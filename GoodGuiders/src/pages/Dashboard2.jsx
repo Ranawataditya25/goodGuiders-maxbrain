@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import { Row, Col, Card, Table, Container } from "react-bootstrap";
@@ -11,12 +11,20 @@ import { Fancybox } from "@fancyapps/ui";
 import "@fancyapps/ui/dist/fancybox/fancybox.css";
 
 export default function Dashboard2() {
+  const [doctor, setDoctor] = useState(null);
+
+  useEffect(() => {
+    const doctorData = JSON.parse(localStorage.getItem("loggedInDoctor"));
+    setDoctor(doctorData);
+  }, []);
+
   useEffect(() => {
     Fancybox.bind('[data-fancybox="gallery"]', {});
     return () => {
       Fancybox.destroy();
     };
   }, []);
+
   return (
     <div className="themebody-wrap">
       {/* Breadcrumb Start */}
@@ -38,12 +46,10 @@ export default function Dashboard2() {
                         alt=""
                       />
                     </div>
-                    <h4>Elizabeth Blackwell</h4>
-                    <span>Cardiologists</span>
+                    <h4>{doctor?.Name}</h4>
+                    <span>{doctor?.specializedIn}</span>
                     <p>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                      sed do eiusmod tempor incididunt ut labore et dolore magna
-                      aliqua. Ut enim ad minim veniam,{" "}
+                      {doctor?.about}
                     </p>
                     <div className="group-btn">
                       <Link
@@ -175,13 +181,13 @@ export default function Dashboard2() {
                       <div className="iocn-item">
                         <FeatherIcon icon="user" />
                       </div>
-                      <h6> Alex Spencer</h6>
+                      <h6>{doctor?.Name}</h6>
                     </li>
                     <li>
                       <div className="iocn-item">
                         <FeatherIcon icon="bookmark" />
                       </div>
-                      <h6> Senior Mentor</h6>
+                      <h6>{doctor?.specializedIn}</h6>
                     </li>
                     <li>
                       <div className="iocn-item">
@@ -189,7 +195,7 @@ export default function Dashboard2() {
                       </div>
                       <h6>
                         {" "}
-                        <Link href="tel:+9588489584">+9588489584</Link>
+                        <Link href="tel:+9588489584">{doctor?.MobileNo}</Link>
                       </h6>
                     </li>
                     <li>
@@ -199,7 +205,7 @@ export default function Dashboard2() {
                       <h6>
                         {" "}
                         <Link href="mailto:test@example.com">
-                          test@example.com
+                         {doctor?.Email}
                         </Link>
                       </h6>
                     </li>
@@ -207,7 +213,7 @@ export default function Dashboard2() {
                       <div className="iocn-item">
                         <FeatherIcon icon="map-pin" />
                       </div>
-                      <h6> live in uk</h6>
+                      <h6>{doctor?.address}</h6>
                     </li>
                     <li>
                       <div className="iocn-item">

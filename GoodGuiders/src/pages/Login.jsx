@@ -7,7 +7,7 @@
 // // import google from '/src/assets/images/auth/2.png';
 
 // // export default function Login() {
-// //      //  Inuut value start 
+// //      //  Inuut value start
 // //      const [formData, setFormData] = useState({
 // //         email: '',
 // //         Remember: '',
@@ -72,9 +72,9 @@
 // //                             </div>
 // //                         </Form.Group>
 // //                         <Form.Group className="mb-20">
-                            // <Button className="btn btn-primary" type="submit">
-                            //     <i className="fa fa-sign-in"></i> Login
-                            // </Button>
+// <Button className="btn btn-primary" type="submit">
+//     <i className="fa fa-sign-in"></i> Login
+// </Button>
 // //                         </Form.Group>
 // //                     </Form>
 // //                     <div className="auth-footer">
@@ -99,9 +99,6 @@
 // //         </>
 // //     )
 // // }
-
-
-
 
 // // import React, { useState } from "react";
 // // import { Link, useNavigate } from "react-router-dom";
@@ -243,9 +240,6 @@
 // //     );
 // // }
 
-
-
-
 // import React, { useState } from "react";
 // import { Link, useNavigate } from "react-router-dom";
 // import { Button, Form, InputGroup } from 'react-bootstrap';
@@ -274,8 +268,6 @@
 //             [name]: type === 'checkbox' ? checked : value,
 //         });
 //     };
-
-   
 
 //     return (
 //         <div className="auth-main">
@@ -344,11 +336,9 @@
 //                         </div>
 //                     </Form.Group>
 
-                   
-
 //                        <Form.Group className="mb-20">
 //                          <Button className="btn btn-primary" type="submit">
-//                              <Link className="fa fa-sign-in"to={'/patient-dashboard'}>Login</Link> 
+//                              <Link className="fa fa-sign-in"to={'/patient-dashboard'}>Login</Link>
 //                          </Button>
 //                     </Form.Group>
 //                 </Form>
@@ -375,9 +365,6 @@
 //         </div>
 //     );
 // }
-
-
-
 
 // import React, { useState } from "react";
 // import { Link, useNavigate } from "react-router-dom";
@@ -521,9 +508,6 @@
 //     );
 // }
 
-
-
-
 // import React, { useState } from "react";
 // import { useNavigate, Link } from "react-router-dom";
 // import { Button, Form, InputGroup } from "react-bootstrap";
@@ -543,8 +527,6 @@
 //   const [showPassword, setShowPassword] = useState(false);
 //   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-
-
 //   const handleChange = (e) => {
 //     const { name, value, type, checked } = e.target;
 //     setFormData({
@@ -552,9 +534,6 @@
 //       [name]: type === "checkbox" ? checked : value,
 //     });
 //   };
-
-
-
 
 // const handleSubmit = (e) => {
 //   e.preventDefault();
@@ -572,7 +551,6 @@
 //     alert("Invalid email. Please try again.");
 //   }
 // };
-
 
 //   return (
 //     <div className="auth-main" style={{ padding: 30 }}>
@@ -652,7 +630,6 @@
 //           </Button>
 //         </Form>
 
-
 //         {/* Footer */}
 //         <div className="auth-footer mt-4 text-center">
 //           <h6 className="auth-with">Or login with</h6>
@@ -672,18 +649,12 @@
 //   );
 // }
 
-
-
-
-
-
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button, Form, InputGroup } from "react-bootstrap";
-import logo from '/src/assets/images/logo/icon-logo.png';
-import facebook from '/src/assets/images/auth/1.png';
-import google from '/src/assets/images/auth/2.png';
+import logo from "/src/assets/images/logo/icon-logo.png";
+import facebook from "/src/assets/images/auth/1.png";
+import google from "/src/assets/images/auth/2.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -705,21 +676,47 @@ export default function Login() {
     });
   };
 
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   const { email } = formData;
+
+  //   console.log("Logging in with email:", email); // Debugging log
+  //   localStorage.setItem("loggedInEmail", email);
+
+  //   if (email === "admin@gmail.com") {
+  //     navigate("/");
+  //   } else if (email === "mentor@gmail.com") {
+  //     navigate("/doctor-dashboard");
+  //   } else if (email === "student@gmail.com") {
+  //     navigate("/patient-dashboard");
+  //   } else {
+  //     alert("Invalid email. Please try again.");
+  //   }
+  // };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const { email } = formData;
+    const { email, password } = formData;
 
-    console.log("Logging in with email:", email); // Debugging log
-    localStorage.setItem("loggedInEmail", email);
+    // Try to get registered doctor info
+    const storedDoctor = JSON.parse(localStorage.getItem("doctorProfile"));
 
-    if (email === "admin@gmail.com") {
-      navigate("/");
-    } else if (email === "mentor@gmail.com") {
+    if (!storedDoctor) {
+      alert("No doctor account found. Please register first.");
+      return;
+    }
+
+    if (email === storedDoctor.Email && password === storedDoctor.Password) {
+      localStorage.setItem("loggedInDoctor", JSON.stringify(storedDoctor));
       navigate("/doctor-dashboard");
+    } else if (email === "admin@gmail.com") {
+      navigate("/");
     } else if (email === "student@gmail.com") {
       navigate("/patient-dashboard");
+    } else if (email === "mentor@gmail.com") {
+      navigate("/doctor-dashboard");
     } else {
-      alert("Invalid email. Please try again.");
+      alert("Invalid email or password. Please try again.");
     }
   };
 
@@ -776,7 +773,9 @@ export default function Login() {
                 onClick={togglePasswordVisibility}
                 style={{ cursor: "pointer" }}
               >
-                <i className={`fa ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
+                <i
+                  className={`fa ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
+                />
               </InputGroup.Text>
             </InputGroup>
           </Form.Group>
@@ -799,16 +798,12 @@ export default function Login() {
             Login
           </Button> */}
 
-
-            <Form.Group className="mb-20">
-                         <Button className="btn btn-primary" type="submit">
-                             <i className="fa fa-sign-in"></i> Login
-                            </Button>
-                       </Form.Group>
+          <Form.Group className="mb-20">
+            <Button className="btn btn-primary" type="submit">
+              <i className="fa fa-sign-in"></i> Login
+            </Button>
+          </Form.Group>
         </Form>
-
-
-                         
 
         {/* Footer */}
         {/* <div className="auth-footer mt-4 text-center">
@@ -825,25 +820,23 @@ export default function Login() {
           </div>
         </div> */}
 
-
-        
-                          <div className="auth-footer">
-                                         <h6 className="auth-with">Or login in with </h6>
-                                         <ul className="login-list">
-                                             <li>
-                                                 <Link className="bg-fb" href="#!">
-                                                     <img className="img-fluid" src={facebook} alt="facebook" />
-                                                     facebook
-                                                 </Link>
-                                             </li>
-                                             <li>
-                                                 <Link className="bg-google" href="#!">
-                                                     <img className="img-fluid" src={google} alt="google" />
-                                                     google
-                                                 </Link>
-                                             </li>
-                                         </ul>
-                                     </div>
+        <div className="auth-footer">
+          <h6 className="auth-with">Or login in with </h6>
+          <ul className="login-list">
+            <li>
+              <Link className="bg-fb" href="#!">
+                <img className="img-fluid" src={facebook} alt="facebook" />
+                facebook
+              </Link>
+            </li>
+            <li>
+              <Link className="bg-google" href="#!">
+                <img className="img-fluid" src={google} alt="google" />
+                google
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );

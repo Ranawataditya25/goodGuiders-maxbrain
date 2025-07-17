@@ -91,8 +91,8 @@ export default function Status() {
                 You’ll be notified once it’s <strong>approved</strong> or <strong>declined</strong>.
               </p>
 
-              <Link to="/" className="btn btn-primary">
-                Back to Home
+              <Link to="/login" className="btn btn-primary">
+                Back to Login
               </Link>
 
             </div>

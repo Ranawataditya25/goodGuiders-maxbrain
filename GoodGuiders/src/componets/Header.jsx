@@ -267,7 +267,8 @@ export default function Header() {
     };
 
     const { toggleSidebar } = useSidebarContext();
-const navigate = useNavigate();
+    const navigate = useNavigate();
+    
     // ✅ Logout function
   const handleLogout = () => {
   localStorage.clear(); // Clear all data
