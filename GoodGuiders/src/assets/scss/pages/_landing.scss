@@ -1,0 +1,201 @@
+/*********************
+  24 LANDING PAGE
+**********************/
+.py-70{
+    padding-top: 70px;
+    padding-bottom: 70px;
+}
+.pt-70{
+    padding-top: 70px;
+}
+.pb-70{
+    padding-bottom: 70px;
+}
+.landing-wrap{
+    .btn{
+        padding: 12px 30px;
+    }
+}
+.landing-title{
+    text-align: center;
+    margin-bottom: 20px;
+    h2{
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 5px;
+        background: linear-gradient(47deg, $theme-primary 45%, $theme-secondary 53.71%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        transition: all 0.5s ease;
+    }
+    p{
+        font-size: 16px;
+    }
+}
+.landing-header{
+    padding: 18px 0;
+    background-color: $sidebar-bg;
+    &.sticky{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 2;
+        animation: fadeInDown 1s ease;
+    }
+    .menu-action{
+        border: none;
+        outline: none;
+        box-shadow: none;
+        svg{
+            width: 28px;
+            height: 28px;
+        }
+    }
+}
+.menu-list {
+    li{
+        display: inline-block;
+        a{
+            color: $white !important;
+            font-size: 16px;
+        }
+        +li{
+            margin-left: 40px;
+        }
+    }
+}
+.hero-sec {
+    background-color: $sidebar-bg;   
+    background-image: url('/src/assets/images/landing/herobg.jpg');
+    background-size: cover;
+    background-position: center;
+    color: $white;
+    .hero-contain{
+        height: calc(100vh - 78px);
+        display: flex;
+        align-items: center;
+        h6{ 
+            font-size: 20px;
+            font-weight: 600;
+            .icon-wrap{               
+                font-size: 18px;
+                vertical-align: middle;
+                background: linear-gradient(71deg, $theme-primary 3.0%, $theme-secondary 98.00%);
+                padding: 8px;
+                border-radius: 50%;
+                margin-right: 10px;
+                display: inline-block;
+            }
+        }
+        h2{           
+            font-size: 46px;
+            background: linear-gradient(92deg, $theme-primary 2.7%, $theme-secondary 53.71%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        p{
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+    }
+    img{
+        width: 80%;
+    }
+}
+.freamwork-grid{
+    background-color: $white;
+    padding: 30px 20px;
+    border-radius: 10px;
+    text-align: center;
+    .icon-wrap{
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        // border: 2px solid $border-color;       
+        margin: auto;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        img{
+            width: auto;
+            height: 55px;
+        }       
+    }
+}
+.feature-grid{
+    background-color: $white;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+    height: 100%;
+    .icon-wrap{
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: $theme-primary;
+        margin: auto;
+        border-radius: 50%;
+        margin-bottom: 10px;
+        svg{
+            color: $white;
+            width: 24px;
+            height: 24px;
+        }
+    }
+    &:hover{
+        background-color: $theme-primary;
+        .icon-wrap{
+            background-color: $white;
+            svg{
+                color: $theme-primary;
+            }
+        }
+        h5,p{
+            color: $white;
+        }
+    }
+}
+.demo-grid{
+    padding: 20px;
+    background-color: $white;
+    border-radius: 10px;
+    text-align: center;   
+    box-shadow: 0 0 20px rgba($black, 0.08);
+    .img-wrap{
+        border-radius: 10px;
+        overflow: hidden;
+        border: 4px solid var(--#{$prefix}border-color);
+        transition:  all 0.3s ease;
+        img{
+            width: 100%;
+            transition:  all 0.3s ease;
+        }
+    }   
+    .demo-detail{
+        padding-top:15px;
+        .demo-title{
+            font-size: 18px;;
+        }
+    }
+    &:hover{
+        .img-wrap{           
+            img{
+                transform: scale(1.02);
+            }
+        }
+    }
+}
+.lan-supports{
+    img{
+        width: 60%;
+    }
+}
+.landing-footer{   
+    text-align: center;
+    background-color: $sidebar-bg;
+}

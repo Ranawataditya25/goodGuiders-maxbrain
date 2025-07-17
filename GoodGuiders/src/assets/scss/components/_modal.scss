@@ -1,0 +1,31 @@
+/*******************
+  16 MODAL START
+*********************/
+.modal-content{
+  border-color: var(--#{$prefix}border-color);
+  border-radius:10px;
+  .select2-container{
+    width:100% !important; 
+  }
+  .close-modal{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    color: $theme-primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease-in;
+    background-color: rgba($theme-primary,0.1);
+    i{
+      font-size:12px;
+    }
+    &:hover{
+      color: $white;
+      background-color: $theme-primary;
+    }
+  }
+}

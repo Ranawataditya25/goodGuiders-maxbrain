@@ -1,0 +1,82 @@
+/*** 01 TYPOGRAPHY ***/
+/*** 02 BASE ***/
+/*** 03 COMMON ***/
+/*** 04 BUTTON ***/
+/*** 05 FORM ***/
+/*** 06 BADGE ***/
+/*** 07 ALERTS ***/
+/*** 08 PAGINATION ***/
+/*** 09 CARD ***/
+/*** 10 TAB ***/
+/*** 11 TABLE ***/
+/*** 12 HEADER ***/
+/*** 13 FOOTER ***/
+/*** 14 DROPDOWN ***/
+/*** 15 DROPZON ***/
+/*** 16 MODAL ***/
+/*** 17 SIDEBAR ***/
+/*** 18 PROGRESS BAR ***/
+/*** 19 CALENDAR-APP ***/
+/*** 20 USER APP ***/
+/*** 21 AUTHENTICATION ***/
+/*** 22 ERROR ***/
+/*** 23 FAQ ***/
+/*** 24 PRICING ***/
+/*** 25 INVOICE ***/
+/*** 26 HOSPITAL DASHBOARD ***/
+/*** 28 DOCTOR DASHBOARD ***/
+/*** 29 PATIENT DASHBOARD ***/
+/*** 30 RESPONSIVE ***/
+
+/*******************
+ 01 TYPOGRAPHY START
+********************/
+body{
+	font-size: 14px;   
+    font-family: $font-poppins;
+    // color: $codex-font-color;   
+	background-color: var(--#{$prefix}bodybg-color);
+}
+a{
+  text-decoration: none;
+  color: currentColor;
+  &:hover{
+	color: currentColor;
+  }
+}
+
+h1,h2,h3,h4,h5,h6,p{
+	margin-bottom: 0;
+}
+
+ol, ul, dl{
+	margin: 0;
+	padding: 0;
+}
+
+li{
+	list-style: none;
+}
+
+h1{	
+	font-size: 34px;
+}
+h2{
+	font-size: 30px;
+}
+h3{
+	font-size: 24px;
+}
+h4{
+	font-size: 20px;
+}
+h5{
+	font-size: 18px;
+}
+h6{
+	font-size: 16px;
+	font-weight: 400;
+}
+p{
+	color: $font-light
+}

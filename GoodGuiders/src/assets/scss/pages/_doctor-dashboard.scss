@@ -1,0 +1,121 @@
+/***********************
+27 DOCTOR DASHBOARD START
+*************************/
+
+/*doctor profile*/
+.doctor-probox{
+    overflow: hidden;
+    .img-wrap{
+        height:175px;
+        background-color:$theme-primary;
+        background-image: url('/src/assets/images/patient-profilebg.jpg');
+        background-size: cover;
+        background-position: center;
+    }   
+    .proimg-wrap{
+        overflow: hidden;
+        width: 95px;
+        height: 95px;
+        border-radius:50%;
+        border:5px solid var(--bs-border-color);
+        margin-bottom: 15px;
+        margin-left: auto;
+        margin-right: auto;
+        img{
+            width: 100%;
+            height: 100%;
+        }
+    }
+    .profile-head{
+        text-align: center;
+        margin-top: -50px;
+        h4{           
+            font-size: 20px;
+        }
+        span{
+            color: $font-light;
+            font-size: 16px;
+        }
+        p{
+            padding-top: 5px;
+        }
+        .group-btn{
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+    }
+    .docactivity-list{
+        border-top: 1px solid var(--bs-border-color);
+        display: flex;
+        li{
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+            padding-top: 15px;
+            padding-bottom: 15px;
+            +li{
+                border-left: 1px solid var(--bs-border-color);
+            }
+        }
+    }
+}
+.speciality-list{
+    li{
+        .icon-wrap{
+            padding:14px;
+            border-radius: 5px;
+            i{
+                color: $white;
+                font-size:18px;               
+                vertical-align: middle;
+            }
+        }
+        .media{
+            align-items: center;
+        }
+        .media-body{
+            margin-left: 10px;
+        }
+        +li{
+            margin-top: 16px;
+        }
+    }
+}
+
+.doct-skill{
+    .progress-group{
+        h6{
+            margin-bottom: 10px;
+            >span{
+                float: right;
+            }
+        }
+        .progress{
+            height: 8px;
+        }
+        .progress-bar{
+            transition: none;
+        }
+        +.progress-group{
+            margin-top: 18px;
+        }
+    }
+}
+
+.patientreport-card{
+    overflow: hidden;
+    .report-count{
+        text-align:center;
+        h3{
+            font-weight:600;
+        }
+    }
+    .card-body{
+        margin-bottom: -30px;
+        margin-inline-start: -25px;
+        margin-inline-end: -25px;
+    }
+}

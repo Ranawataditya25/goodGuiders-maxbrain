@@ -1,0 +1,179 @@
+/****************
+  17 SIDEBAR START
+*****************/
+.codex-sidebar{
+  position: fixed;
+  top:0;
+  inset-inline-start: 0;
+  width: 285px;
+  height: 100%; 
+  transition:all 0.5s ease;
+  z-index:4; 
+  color: var(--#{$prefix}sidebar-link);
+  background-color: var(--bs-sidebar-bg);
+  box-shadow: 0 0 20px 5px rgba($black, 0.05);
+  .logo-gridwrap,.icon-logo{
+      padding:3px 20px;
+      display:flex;
+      justify-content: space-between;
+      align-items: center;     
+      inset-block-start: 0;
+      inset-inline-start: 0;          
+      transition: all 0.5s ease;     
+      box-shadow: 0 0 20px 5px rgba($black, 0.05);
+      .lightlogo{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        span{
+          font-size: 24px;
+          font-weight: 700;
+        }
+      }
+      .sidebar-action{              
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba($theme-primary, 0.05);
+        color: $theme-primary;
+        position: relative;
+        svg{
+          color: $theme-primary;
+          width: 18px;
+        }
+    }
+  } 
+  .icon-logo{
+    display: none;
+  }
+  .darklogo{
+    display: none;
+  } 
+  .codex-menu{
+    margin-top: 25px;
+    padding-bottom: 38px;
+    padding-inline-start: 20px;
+    padding-inline-end: 20px;
+    height: calc(100vh - 400px);
+    margin-bottom: 260px;
+  } 
+  .sidebarpro-sec{
+    background-color:rgba($theme-primary,0.06);
+    border-radius:15px;
+    padding:15px;
+    margin:20px;
+    text-align: center;
+    margin-top:-50%;
+    img{
+      margin-top: -115px;
+    }
+    h6{     
+      margin-top: 15px;
+    }
+    .btn{
+      margin-top: 15px;
+    }
+  }
+}
+.codex-menu {
+  padding-top:0;
+  .cdxmenu-title {
+      padding: 10px 15px;
+      font-weight: 600;       
+      border-radius: 2px;       
+      border-left: 5px solid $theme-primary;
+      background-color: rgba($theme-primary,0.1);
+      margin-bottom:10px;
+      margin-top: 10px;
+      h5 {           
+          font-size: 14px;
+          text-transform: capitalize;           
+          font-weight: 600;
+          color: $theme-primary;
+      }
+  }
+
+  li {     
+      position: relative;
+      &.menu-item{
+        >a{
+          font-weight:500;
+        }
+          &.active{
+              >a{
+                  color:$theme-primary;
+              }
+          }
+      }
+      >a {
+          padding: 10px 15px;          
+          .icon-item {
+              margin-inline-end: 10px;
+              line-height: 1;
+              i {
+                  font-size: 20px;
+              }
+              svg {
+                  width: 20px;
+                  height: auto;
+              }
+          }
+          >svg {
+              margin-inline-end: 10px;
+          }
+          >i {
+              font-size: 18px;
+              &.fa {
+                  margin-inline-start: auto;
+              }
+          }
+          span {
+              transition: all 0.5s ease;
+              line-height: 1;
+          }
+      }
+      a {
+          font-style: normal;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          text-transform: capitalize;
+          position: relative;
+          color: $font-light;
+          
+      }
+      .submenu-list,
+      .secondsubmenu-list {
+          display: none;
+      }
+      &.active {
+          .submenu-list,
+          .secondsubmenu-list {
+              display: block;
+          }
+      }
+  }
+  .submenu-list {
+      padding-inline-start: 10px;
+      a {
+          color: $font-light;
+          padding:5px 25px;
+          padding-inline-start: 35px;      
+      }
+      >li{
+          &.active{
+              >a{
+                  color: $theme-primary;
+              }
+          }
+      }
+  }
+}
+
+
+/****************
+SIDEBAR END
+*****************/

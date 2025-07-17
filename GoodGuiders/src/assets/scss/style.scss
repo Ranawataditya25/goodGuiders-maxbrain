@@ -1,0 +1,44 @@
+@import 'utils/variables';
+
+// Base 
+@import 'base/typography';
+@import 'base/reset';
+
+// Components
+@import 'components/common';
+@import 'components/button';
+@import 'components/form';
+@import 'components/badge';
+@import 'components/switch';
+@import 'components/alerts';
+@import 'components/pagination';
+@import 'components/card';
+@import 'components/tab';
+@import 'components/table';
+@import 'components/dropdown';
+@import 'components/dropzon';
+@import 'components/modal';
+@import 'components/progress';
+@import 'components/header';
+@import 'components/sidebar';
+@import 'components/footer';
+@import 'components/customizer';
+
+// Application
+@import 'pages/calendar-app';
+@import 'pages/user-app';
+
+// Pages
+@import 'pages/hospital-dashboard';
+@import 'pages/doctor-dashboard';
+@import 'pages/patient-dashboard';
+@import 'pages/authentication';
+@import 'pages/error';
+@import 'pages/faq';
+@import 'pages/pricing';
+@import 'pages/invoice';
+@import 'pages/timeline';
+@import './pages/landing';
+
+// Dashboard
+@import 'theme/responsive';

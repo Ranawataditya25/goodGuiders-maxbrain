@@ -1,0 +1,93 @@
+/*******************
+ 22  CALENDAR START
+*********************/
+.codex-calendar{ 
+  
+  .events-list{
+    li{
+      font-size: 16px;
+      font-weight: 500;
+      padding: 12px 15px;
+      border-radius: 5px;
+      color: $white;
+      line-height: 1;     
+      i{
+        margin-right: 10px;
+      }
+      &:nth-child(n+2){
+        margin-top: 15px;
+      }   
+    }
+  }
+  .fc-event-title{
+    padding: 10px 15px;
+    width: 100%; 
+    white-space: pre-wrap;  
+  }
+  .fc-button-group{    
+    button{
+      background-color: $theme-primary;
+      border-radius: 5px !important;  
+      text-transform: capitalize;  
+      padding: 7px 13px;   
+      border:none;
+      background-image: none !important;
+      &:focus{
+        box-shadow: none !important;       
+      }
+      &:nth-child(n+2){
+        margin-left: 10px !important;
+        background-color: $theme-primary !important;
+      color: $white !important;
+      background-image: none !important;
+      }
+    }
+    
+    
+  }
+  .fc-button-group{
+    button{
+      background-color: $theme-primary !important;
+      color: $white !important;
+    }
+  }
+  .fc button {
+    box-sizing: border-box;
+    margin: 0;
+    height: auto !important;
+    padding: 7px 13px !important;
+    font-size: 1em;
+    white-space: nowrap;
+    cursor: pointer;
+    background-color: $theme-primary !important;
+    color: $white !important;
+    opacity: 1;
+    margin-left: 10px;
+    background-image: none;
+}
+.fc-day-grid-event{
+  .fc-content {
+    white-space: nowrap;
+    overflow: hidden;
+    background: $theme-primary ;
+    border: 1px solid var(--#{$prefix}border-color);
+    padding: 8px;
+  }
+} 
+  .fc-daygrid-event{
+    border:none;
+  } 
+  table{
+    thead{
+      .fc-col-header-cell{
+        padding: 10px 12px;
+        background-color: rgba($theme-primary,0.05) !important;
+      }
+    }
+  }
+  .fc {
+    .fc-toolbar-title{
+      color: $font-light;
+    }
+  }
+}

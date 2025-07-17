@@ -1,0 +1,86 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+// theme fonts
+$font-poppins: "Poppins", sans-serif;
+$font-awesome: 'FontAwesome';
+$font-themify: 'themify';
+
+// theme colors
+
+
+
+$theme-primary:#0c4079;
+$theme-secondary: #e2562a;
+$theme-success:#10b981;
+$theme-info:#0ea5e9;
+$theme-warning:#ff9800;
+$theme-danger:#ff5724;
+$theme-light:#f4f7fc;
+$theme-dark:#333333;
+$theme-border:#e5e5e5;
+$sidebar-bg:#202046;
+
+$theme-colors:(
+    "primary":    $theme-primary,
+    "secondary":  $theme-secondary,
+    "success":    $theme-success,
+    "info":       $theme-info,
+    "warning":    $theme-warning,
+    "danger":     $theme-danger,
+    "light":      $theme-light,
+    "dark":       $theme-dark,
+);
+
+// theme fonts colors
+$black:#051722;
+$white:#ffffff;
+$font-light:#8392a5;
+$bg-light:#f4f6fb;
+$codex-font-color:#262626;
+$theme-shadow: 0 0 20px rgba($black,0.05);
+
+// social icon color
+$fb-color:#385196;
+$twt-color:#00a8ff;
+$insta-color: #e2215d;
+$whp-color:#4aec61;
+
+// dark layout
+$dark-body:#0c162e;
+$dark-card:#18223a;
+$extradark-card:#223050;
+$dark-font:#cdc9c9;
+$dark-small-font:#cdc9c9;
+$dark-border:#0d3e5e;
+
+
+:root{  
+ 
+    --#{$prefix}bodybg-color: #{$bg-light};
+
+    // Sidebar
+    --#{$prefix}sidebar-bg: #{$white};
+    --#{$prefix}sidebarbg-light: var(--#{$prefix}bodybg-color);
+    --#{$prefix}sidebar-link: currentColor;
+    --#{$prefix}sidebar-linkactivefont: #{$white};
+    --#{$prefix}sidebar-linkactive: #{$theme-primary};
+    --#{$prefix}sidebar-itembefore: currentColor;
+    --#{$prefix}iconnav-color: #{$bg-light};
+    --#{$prefix}sidebarborder-color: #{$border-color};
+}
+[data-bs-theme="dark"]{
+    --#{$prefix}body-bg: #{$dark-card};
+    --#{$prefix}bodybg-color: #{$dark-body};
+    --#{$prefix}sidebar-bg: #{$dark-card};
+    --#{$prefix}sidebarbg-light: #{$dark-body};
+    --#{$prefix}iconnav-color: #{$dark-body};
+    --#{$prefix}sidebarborder-color: #{$gray-700};
+}
+[data-sidebar-theme="dark"]{
+    --#{$prefix}sidebar-bg: #{$dark-card};
+    --#{$prefix}sidebarbg-light: #{$dark-body};
+    --#{$prefix}sidebar-link: #{$gray-300};   
+    --#{$prefix}iconnav-color: #{$dark-body};
+    --#{$prefix}sidebarborder-color: #{$gray-700};
+}
+

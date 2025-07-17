@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- Favicon Icon-->
+  <link rel="icon" href="../assets/images/logo/favicon.png" type="image/x-icon">
+  <!-- Tabler Icon-->
+  <link href="../assets/css/vendor/tabler-icons.css" rel="stylesheet">
+  <link href="../assets/css/vendor/prism.css" rel="stylesheet">
+  <!-- Bootstrap css-->
+  <link href="../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <!-- Tree Js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+  <!-- Custom css-->
+  <link href="../assets/css/style.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <!-- Header Start-->
+  <header class="py-3 codex-header">
+    <nav class="navbar navbar-expand-lg navbar-dark p-0">
+      <div class="container position-relative">
+        <a href="index.html" class="codex-brand">
+          <img class="img-fluid align-middle" src="../assets/images/logo/logo.png" alt="logo">
+          <span class="ms-2 text-white">Medixo</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse " id="navbarNavAltMarkup">
+          <div class="navbar-nav ms-auto">
+            <a class="nav-link text-white" href="https://codextheme.codexperts.in/bootstrapreact/medixo/landing" target="_blank">Demo</a>
+            <a class="nav-link text-white" href="https://codextheme.codexperts.in/bootstrapreact/medixo/landing" target="_blank">Feature</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <!-- Header End-->
+
+
+
+  <!-- Gulp Setup Start -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <div class="dock_main">
+            <aside class="codex-sidebar">
+              <ul class="menu-list">
+                <li>
+                  <a class="nav-link" href="index.html">Getting Started</a>
+                </li>
+                <li>
+                  <a class="nav-link" href="gulp-setup.html">Gulp setup</a>
+                </li>
+                <li>
+                  <a class="nav-link" href="structure.html">Structures</a>
+                </li>
+                <li>
+                  <a class="nav-link" href="customizer.html">Customizer</a>
+                </li>
+                <li>
+                  <a class="nav-link" href="plugins.html">Plugins</a>
+                </li>
+                <li>
+                  <a class="nav-link" href="changelog.html">Changelog</a>
+                </li>
+              </ul>
+            </aside>
+            <div class="doc_content">
+              <h3 class="page-title mb-3">Gulp setup</h3>
+              <h5 class="text-muted mb-2">How to do development using Gulp</h5>
+              <p>Rohi Is An HTML Version Of The Well-Known Bootstrap Template. Rohi Bootstrap Brings You Basic HTML Components To Work With So You Can Modify Them The Way You Want. It Has A Complete List Of Feature And Apps Which Helps You To Reduce Your Development Time.</p>
+              <div class="callout callout-primary mt-3">
+                <h5 class="fw-semibold mb-2">Gulp is not mandatory</h5>
+                <p>You may skip this section if you don't want Gulp in your project. Please use <strong class="text-black">dist/</strong> directory in your project.</p>
+              </div>
+              <p class="my-4">You Can Use Gulp To Automate And Enhance Your Project Workflow.</p>
+              <h5 class="fw-semibold text-muted mb-2">Don't know about Gulp?</h5>
+              <p>Gulp Is A Toolkit For Automating Painful Or Time-Consuming Tasks In Your Project Development Workflow, So You Can Stop Messing Around And Build Something Easier Than Ever.</p>
+              <ul class="mt-2 mb-4">
+                <li>Auto Minify/Uglify CSS, HTML, JS codes</li>
+                <li>Auto Compile SaSS file</li>
+                <li>3000+ Plugins</li>
+              </ul>
+              <h5 class="fw-semibold mb-2">Gulp for Rohi</h5>
+              <p class="mb-4">Use Gulp In Rohi Is For Building Different Layouts And Theme Customization With Lots Of Functional Tasks Like Image Optimization, SaSS Compilation, Etc...Which Really Useful To Make The Production Ready <strong class="text-black">Dist/Directory</strong>
+              </p>
+              <h5 class="fw-semibold mb-2">How to set up Gulp for Rohi?</h5>
+              <ul class="mb-4">
+                <li>Make Sure That You Have Already Installed <strong class="text-black">Nodejs And Gulp</strong> On Your Server/Computer</li>
+                <li>Open The "Nodejs Command Prompt" And Redirect To Your Project Root Directory.</li>
+                <li>Enter The Command Yarn In The Command Prompt.</li>
+                <li>After That, You Need To Run The Below Gulp Tasks To Build Production Ready <strong class="text-black">Dist/ Directory</strong>.</li>
+              </ul>
+              <h5 class="mb-4">Gulp Commands(task)</h5>
+              <h6 class="fw-semibold mb-3">Default task</h6>
+              <table class="table mb-4">
+                <thead class="table-light">
+                  <tr>
+                    <th class="fw-semibold bg-primary text-white" style="width: 25%;">Gulp Command</th>
+                    <th class="fw-semibold bg-primary text-white" style="width: 75%;">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-muted">gulp</td>
+                    <td class="text-muted">which build template in <strong class="text-black">/dist</strong> directory</td>
+                  </tr>
+                </tbody>
+              </table>
+              <h6 class="fw-semibold mb-3">Basic task</h6>
+              <table class="table">
+                <thead class="table-light">
+                  <tr>
+                    <th class="fw-semibold bg-primary text-white" style="width: 25%;">Gulp Command</th>
+                    <th class="fw-semibold bg-primary text-white" style="width: 75%;">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-muted">gulp style</td>
+                    <td class="text-muted">which compile .scss files from <strong class="text-black">/src/assets/scss</strong> directory and place it into a <strong class="text-black">/dist/assets/css</strong> directory</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">gulp imgmin</td>
+                    <td class="text-muted">which use to optimize images from <strong class="text-black">/src/assets/images</strong> directory and place it into a <strong class="text-black">/dist/assets/images</strong> directory</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">gulp html</td>
+                    <td class="text-muted">which uses compiling your HTML file from <strong class="text-black">/src/html</strong> directory and place it into a <strong class="text-black">/dist</strong> directory</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">gulp buildjs</td>
+                    <td class="text-muted">which use to build .js files from <strong class="text-black">/src/assets/js</strong> directory and place it into a <strong class="text-black">/dist/assets/js</strong> directory</td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">gulp watch</td>
+                    <td class="text-muted">It will automatically start your build process if you make any changes in HTML, scss or js files from <strong class="text-black">/src</strong> directory and put new changes to <strong class="text-black">/dist</strong> directory</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="mt-5 d-flex align-items-center justify-content-between gx-2">
+                <a href="index.html" class="btn-pagination">
+                  <div class="arrow-right">
+                    <i class="ti ti-arrow-left"></i>
+                  </div>
+                  <div class="text-end">
+                    <div class="pagination-action">Previous</div>
+                    <div class="pagination-target">Introduction</div>
+                  </div>
+                </a>
+                <a href="structure.html" class="btn-pagination">
+                  <div>
+                    <div class="pagination-action">Next</div>
+                    <div class="pagination-target">Structure</div>
+                  </div>
+                  <div class="arrow-right">
+                    <i class="ti ti-arrow-right"></i>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Gulp Setup End -->
+
+  <!-- Back To Top Start -->
+  <div class="scroll-top d-flex justify-content-center align-items-center">
+    <i class="ti ti-chevrons-up"></i>
+  </div>
+  <!-- Back To Top End -->
+
+
+  <!-- Jquary -->
+  <script src="../assets/js/jquery-3.7.1.min.js"></script>
+  <!-- Bootstrap js-->
+  <script src="../assets/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/vendors/prism.js"></script>
+  <!-- Js Tree -->
+  <script src="../assets/js/jstree.min.js"></script>
+  <script src="../assets/js/tree-custom.js"></script>
+  <!-- Custom script-->
+  <script src="../assets/js/app.js"></script>
+
+</body>
+
+</html>

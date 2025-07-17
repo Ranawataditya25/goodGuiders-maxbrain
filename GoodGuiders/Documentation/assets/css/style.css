@@ -1,0 +1,429 @@
+/*====================================================================
+Template Name: Crikho - Yoga Bootstrap Responsive Template
+Author: dreamzontheme
+Contact: codnictheme@gmail.com
+====================================================================*/
+/*** 01 Variabels ***/
+/*** 02 Typography ***/
+/*** 03 Common ***/
+/*** 04 Form ***/
+/*** 05 Badge ***/
+/*** 06 Card ***/
+/*** 07 Table ***/
+/*** 08 Dropdown ***/
+/*** 09 Header ***/
+/*** 10 Siderbar ***/
+/*** 11 Footer ***/
+/*** 12 Dashboard ***/
+/*** 13 Product ***/
+/*** 14 User Setting ***/
+/*** 15 Authentication ***/
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+/**************
+ 01 Variabels
+***************/
+:root {
+  --bs-body-bg: #fff;
+  --bs-body-color: #212529;
+  --bs-bodybg-color: #f8f9fa;
+  --bs-primary-darken: #5a5df0;
+  --bs-border-color: #dee2e6;
+  --bs-light: #adb5bd;
+  --bs-cardbg-color: #fff;
+  --bs-header-spacer-x: 1.563em;
+  --bs-header-spacer-y: 0;
+  --bs-header-bg: #fff;
+  --bs-menulink-color: #000;
+  --bs-menulink-hovercolor: #6366f1;
+  --bs-footer-bg: #212529;
+}
+
+[data-bs-theme=dark] {
+  --bs-body-bg:#092036;
+  --bs-bodybg-color: red;
+  --bs-border-color: #0f405e;
+  --bs-light: #020303;
+  --bs-cardbg-color: #092036;
+  --bs-header-bg: #092036;
+  --bs-menulink-color: rgba($white,0.8);
+  --bs-table-bg: #092036;
+}
+
+/**************
+ 02 TYPOGRAPHY
+***************/
+body {
+  scroll-behavior: smooth;
+}
+
+a {
+  color: #6366f1;
+  text-decoration: none;
+}
+
+p {
+  color: var(--bs-gray-600);
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Jost", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  padding: 0;
+  margin: 0;
+}
+
+code {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.wd-0 {
+  width: 0px;
+}
+
+.wd-5 {
+  width: 5px;
+}
+
+.wd-10 {
+  width: 10px;
+}
+
+.wd-15 {
+  width: 15px;
+}
+
+.wd-20 {
+  width: 20px;
+}
+
+.wd-25 {
+  width: 25px;
+}
+
+.wd-30 {
+  width: 30px;
+}
+
+.wd-35 {
+  width: 35px;
+}
+
+.wd-40 {
+  width: 40px;
+}
+
+.wd-45 {
+  width: 45px;
+}
+
+.wd-50 {
+  width: 50px;
+}
+
+/****************
+ 03 Common
+*****************/
+.scroll-top {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  z-index: 99;
+  border: none;
+  outline: none;
+  color: #fff;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50px;
+  font-size: 22px;
+  text-align: center;
+  -webkit-box-shadow: 0 3px 24px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 3px 24px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  -webkit-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+  background: #6366f1;
+}
+.scroll-top.show {
+  opacity: 1;
+  visibility: visible;
+}
+.scroll-top:hover {
+  color: #fff;
+}
+
+/*********************
+  06 Card
+**********************/
+.card {
+  border-radius: 10px;
+  -webkit-box-shadow: var(--bs-shadow);
+          box-shadow: var(--bs-shadow);
+  margin-bottom: 1.6em;
+}
+.card .setting-card .action-toggle {
+  border-radius: 5px;
+  border: 1px solid var(--bs-border-color);
+  padding: 2px 10px;
+  line-height: 1;
+}
+.card .setting-card .action-toggle i {
+  font-size: 18px;
+}
+.card .card-header {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  padding: 25px;
+  padding-bottom: 0 !important;
+  border: none;
+  background-color: transparent;
+}
+
+/*********************
+ 09 Header
+**********************/
+.codex-header {
+  z-index: 5;
+  -webkit-box-shadow: var(--bs-shadow);
+          box-shadow: var(--bs-shadow);
+  background-color: #202046;
+  -webkit-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  position: sticky;
+  top: 0;
+}
+.codex-header .navicon-wrap {
+  position: relative;
+  padding: 7px 10px;
+  border-radius: 50%;
+  background-color: var(--bs-nav-icon-color);
+}
+.codex-header .navicon-wrap i {
+  font-size: 16px;
+  vertical-align: middle;
+}
+.codex-header .navicon-wrap .noti-count {
+  color: #fff;
+  background-color: #6366f1;
+  position: absolute;
+  top: -8px;
+  inset-inline-end: -4px;
+  padding: 4px 6px;
+  border-radius: 15px;
+  font-size: 9px;
+  line-height: 1;
+}
+.codex-header .navicon-wrap:hover {
+  background-color: #6366f1;
+}
+.codex-header .navicon-wrap:hover i {
+  color: #fff;
+}
+.codex-header .navbar-nav {
+  gap: 40px;
+}
+.codex-header .navbar-nav .nav-link {
+  font-weight: 500;
+}
+
+/****************
+  10 Siderbar
+*****************/
+.dock_main {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+}
+
+.doc_content {
+  width: calc(100% - 280px);
+  padding-left: 25px;
+}
+
+.codex-sidebar {
+  width: 280px;
+  position: sticky;
+  top: 74px;
+}
+.codex-sidebar .menu-list {
+  list-style: none;
+  padding-left: 0;
+  background-color: #f4f7f9;
+  border-radius: 4px;
+}
+.codex-sidebar .menu-list li a {
+  padding: 10px 15px;
+  font-weight: 500;
+  font-size: 15px;
+}
+.codex-sidebar .menu-list li + li {
+  border-top: 1px solid #dee2e6;
+}
+.codex-sidebar .menu-list li.active {
+  background-color: #6366f1;
+}
+.codex-sidebar .menu-list li.active a {
+  color: #fff;
+}
+
+/********************
+  12 Documentation
+*********************/
+pre[class*=language-] {
+  margin-bottom: 0;
+}
+
+.callout {
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 5px solid transparent;
+}
+
+.callout-primary {
+  background-color: rgba(99, 102, 241, 0.1);
+  border-color: #6366f1;
+}
+
+.btn-pagination {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  padding: 15px;
+  border: 1px solid #dee2e6;
+  width: calc(50% - 0.5rem);
+  font-weight: 500;
+  color: #000;
+  border-radius: 5px;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+.btn-pagination .pagination-action {
+  font-size: 14px;
+  color: var(--bs-light);
+}
+.btn-pagination .arrow-right {
+  font-size: 26px;
+  color: var(--bs-light);
+}
+.btn-pagination:hover {
+  border-color: #6366f1;
+}
+
+.code-box {
+  border: 1px solid #dee2e6;
+  padding: 25px;
+  border-radius: 5px;
+}
+
+.callout {
+  background-color: rgba(99, 102, 241, 0.07);
+  border-left: 5px solid #6366f1;
+  padding: 30px;
+  margin-bottom: 0;
+  font-style: italic;
+  border-radius: 8px;
+}
+
+.icontree {
+  width: 18px !important;
+  height: 18px !important;
+  line-height: normal !important;
+  background-position: center !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  margin-right: 7px !important;
+  vertical-align: middle !important;
+}
+
+.iconfolder {
+  background-image: url("../images/folder.png") !important;
+}
+
+.iconjsx {
+  background-image: url("../images/js.png") !important;
+}
+
+.iconhtml {
+  background-image: url("../images/html.png") !important;
+}
+
+.iconreact {
+  background-image: url("../images/react.png") !important;
+}
+
+.iconsass {
+  background-image: url("../images/sass.png") !important;
+}
+
+@media screen and (max-width: 1199px) {
+  .codex-sidebar {
+    z-index: 4;
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+  }
+  .codex-sidebar .logo-gridwrap .sidebar-action {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+  }
+}
+@media screen and (max-width: 991px) {
+  .codex-sidebar {
+    width: auto;
+  }
+  .codex-sidebar .menu-list li {
+    display: inline-block;
+  }
+  .codex-header .navbar-nav {
+    gap: 10px;
+    background-color: #202046;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    padding: 13px 16px;
+    margin-top: 15px;
+  }
+  .codex-header .navbar-nav .nav-link {
+    padding: 0;
+  }
+  .dock_main {
+    display: block;
+  }
+  .doc_content {
+    width: 100%;
+    padding-left: 0;
+  }
+}
+@media screen and (max-width: 575px) {
+  .themebody-wrap {
+    padding-top: 85px;
+  }
+}

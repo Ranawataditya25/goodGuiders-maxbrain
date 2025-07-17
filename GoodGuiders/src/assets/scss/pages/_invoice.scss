@@ -1,0 +1,118 @@
+/*******************
+  25 INVOICE START
+********************/
+.cdx-invoice{
+    .head-invoice{       
+        background-color: rgba($theme-primary , 0.05);
+        padding: 25px;     
+        display: flex;
+        justify-content: space-between;
+        .codex-brand{
+            margin-bottom: 10px;           
+            
+            span{
+            font-size: 20px;
+            font-weight: 700;
+            }
+        }
+        .invoice-brand{
+            p{
+                font-size: 16px;
+                font-weight: 500;
+            }
+        }
+    }
+    .invoice-user{       
+        h5{
+            text-transform: uppercase;
+            color: $theme-primary;
+            margin-bottom: 5px;
+            font-weight:600;
+        }
+        .detail-list{
+            li{
+                display: flex;
+                align-items: center;
+                font-size: 16px;     
+                font-weight: 500;
+                text-transform: capitalize;       
+                span{
+                    color: $font-light;
+                    margin-left: 10px;
+                }           
+            }    
+        }       
+    }
+    .body-invoice{
+        margin-top:25px;
+        .table{
+            th,td{
+                padding:10px 15px;
+            }
+            tr{
+                th{
+                    background-color: $theme-primary;
+                    color: $white;                                                         
+                    border-color: var(--#{$prefix}border-color);    
+                    text-transform:capitalize;
+                }               
+            }
+        }
+    }
+    .footer-invoice{
+        margin-top: 20px;       
+        width:30%;               
+        margin-inline-start: auto;
+        .table{
+            
+            td{
+                text-transform: capitalize;
+                font-weight: 500;
+                border: 1px solid var(--#{$prefix}border-color);                    
+                padding: 12px 20px;
+                &:nth-child(2){
+                    color: $font-light;
+                }
+            }
+            tr{
+                &:last-child{
+                    td{                                        
+                        font-size: 18px;
+                    }
+                }
+            }
+        }       
+    }
+    .invoice-action{
+        display: flex;
+        justify-content: center;
+        margin-top:20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--#{$prefix}border-color);
+        .btn{
+            text-transform: capitalize;
+        }
+    }
+}
+
+
+@media print {   
+    .hidden-print {
+        display: none;
+    }
+    .invoice {
+        font-size: 11px !important;
+        overflow: hidden !important;
+        footer {
+            position: absolute;
+            bottom: 10px;
+            page-break-after: always;
+        }
+        >div {
+            &:last-child {
+                page-break-before: always;
+            }
+        }
+    }
+    
+}

@@ -1,0 +1,388 @@
+/****************************
+26 HOSPITAL DASHBOARD START
+*****************************/
+.common-dash{
+    .table {
+        > :not(:last-child) {
+            > :last-child > *{
+                border-color: var(--#{$prefix}border-color);
+            }
+        }
+    }
+    tr{
+        &:last-child{
+            td{
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+        }    
+        th{
+            font-size:16px;           
+            font-weight:500;
+            // color: $codex-font-color;
+        }   
+        th,td{
+            white-space: nowrap;
+            &:first-child{
+                padding-inline-start:0;
+            }
+            &:last-child{
+                padding-inline-end: 0 ;
+                text-align: end ;               
+            }
+        }
+        td{         
+            font-size: 14px;       
+            font-weight: 400;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--#{$prefix}border-color);
+            color: $font-light;           
+            .badge{
+                transition: all 0.4s ease;
+            }
+            .media{
+                align-items:center;
+                >img{
+                    margin-inline-end: 15px;
+                }
+            }
+            span{                
+                color: $font-light;
+                text-transform: capitalize;
+            }
+            i{          
+                font-size: 20px;
+                font-weight: 500;
+            }
+        }    
+        .media{
+            .img-wrap{
+                background-color: rgba($theme-primary,0.1);
+                width: 40px;
+                height: 40px;
+                border-radius: 5px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-inline-end: 15px;
+                transition: all 0.4s ease;
+            }
+        }
+        &:hover{
+            .media{
+                .img-wrap{
+                    box-shadow: inset 0 0 0 1.2em rgba($theme-primary,0.2);
+                }
+            }
+            td{ 
+                .badge{
+                    transition: all 0.4s ease;
+                }
+                .badge_primary{
+                    background-color: $theme-primary !important;                                      
+                    color: $white !important;
+                }
+                .badge_secondary{                   
+                    background-color: $theme-secondary !important;
+                    color: $white !important;
+                }
+                .badge_danger{                   
+                    background-color: $theme-danger !important;
+                    color: $white !important;
+                }
+            }
+        }
+    }
+    .tblbody-p0{
+       tbody{
+        tr{
+            &:first-child{
+                td{
+                    padding-top: unset;
+                }
+                }
+            }
+        }
+     }
+     .badge{
+        i{
+            font-size: 16px;
+            margin-inline-start:5px;
+        }
+     }
+    .copycode-grid{
+        padding:0px;
+        max-height: 0;        
+        pre{
+            margin: 0;
+        }  
+        &.active{
+            max-height: 100%;            
+            transition: all 0.5s ease-in;
+        }
+    }   
+}
+
+/*Hospital welcome*/
+.hos-welcome{
+    background-image: url("/src/assets/images/dashboard/hoswelcome-bg.jpg") ;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    h3{
+        color: $white;
+        font-weight: 600;
+        margin-bottom: 15px;
+        text-transform: capitalize;
+    }
+    p{
+        color: rgba($white,0.8);
+        width:45%;
+        font-size:16px;
+    }
+    .btn{
+        margin-top: 30px;
+    }
+}
+
+/* hos info count */
+.hosinfo-count{
+    .icon-wrap{
+        width: 60px;
+        height: 60px;
+        background-color: $theme-primary;
+        border-radius:50%;       
+        display: flex;
+        align-items: center;
+        justify-content: center;       
+        i{
+            color:$white;
+            font-size:28px;
+        }
+    }
+    .media{
+        align-items: center;
+        justify-content: space-between;
+        .count-detail{
+            text-align: right;
+        }
+        h3{           
+            margin-bottom:5px;
+        }     
+        p{
+            font-size:16px;
+        }  
+    }
+}
+
+/*doctor team*/
+.hosdoct-grid{
+    padding:25px;
+    border: 1px solid var(--#{$prefix}border-color);
+    border-radius: 10px;
+    text-align: center;
+    margin-left: 8px;
+    margin-right: 8px;
+    .img-wrap{
+        width: 100px;
+        height: 100px;
+        border-radius: 10px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 10px;
+        overflow: hidden;
+        img{
+            width: 100%;
+            height: 100%;
+        }
+    }
+    h5{
+        margin-bottom:10px;
+    }
+    span{
+        color: $font-light;
+    }
+    p{
+        margin-top: 10px;
+    }
+    .codex-soclist{
+        margin-top: 15px;
+    }
+}
+.toprated-doctor{
+    .card-body{
+        .ratedoctor-slide{
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+    }
+    .slick-dots {
+        li {
+            width:20px;
+            height:8px;
+            border-radius:10px;
+            background-color: rgba($theme-primary,0.1);
+            &.slick-active{
+                background-color: $theme-primary;
+            }
+            button{
+                width:100%;
+                height:100%;
+                padding:0;
+                &::before{
+                    display: none;                                  
+                }
+            }
+        }
+    }
+}
+
+.patientvisits-tbl{
+    table{       
+        th,td{
+            padding:15px 15px !important;
+            text-transform: capitalize;
+        }
+    }
+}
+
+/* visitor ratetbl*/
+.visitor-ratetbl{
+    .card-body{
+        padding-top:0;       
+    }
+}
+
+/* recent-ordertbl */
+.recentpatient-card{
+    tr{
+        td{
+            padding-top: 16px;
+            padding-bottom: 16px;           
+        }
+    }
+}
+
+/*dash live chat*/
+.dash-chat{
+    .dash-chatbox{
+    .chating-list{
+            background-color: rgba($theme-primary,0.04);
+            padding: 15px;
+            border-radius: 5px;
+            height: 298px;
+            overflow: auto;
+            li{
+                .user-msgbox,.admin-msgbox{
+                    max-width: 70%;
+                    width:fit-content;        
+                    .media{
+                        img{
+                            width: 28px;
+                            height: 28px;
+                        }
+                        p{
+                            background-color: var(--#{$prefix}bodybg-color);                           
+                            padding: 5px 10px;                           
+                        }
+                    }
+                }
+                .user-msgbox{
+                    .media{
+                        img{
+                            margin-inline-end: 10px;
+                        }
+                    }
+                }
+                .admin-msgbox{
+                    margin-inline-start: auto;
+                    .media{
+                        img{
+                            margin-inline-start: 10px;
+                        }
+                    }
+                }
+                +li{
+                    margin-top: 10px;
+                }
+            }
+        }
+        .userchat-typebox{
+            padding-top:25px;
+            align-items: center;
+            .btn{
+                padding: 10px 12px;
+            }
+        }
+    }
+}
+
+/* visitor-performance */
+.visitor-performance{
+    .apexcharts-legend{        
+        top: 0 !important;
+        left: unset !important;
+        right: 20px !important;
+        width: fit-content;
+        padding: 0 ;       
+        span{           
+            font-weight: 600 !important;
+            color: $font-light !important;
+        }
+    }
+    .card-body{
+        // padding:38px 10px 0 10px !important;
+        // overflow: hidden;
+        #visitor-chart{
+            margin-top: -15px;
+        }
+        h4{
+            padding-inline-start: 25px;
+            color: $theme-primary;
+        }
+    }
+}
+
+/*Notification*/
+.docnoti-list{
+    position: relative;
+    height: 289px;
+    overflow-y: auto;
+    padding-left: 7px;
+    &::before{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 7px;
+        width: 3px;
+        height: 100%;       
+        background-color: var(--bs-border-color);
+        border-radius:15px;
+    }
+    .media-body{
+        margin-left:10px;
+        h6{
+            font-weight:600;
+        }
+    }
+    li{       
+        padding-left: 20px;
+        position: relative;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        &::before{
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: -6px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: $white;
+            border: 2px solid $theme-primary;
+        }  
+        +li{
+            margin-top: 2px;
+        }     
+    }
+}

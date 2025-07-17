@@ -1,0 +1,196 @@
+
+/*******************
+02 BASE CSS START
+********************/
+/* padding class */
+@for $paddingcls from 1 through 100 {
+    .p-#{$paddingcls} {
+        padding: $paddingcls + px !important;
+    }
+}
+
+/* padding top class */
+@for $paddingtop from 1 through 100 {
+    .pt-#{$paddingtop} {
+        padding-top: $paddingtop + px !important;
+    }
+}
+
+/* padding bottom class */
+@for $paddingbottom from 1 through 100 {
+    .pb-#{$paddingbottom} {
+        padding-bottom: $paddingbottom + px !important;
+    }
+}
+
+/* padding left class */
+@for $paddingleft from 1 through 100 {
+    .pl-#{$paddingleft} {
+        padding-inline-start: $paddingleft + px !important;
+    }
+}
+
+/* padding right class */
+@for $paddingright from 1 through 100 {
+    .pr-#{$paddingright} {
+        padding-inline-end: $paddingright + px !important;
+    }
+}
+
+/* padding top-bottom class */
+@for $paddingtopbottom from 1 through 100 {
+    .py-#{$paddingtopbottom} {
+        padding-top: $paddingtopbottom + px !important;
+        padding-bottom: $paddingtopbottom + px !important;
+    }
+}
+
+/* margin class */
+.ml-auto{
+    margin-inline-start: auto;
+}
+.mr-auto{
+    margin-inline-end: auto;
+}
+@for $margincls from 1 through 100 {
+    .m-#{$margincls} {
+        margin: $margincls + px !important;
+    }
+}
+
+/* margin top class */
+@for $margintop from 1 through 100 {
+    .mt-#{$margintop} {
+        margin-top: $margintop + px !important;
+    }
+}
+
+
+/* margin bottom class */
+@for $marginbottom from 1 through 100 {
+    .mb-#{$marginbottom} {
+        margin-bottom: $marginbottom + px !important;
+    }
+}
+
+
+/* margin left class */
+@for $marginleft from 1 through 100 {
+    .ml-#{$marginleft} {
+        margin-inline-start: $marginleft + px !important;
+    }
+}
+
+
+/* margin right class */
+@for $marginright from 1 through 100 {
+    .mr-#{$marginright} {
+        margin-inline-end: $marginright + px !important;
+    }
+}
+
+
+/* margin vertical class */
+@for $margincls from 1 through 100 {
+    .my-#{$margincls} {
+        margin-top: $margincls + px !important;
+        margin-bottom: $margincls + px !important;
+    }
+}
+
+
+/* margin horizontal class */
+@for $margincls from 1 through 100 {
+    .mx-#{$margincls} {
+        margin-inline-start: $margincls + px !important;
+        margin-inline-end: $margincls + px !important;
+    }
+}
+
+
+/* font size */
+@for $font_size from 1 through 100 {
+  .fs-#{$font_size} {
+    font-size: $font_size + px !important;
+  }
+}
+
+/* font weight */
+  $fwweights: 100, 200, 300,400,500,600,700,800,900;
+  @each $fwweight in $fwweights {
+    .fw-#{$fwweight} {
+      font-weight: $fwweight !important;      
+    }
+  }
+
+
+/* widht class*/
+@for $widthcls from 1 through 100 {
+    .w-#{$widthcls} {
+        width: $widthcls + px !important;
+        height: auto ;
+    }
+}
+
+/*  bg color */
+$bg-colors:(
+    "primary":          $theme-primary,
+    "secondary":        $theme-secondary,
+    "success":          $theme-success,
+    "info":             $theme-info,
+    "warning":          $theme-warning,
+    "danger":           $theme-danger,
+    "light":            $font-light,
+    "black":            $black,
+    "white":            $white,
+    "fontlight":        $font-light,
+    "themebodycolor":   $bg-light,
+    "themefontcolor":   $codex-font-color,
+    "themeborder":      $theme-border,
+    "fb":               $fb-color,
+    "twt":              $twt-color,
+    "insta":            $insta-color,
+    "whp":              $whp-color,
+    "darkbody":         $dark-body,
+    "darkcard":         $dark-card,
+    "extradarkcard":    $extradark-card,
+    "darkfont":         $dark-font,
+    "darksmallfont":    $dark-small-font,
+    "darkborder":       $dark-border,
+);
+
+@each  $bg-colorname , $bg-color  in $bg-colors {
+    .bg-#{$bg-colorname}{
+        background-color: $bg-color !important;      
+    }
+}
+
+/* fill color */
+@each  $bg-colorname , $bg-color  in $bg-colors {
+    .fill-#{$bg-colorname}{
+        fill: $bg-color !important;      
+    }
+}
+
+
+/*  fonts color */
+$txt-colors:(
+    "primary":    $theme-primary,
+    "secondary":  $theme-secondary,
+    "success":    $theme-success,
+    "info":       $theme-info,
+    "warning":    $theme-warning,
+    "danger":     $theme-danger,
+    "light":      $font-light,
+    "fb":         $fb-color,
+    "twt":        $twt-color,
+    "insta":      $insta-color,
+    "whp":        $whp-color,
+    "default":    $codex-font-color,
+);
+
+@each  $txt-colorname , $color  in $txt-colors {
+    .text-#{$txt-colorname}{
+        color: $color !important;      
+    }
+}

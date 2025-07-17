@@ -1,0 +1,65 @@
+/**************
+ 10 TAB CSS START
+***************/
+/* tab color */
+$tab-colors:(
+    "primary":    $theme-primary,
+    "secondary":  $theme-secondary,
+    "success":    $theme-success,
+    "info":       $theme-info,
+    "warning":    $theme-warning,
+    "danger":     $theme-danger,
+    "light":      $theme-light,
+    "dark":       $theme-dark,
+);
+
+@each  $tab-colorname , $tab-color  in $tab-colors {   
+           
+    .tab-#{$tab-colorname}{       
+        .nav-item{
+            a{
+                border: none;
+                color: currentColor;
+                border-radius: 8px;
+                margin-right: 10px;
+                &.active{
+                    background-color: rgba($tab-color,1) !important;        
+                    color: $white;                 
+                }
+            }
+        }
+    }   
+}
+
+@each  $tab-colorname , $tab-color  in $tab-colors {   
+    .tab-#{$tab-colorname}-border{       
+        .nav-item{
+            a{
+                border: 1px solid rgba($tab-color,1) !important;
+                color: rgba($tab-color,1) ;
+                border-radius: 8px;
+                margin-right: 10px;
+                &.active{
+                    background-color: rgba($tab-color,1) !important;
+                    color: $white;                 
+                }
+            }
+            +li{
+                margin-left: 10px;
+            }
+        }
+    }   
+}
+
+// .cdx-tab{
+//     width:fit-content;    
+//     display: flex;
+//     align-items: center;
+//     border-bottom: none;
+//     li{
+//         a{
+//             font-weight:500;
+//             padding:10px 25px;
+//         }
+//     }
+// }
