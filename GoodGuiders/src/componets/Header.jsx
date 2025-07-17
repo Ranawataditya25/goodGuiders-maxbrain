@@ -271,7 +271,7 @@ export default function Header() {
     
     // ✅ Logout function
   const handleLogout = () => {
-  localStorage.clear(); // Clear all data
+//   localStorage.clear(); 
   navigate("/login");   // Navigate to login screen
 };
     return (
