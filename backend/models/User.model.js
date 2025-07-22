@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
     },
     mobileNo: {
-      type: Number,
+      type: String,
       unique: true,
       required: true,
     },
@@ -40,5 +40,6 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
 
 export default mongoose.model("User", userSchema);

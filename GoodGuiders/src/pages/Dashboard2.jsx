@@ -12,10 +12,27 @@ import "@fancyapps/ui/dist/fancybox/fancybox.css";
 
 export default function Dashboard2() {
   const [doctor, setDoctor] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [referralInput, setReferralInput] = useState("");
 
   useEffect(() => {
     const doctorData = JSON.parse(localStorage.getItem("loggedInDoctor"));
-    setDoctor(doctorData);
+    if (!doctorData?.Email) {
+      alert("No mentor logged in");
+      return;
+    }
+
+    fetch(`http://localhost:5000/api/auth/dashboard?email=${doctorData.Email}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setDoctor({ ...doctorData, ...data });
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Failed to load profile");
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -24,6 +41,42 @@ export default function Dashboard2() {
       Fancybox.destroy();
     };
   }, []);
+
+  const handleUseReferral = async () => {
+    if (!referralInput.trim()) {
+      alert("Please enter a referral code.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/use-referral", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: doctor.Email,
+          referralCode: referralInput.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(`✅ ${data.msg}`);
+        if (data.updatedCredits) {
+          setDoctor((prev) => ({
+            ...prev,
+            credits: data.updatedCredits,
+          }));
+        }
+        setReferralInput("");
+      } else {
+        alert(`❌ ${data.msg}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error. Please try again.");
+    }
+  };
 
   return (
     <div className="themebody-wrap">
@@ -34,6 +87,86 @@ export default function Dashboard2() {
       <div className="theme-body">
         <Container fluid className="cdxuser-profile">
           <Row>
+            <Col xl={12} className="mb-4">
+              <Card>
+                <Card.Header>
+                  <h4>Your Profile & Referral</h4>
+                </Card.Header>
+                <Card.Body>
+                  {loading ? (
+                    <div className="text-center">
+                      <Spinner animation="border" />
+                    </div>
+                  ) : doctor ? (
+                    <Row>
+                      <Col md={6} className="mb-3">
+                        <p>
+                          <strong>Name:</strong> {doctor.Name}
+                        </p>
+                        <p>
+                          <strong>Email:</strong> {doctor.Email}
+                        </p>
+                        <p>
+                          <strong>Mobile No:</strong> {doctor.MobileNo}
+                        </p>
+                        <p>
+                          <strong>Specialized In:</strong>{" "}
+                          {doctor.specializedIn}
+                        </p>
+                        <p>
+                          <strong>Credits:</strong> {doctor.credits}
+                        </p>
+                      </Col>
+                      <Col md={6}>
+                        <div className="mb-3">
+                          <h5>Refer & Earn</h5>
+                          <p>Your Referral Code:</p>
+                          <div className="d-flex align-items-center gap-2">
+                            <span className="badge bg-primary fs-15">
+                              {doctor.yourReferralCode || doctor.referralCode}
+                            </span>
+                            <button
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  doctor.yourReferralCode || doctor.referralCode
+                                );
+                                alert("Referral code copied!");
+                              }}
+                            >
+                              Copy Code
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
+                          <h5>Avail Benefits</h5>
+                          <p>Enter your friend’s referral code:</p>
+                          <div className="d-flex gap-2">
+                            <input
+                              type="text"
+                              className="form-control"
+                              placeholder="Enter Referral Code"
+                              value={referralInput}
+                              onChange={(e) => setReferralInput(e.target.value)}
+                            />
+                            <button
+                              className="btn btn-success"
+                              onClick={handleUseReferral}
+                            >
+                              Apply
+                            </button>
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+                  ) : (
+                    <p className="text-danger">Mentor data not found</p>
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+
             <Col xxl={4} md={6}>
               <Card className="doctor-probox">
                 <div className="img-wrap"></div>
@@ -48,9 +181,7 @@ export default function Dashboard2() {
                     </div>
                     <h4>{doctor?.Name}</h4>
                     <span>{doctor?.specializedIn}</span>
-                    <p>
-                      {doctor?.about}
-                    </p>
+                    <p>{doctor?.about}</p>
                     <div className="group-btn">
                       <Link
                         className="btn btn-primary"
@@ -205,7 +336,7 @@ export default function Dashboard2() {
                       <h6>
                         {" "}
                         <Link href="mailto:test@example.com">
-                         {doctor?.Email}
+                          {doctor?.Email}
                         </Link>
                       </h6>
                     </li>

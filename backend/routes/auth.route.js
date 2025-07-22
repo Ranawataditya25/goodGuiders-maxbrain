@@ -57,7 +57,7 @@ router.post("/register", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: "Server error" });
+    res.status(500).json({ msg: "Server errrrror" });
   }
 });
 
@@ -120,6 +120,48 @@ router.get("/dashboard", async (req, res) => {
       res.status(500).json({ msg: "Server error" });
     }
   });
+
+  // 👉 POST /api/auth/use-referral
+router.post("/use-referral", async (req, res) => {
+  const { email, referralCode } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    if (user.referredBy) {
+      return res.status(400).json({ msg: "You have already used a referral code" });
+    }
+
+    if (user.referralCode === referralCode) {
+      return res.status(400).json({ msg: "You cannot use your own referral code" });
+    }
+
+    const referrer = await User.findOne({ referralCode });
+    if (!referrer) {
+      return res.status(400).json({ msg: "Invalid referral code" });
+    }
+
+    // update both
+    referrer.credits += 60;
+    user.credits += 50;
+    user.referredBy = referralCode;
+
+    await referrer.save();
+    await user.save();
+
+    res.json({
+      msg: "Referral applied successfully",
+      updatedCredits: user.credits,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
   
 
 export default router;

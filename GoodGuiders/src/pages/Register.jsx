@@ -6,7 +6,7 @@
 // import google from '/src/assets/images/auth/2.png';
 
 // export default function Register() {
-//     //  Inuut value start 
+//     //  Inuut value start
 //     const [formData, setFormData] = useState({
 //         Name: '',
 //         Email: '',
@@ -15,7 +15,6 @@
 
 //     });
 
-    
 //     const handleChange = (e) => {
 //         const { name, value, type, checked } = e.target;
 //         setFormData({
@@ -77,14 +76,6 @@
 //                                     </InputGroup>
 //                                 </Form.Group>
 
-
-
-
-
-                              
-
-
-
 //                                 <Form.Group className="">
 //                                     <div className="auth-remember">
 //                                         <Form.Check className="form-check custom-chek">
@@ -125,26 +116,23 @@
 //   )
 // }
 
-
-
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Form, InputGroup, Button, Row, Col, Container } from 'react-bootstrap';
-import logo from '/src/assets/images/logo/icon-logo.png';
-import facebook from '/src/assets/images/auth/1.png';
-import google from '/src/assets/images/auth/2.png';
+import { Form, InputGroup, Button, Row, Col, Container } from "react-bootstrap";
+import logo from "/src/assets/images/logo/icon-logo.png";
+import facebook from "/src/assets/images/auth/1.png";
+import google from "/src/assets/images/auth/2.png";
 import { useNavigate } from "react-router-dom";
-
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    Name: '',
-    Email: '',
-    MobileNo: '',
-    department: '',
-    Password: '',
-    IAgree: false,
+    name: "",
+    email: "",
+    mobileNo: "",
+    password: "",
+    role: "student",
+    referralCode: "",
+    // IAgree: false,
   });
 
   const navigate = useNavigate();
@@ -154,7 +142,7 @@ export default function Register() {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -172,22 +160,36 @@ export default function Register() {
   //   // Submit the form data to your backend or API here
   // };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.IAgree) {
-      alert("Please agree to the Terms & Conditions.");
-      return;
-    }
+    // if (!formData.IAgree) {
+    //   alert("Please agree to the Terms & Conditions.");
+    //   return;
+    // }
   
-    console.log("Form Data:", formData);
-    // Pass data to doctor profile page
-    navigate("/doctor-profile", { state: formData });
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        alert(`✅ Registered successfully! Your referral code: ${data.referralCode}`);
+        navigate("/login");
+      } else {
+        alert(`❌ Error: ${data.msg}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error. Please try again.");
+    }
   };
   
-
-
-
-
 
   return (
     <section className="py-100">
@@ -198,13 +200,20 @@ export default function Register() {
               <div className="auth-header text-center mb-4">
                 <div className="codex-brand mb-3">
                   <Link to="/">
-                    <img className="img-fluid" src={logo} alt="Logo" style={{ width: '150px', height: 'auto' }} />
+                    <img
+                      className="img-fluid"
+                      src={logo}
+                      alt="Logo"
+                      style={{ width: "150px", height: "auto" }}
+                    />
                   </Link>
                 </div>
                 <h3>Create your account</h3>
                 <h6>
-                  Already have an account?{' '}
-                  <Link className="text-primary" to="/login">Login here</Link>
+                  Already have an account?{" "}
+                  <Link className="text-primary" to="/login">
+                    Login here
+                  </Link>
                 </h6>
               </div>
 
@@ -215,9 +224,10 @@ export default function Register() {
                     type="text"
                     placeholder="Enter Your Name"
                     required
-                    name="Name"
-                    value={formData.Name}
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
+                    
                   />
                 </Form.Group>
 
@@ -227,8 +237,8 @@ export default function Register() {
                     type="email"
                     placeholder="Enter Your Email"
                     required
-                    name="Email"
-                    value={formData.Email}
+                    name="email"
+                    value={formData.email}
                     onChange={handleChange}
                   />
                 </Form.Group>
@@ -239,29 +249,54 @@ export default function Register() {
                     type="text"
                     placeholder="Enter Your Phone Number"
                     required
-                    name="MobileNo"
-                    value={formData.MobileNo}
+                    name="mobileNo"
+                    value={formData.mobileNo}
                     onChange={handleChange}
                   />
                 </Form.Group>
 
-                  <Form.Group className="mb-3">
+                <Form.Group className="mb-3">
                   <Form.Label htmlFor="password">Password</Form.Label>
                   <InputGroup>
                     <Form.Control
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       placeholder="Enter Your Password"
-                      name="Password"
-                      value={formData.Password}
+                      name="password"
+                      value={formData.password}
                       onChange={handleChange}
                       required
                     />
                     <InputGroup.Text
-                      className={`toggle-show d-flex align-items-center fa ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}
+                      className={`toggle-show d-flex align-items-center fa ${
+                        showPassword ? "fa-eye-slash" : "fa-eye"
+                      }`}
                       onClick={togglePasswordVisibility}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "pointer" }}
                     />
                   </InputGroup>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Select Role</Form.Label>
+                  <Form.Select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                  >
+                    <option value="student">Student</option>
+                    <option value="mentor">Mentor</option>
+                  </Form.Select>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Referral Code (optional)</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter referral code if any"
+                    name="referredBy"
+                    value={formData.referredBy}
+                    onChange={handleChange}
+                  />
                 </Form.Group>
 
                 {/* <Form.Group className="mb-3">
@@ -278,8 +313,6 @@ export default function Register() {
                   </Form.Select>
                 </Form.Group> */}
 
-              
-
                 <Form.Group className="mb-3">
                   <Form.Check
                     type="checkbox"
@@ -289,30 +322,33 @@ export default function Register() {
                     onChange={handleChange}
                   />
                 </Form.Group>
- <Form.Group className="mb-20">
-                                    <Button className="btn btn-primary" type="submit">
-                                        <i className="fa fa-paper-plane"></i> Register
-                                    </Button>
-                                </Form.Group>
-             
+                <Form.Group className="mb-20">
+                  <Button className="btn btn-primary" type="submit">
+                    <i className="fa fa-paper-plane"></i> Register
+                  </Button>
+                </Form.Group>
 
-                  <div className="auth-footer">
-                                 <h6 className="auth-with">Or login in with </h6>
-                                 <ul className="login-list">
-                                     <li>
-                                         <Link className="bg-fb" href="#!">
-                                             <img className="img-fluid" src={facebook} alt="facebook" />
-                                             facebook
-                                         </Link>
-                                     </li>
-                                     <li>
-                                         <Link className="bg-google" href="#!">
-                                             <img className="img-fluid" src={google} alt="google" />
-                                             google
-                                         </Link>
-                                     </li>
-                                 </ul>
-                             </div>
+                <div className="auth-footer">
+                  <h6 className="auth-with">Or login in with </h6>
+                  <ul className="login-list">
+                    <li>
+                      <Link className="bg-fb" href="#!">
+                        <img
+                          className="img-fluid"
+                          src={facebook}
+                          alt="facebook"
+                        />
+                        facebook
+                      </Link>
+                    </li>
+                    <li>
+                      <Link className="bg-google" href="#!">
+                        <img className="img-fluid" src={google} alt="google" />
+                        google
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
               </Form>
             </div>
           </Col>

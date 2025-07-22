@@ -649,6 +649,200 @@
 //   );
 // }
 
+// import { useState } from "react";
+// import { useNavigate, Link } from "react-router-dom";
+// import { Button, Form, InputGroup } from "react-bootstrap";
+// import logo from "/src/assets/images/logo/icon-logo.png";
+// import facebook from "/src/assets/images/auth/1.png";
+// import google from "/src/assets/images/auth/2.png";
+
+// export default function Login() {
+//   const navigate = useNavigate();
+
+//   const [formData, setFormData] = useState({
+//     email: "",
+//     password: "",
+//     Remember: false,
+//   });
+
+//   const [showPassword, setShowPassword] = useState(false);
+//   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
+//   const handleChange = (e) => {
+//     const { name, value, type, checked } = e.target;
+//     setFormData({
+//       ...formData,
+//       [name]: type === "checkbox" ? checked : value,
+//     });
+//   };
+
+//   // const handleSubmit = (e) => {
+//   //   e.preventDefault();
+//   //   const { email } = formData;
+
+//   //   console.log("Logging in with email:", email); // Debugging log
+//   //   localStorage.setItem("loggedInEmail", email);
+
+//   //   if (email === "admin@gmail.com") {
+//   //     navigate("/");
+//   //   } else if (email === "mentor@gmail.com") {
+//   //     navigate("/doctor-dashboard");
+//   //   } else if (email === "student@gmail.com") {
+//   //     navigate("/patient-dashboard");
+//   //   } else {
+//   //     alert("Invalid email. Please try again.");
+//   //   }
+//   // };
+
+//   const handleSubmit = (e) => {
+//     e.preventDefault();
+//     const { email, password } = formData;
+
+//     // Try to get registered doctor info
+//     const storedDoctor = JSON.parse(localStorage.getItem("doctorProfile"));
+
+//     if (!storedDoctor) {
+//       alert("No doctor account found. Please register first.");
+//       return;
+//     }
+
+//     if (email === storedDoctor.Email && password === storedDoctor.Password) {
+//       localStorage.setItem("loggedInDoctor", JSON.stringify(storedDoctor));
+//       navigate("/doctor-dashboard");
+//     } else if (email === "admin@gmail.com") {
+//       navigate("/");
+//     } else if (email === "student@gmail.com") {
+//       navigate("/patient-dashboard");
+//     } else if (email === "mentor@gmail.com") {
+//       navigate("/doctor-dashboard");
+//     } else {
+//       alert("Invalid email or password. Please try again.");
+//     }
+//   };
+
+//   return (
+//     <div className="auth-main" style={{ padding: 30 }}>
+//       <div className="codex-authbox">
+//         {/* Header */}
+//         <div className="auth-header text-center">
+//           <div className="codex-brand mb-3">
+//             <Link to={"/"}>
+//               <img
+//                 className="img-fluid"
+//                 src={logo}
+//                 alt="logo"
+//                 style={{ width: "150px" }}
+//               />
+//             </Link>
+//           </div>
+//           <h3>Welcome to Good Guiders</h3>
+//           <h6>
+//             Don't have an account?{" "}
+//             <Link className="text-primary" to={"/register"}>
+//               Create an account
+//             </Link>
+//           </h6>
+//         </div>
+
+//         {/* Login Form */}
+//         <Form onSubmit={handleSubmit}>
+//           <Form.Group className="mb-3">
+//             <Form.Label>Email</Form.Label>
+//             <Form.Control
+//               type="email"
+//               placeholder="Enter Your Email"
+//               name="email"
+//               value={formData.email}
+//               onChange={handleChange}
+//               required
+//             />
+//           </Form.Group>
+
+//           <Form.Group className="mb-3">
+//             <Form.Label>Password</Form.Label>
+//             <InputGroup>
+//               <Form.Control
+//                 type={showPassword ? "text" : "password"}
+//                 placeholder="Enter Your Password"
+//                 name="password"
+//                 value={formData.password}
+//                 onChange={handleChange}
+//                 required
+//               />
+//               <InputGroup.Text
+//                 onClick={togglePasswordVisibility}
+//                 style={{ cursor: "pointer" }}
+//               >
+//                 <i
+//                   className={`fa ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
+//                 />
+//               </InputGroup.Text>
+//             </InputGroup>
+//           </Form.Group>
+
+//           <Form.Group className="mb-3 d-flex justify-content-between align-items-center">
+//             <Form.Check
+//               type="checkbox"
+//               label="Remember me"
+//               name="Remember"
+//               checked={formData.Remember}
+//               onChange={handleChange}
+//             />
+//             <Link className="text-primary" to={"/forgot-password"}>
+//               Forgot your password?
+//             </Link>
+//           </Form.Group>
+
+//           {/* <Button variant="btn btn-primary" type="submit" className="w-100">
+//             <i className="fa fa-sign-in" />
+//             Login
+//           </Button> */}
+
+//           <Form.Group className="mb-20">
+//             <Button className="btn btn-primary" type="submit">
+//               <i className="fa fa-sign-in"></i> Login
+//             </Button>
+//           </Form.Group>
+//         </Form>
+
+//         {/* Footer */}
+//         {/* <div className="auth-footer mt-4 text-center">
+//           <h6 className="auth-with">Or login with</h6>
+//           <div className="d-flex gap-3 justify-content-center mt-2">
+//             <Link className="bg-primary px-3 py-2 text-white rounded">
+//               <img src={facebook} alt="facebook" width={20} className="me-2" />
+//               Facebook
+//             </Link>
+//             <Link className="bg-google">
+//               <img src={google} alt="google" width={20} className="me-2" />
+//               Google
+//             </Link>
+//           </div>
+//         </div> */}
+
+//         <div className="auth-footer">
+//           <h6 className="auth-with">Or login in with </h6>
+//           <ul className="login-list">
+//             <li>
+//               <Link className="bg-fb" href="#!">
+//                 <img className="img-fluid" src={facebook} alt="facebook" />
+//                 facebook
+//               </Link>
+//             </li>
+//             <li>
+//               <Link className="bg-google" href="#!">
+//                 <img className="img-fluid" src={google} alt="google" />
+//                 google
+//               </Link>
+//             </li>
+//           </ul>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button, Form, InputGroup } from "react-bootstrap";
@@ -676,47 +870,48 @@ export default function Login() {
     });
   };
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   const { email } = formData;
-
-  //   console.log("Logging in with email:", email); // Debugging log
-  //   localStorage.setItem("loggedInEmail", email);
-
-  //   if (email === "admin@gmail.com") {
-  //     navigate("/");
-  //   } else if (email === "mentor@gmail.com") {
-  //     navigate("/doctor-dashboard");
-  //   } else if (email === "student@gmail.com") {
-  //     navigate("/patient-dashboard");
-  //   } else {
-  //     alert("Invalid email. Please try again.");
-  //   }
-  // };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password } = formData;
 
-    // Try to get registered doctor info
-    const storedDoctor = JSON.parse(localStorage.getItem("doctorProfile"));
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (!storedDoctor) {
-      alert("No doctor account found. Please register first.");
-      return;
-    }
+      const data = await res.json();
+      
 
-    if (email === storedDoctor.Email && password === storedDoctor.Password) {
-      localStorage.setItem("loggedInDoctor", JSON.stringify(storedDoctor));
-      navigate("/doctor-dashboard");
-    } else if (email === "admin@gmail.com") {
-      navigate("/");
-    } else if (email === "student@gmail.com") {
-      navigate("/patient-dashboard");
-    } else if (email === "mentor@gmail.com") {
-      navigate("/doctor-dashboard");
-    } else {
-      alert("Invalid email or password. Please try again.");
+      if (res.ok) {
+        alert("✅ Login successful!");
+
+
+        // Save user data locally if needed
+        localStorage.setItem("loggedInUser", JSON.stringify(data));
+
+        // const role = data.user?.role?.toLowerCase();
+
+        // Navigate based on role
+        if (data.user.role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (data.user.role === "student") {
+          navigate("/patient-dashboard");
+        } else if (data.user.role === "mentor") {
+          navigate("/doctor-dashboard");
+        } else {
+          navigate("/");
+          console.log(data)
+        }
+      } else {
+        alert(`❌ ${data.msg}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error. Please try again.");
     }
   };
 
@@ -793,11 +988,6 @@ export default function Login() {
             </Link>
           </Form.Group>
 
-          {/* <Button variant="btn btn-primary" type="submit" className="w-100">
-            <i className="fa fa-sign-in" />
-            Login
-          </Button> */}
-
           <Form.Group className="mb-20">
             <Button className="btn btn-primary" type="submit">
               <i className="fa fa-sign-in"></i> Login
@@ -806,22 +996,8 @@ export default function Login() {
         </Form>
 
         {/* Footer */}
-        {/* <div className="auth-footer mt-4 text-center">
-          <h6 className="auth-with">Or login with</h6>
-          <div className="d-flex gap-3 justify-content-center mt-2">
-            <Link className="bg-primary px-3 py-2 text-white rounded">
-              <img src={facebook} alt="facebook" width={20} className="me-2" />
-              Facebook
-            </Link>
-            <Link className="bg-google">
-              <img src={google} alt="google" width={20} className="me-2" />
-              Google
-            </Link>
-          </div>
-        </div> */}
-
         <div className="auth-footer">
-          <h6 className="auth-with">Or login in with </h6>
+          <h6 className="auth-with">Or login with</h6>
           <ul className="login-list">
             <li>
               <Link className="bg-fb" href="#!">
@@ -841,3 +1017,5 @@ export default function Login() {
     </div>
   );
 }
+
+
