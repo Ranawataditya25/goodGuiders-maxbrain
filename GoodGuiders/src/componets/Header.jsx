@@ -239,7 +239,7 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import FeatherIcon from 'feather-icons-react';
 import SimpleBar from 'simplebar-react';
 import { Link,useNavigate } from 'react-router-dom';
@@ -271,7 +271,8 @@ export default function Header() {
     
     // ✅ Logout function
   const handleLogout = () => {
-//   localStorage.clear(); 
+//   localStorage.clear(); ``
+  localStorage.removeItem("loggedInUser");
   navigate("/login");   // Navigate to login screen
 };
     return (

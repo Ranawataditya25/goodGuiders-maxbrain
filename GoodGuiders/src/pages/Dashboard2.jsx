@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
-import { Row, Col, Card, Table, Container } from "react-bootstrap";
+import { Row, Col, Card, Table, Container, Spinner } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import Chart from "react-apexcharts";
 import { doctskill, Gallerydata } from "./js/Dashboard2";
@@ -16,13 +16,13 @@ export default function Dashboard2() {
   const [referralInput, setReferralInput] = useState("");
 
   useEffect(() => {
-    const doctorData = JSON.parse(localStorage.getItem("loggedInDoctor"));
-    if (!doctorData?.Email) {
+    const doctorData = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!doctorData?.email) {
       alert("No mentor logged in");
       return;
     }
 
-    fetch(`http://localhost:5000/api/auth/dashboard?email=${doctorData.Email}`)
+    fetch(`http://localhost:5000/api/auth/dashboard?email=${doctorData.email}`)
       .then((res) => res.json())
       .then((data) => {
         setDoctor({ ...doctorData, ...data });
@@ -53,7 +53,7 @@ export default function Dashboard2() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: doctor.Email,
+          email: doctor.email,
           referralCode: referralInput.trim(),
         }),
       });
@@ -101,17 +101,17 @@ export default function Dashboard2() {
                     <Row>
                       <Col md={6} className="mb-3">
                         <p>
-                          <strong>Name:</strong> {doctor.Name}
+                          <strong>Name:</strong> {doctor.name}
                         </p>
                         <p>
-                          <strong>Email:</strong> {doctor.Email}
+                          <strong>Email:</strong> {doctor.email}
                         </p>
                         <p>
-                          <strong>Mobile No:</strong> {doctor.MobileNo}
+                          <strong>Mobile No:</strong> {doctor.mobileNo}
                         </p>
                         <p>
-                          <strong>Specialized In:</strong>{" "}
-                          {doctor.specializedIn}
+                          <strong>Role:</strong>{" "}
+                          {doctor.role}
                         </p>
                         <p>
                           <strong>Credits:</strong> {doctor.credits}
@@ -179,7 +179,7 @@ export default function Dashboard2() {
                         alt=""
                       />
                     </div>
-                    <h4>{doctor?.Name}</h4>
+                    <h4>{doctor?.name}</h4>
                     <span>{doctor?.specializedIn}</span>
                     <p>{doctor?.about}</p>
                     <div className="group-btn">
@@ -312,7 +312,7 @@ export default function Dashboard2() {
                       <div className="iocn-item">
                         <FeatherIcon icon="user" />
                       </div>
-                      <h6>{doctor?.Name}</h6>
+                      <h6>{doctor?.name}</h6>
                     </li>
                     <li>
                       <div className="iocn-item">
@@ -326,7 +326,7 @@ export default function Dashboard2() {
                       </div>
                       <h6>
                         {" "}
-                        <Link href="tel:+9588489584">{doctor?.MobileNo}</Link>
+                        <Link href="tel:+9588489584">{doctor?.mobileNo}</Link>
                       </h6>
                     </li>
                     <li>
@@ -336,7 +336,7 @@ export default function Dashboard2() {
                       <h6>
                         {" "}
                         <Link href="mailto:test@example.com">
-                          {doctor?.Email}
+                          {doctor?.email}
                         </Link>
                       </h6>
                     </li>

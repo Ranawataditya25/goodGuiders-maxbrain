@@ -402,15 +402,16 @@ export default function Dashboard3() {
 
   useEffect(() => {
     const loggedIn = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!loggedIn?.user?.email) {
+    if (!loggedIn?.email) {
       alert("No user logged in");
       return;
     }
 
-    fetch(`http://localhost:5000/api/auth/dashboard?email=${loggedIn.user.email}`)
+    
+    fetch(`http://localhost:5000/api/auth/dashboard?email=${loggedIn.email}`)
       .then((res) => res.json())
       .then((data) => {
-        setUser({ ...loggedIn.user, ...data });
+        setUser({ ...loggedIn, ...data });
         setLoading(false);
       })
       .catch((err) => {
@@ -546,12 +547,12 @@ export default function Dashboard3() {
                     </Card.Header>
                     <Card.Body>
                       <ul className="contact-list">
-                        <li><span>Name:</span> Daniel Smith</li>
+                        <li><span>Name:</span> {user.name}</li>
                         <li><span>Date of Birth:</span> 18-09-2015</li>
                         <li><span>Gender:</span> Male</li>
                         <li><span>Address:</span> Live In UK</li>
-                        <li><span>Phone:</span> +1 80 606590</li>
-                        <li><span>Email:</span> daniel@example.com</li>
+                        <li><span>Phone:</span> {user.mobileNo}</li>
+                        <li><span>Email:</span> {user.email}</li>
                       </ul>
                     </Card.Body>
                   </Card>

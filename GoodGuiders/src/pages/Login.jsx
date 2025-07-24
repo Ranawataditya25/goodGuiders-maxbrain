@@ -891,7 +891,7 @@ export default function Login() {
 
 
         // Save user data locally if needed
-        localStorage.setItem("loggedInUser", JSON.stringify(data));
+        localStorage.setItem("loggedInUser", JSON.stringify(data.user));
 
         // const role = data.user?.role?.toLowerCase();
 
@@ -932,7 +932,7 @@ export default function Login() {
           </div>
           <h3>Welcome to Good Guiders</h3>
           <h6>
-            Don't have an account?{" "}
+            {"Don't have an account?"}
             <Link className="text-primary" to={"/register"}>
               Create an account
             </Link>
