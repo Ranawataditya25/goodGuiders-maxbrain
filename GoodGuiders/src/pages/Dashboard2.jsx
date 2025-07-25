@@ -101,20 +101,20 @@ export default function Dashboard2() {
                     <Row>
                       <Col md={6} className="mb-3">
                         <p>
-                          <strong>Name:</strong> {doctor.name}
+                          <strong>Name:</strong> {doctor?.name}
                         </p>
                         <p>
-                          <strong>Email:</strong> {doctor.email}
+                          <strong>Email:</strong> {doctor?.email}
                         </p>
                         <p>
-                          <strong>Mobile No:</strong> {doctor.mobileNo}
+                          <strong>Mobile No:</strong> {doctor?.mobileNo}
                         </p>
                         <p>
                           <strong>Role:</strong>{" "}
-                          {doctor.role}
+                          {doctor?.role}
                         </p>
                         <p>
-                          <strong>Credits:</strong> {doctor.credits}
+                          <strong>Credits:</strong> {doctor?.credits}
                         </p>
                       </Col>
                       <Col md={6}>

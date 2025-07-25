@@ -432,7 +432,7 @@ export default function Dashboard3() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user.email,
+          email: user?.email,
           referralCode: referralInput.trim(),
         }),
       });
@@ -481,11 +481,11 @@ export default function Dashboard3() {
                   ) : user ? (
                     <Row>
                       <Col md={6} className="mb-3">
-                        <p><strong>Name:</strong> {user.name}</p>
-                        <p><strong>Email:</strong> {user.email}</p>
-                        <p><strong>Mobile No:</strong> {user.mobileNo}</p>
-                        <p><strong>Role:</strong> {user.role}</p>
-                        <p><strong>Credits:</strong> {user.credits}</p>
+                        <p><strong>Name:</strong> {user?.name}</p>
+                        <p><strong>Email:</strong> {user?.email}</p>
+                        <p><strong>Mobile No:</strong> {user?.mobileNo}</p>
+                        <p><strong>Role:</strong> {user?.role}</p>
+                        <p><strong>Credits:</strong> {user?.credits}</p>
                       </Col>
                       <Col md={6}>
                         <div className="mb-3">
@@ -547,12 +547,12 @@ export default function Dashboard3() {
                     </Card.Header>
                     <Card.Body>
                       <ul className="contact-list">
-                        <li><span>Name:</span> {user.name}</li>
-                        <li><span>Date of Birth:</span> 18-09-2015</li>
-                        <li><span>Gender:</span> Male</li>
-                        <li><span>Address:</span> Live In UK</li>
-                        <li><span>Phone:</span> {user.mobileNo}</li>
-                        <li><span>Email:</span> {user.email}</li>
+                        <li><span>Name:</span> {user?.name}</li>
+                        <li><span>Date of Birth:</span>{user?.dob}</li>
+                        <li><span>Gender:</span>{user?.gender}</li>
+                        <li><span>Address:</span>{user?.address}</li>
+                        <li><span>Phone:</span> {user?.mobileNo}</li>
+                        <li><span>Email:</span> {user?.email}</li>
                       </ul>
                     </Card.Body>
                   </Card>

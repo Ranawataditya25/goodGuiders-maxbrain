@@ -76,22 +76,19 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ msg: "Invalid email or password" });
     }
 
+    // Get full profile (except password)
+    const fullUser = await User.findOne({ email }).select("-password");
+
     res.json({
       msg: "Login successful",
-      user: {
-        name: user.name,
-        email: user.email,
-        mobileNo: user.mobileNo,
-        referralCode: user.referralCode,
-        credits: user.credits,
-        role: user.role,
-      },
+      user: fullUser,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Server error" });
   }
 });
+
 
 // 👉 GET /api/auth/dashboard?email=...
 router.get("/dashboard", async (req, res) => {

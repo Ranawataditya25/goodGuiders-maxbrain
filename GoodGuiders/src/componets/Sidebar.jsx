@@ -2846,7 +2846,7 @@
 
 
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from "react-router-dom";
 import SimpleBar from 'simplebar-react';
 import FeatherIcon from 'feather-icons-react';
@@ -2875,12 +2875,18 @@ export default function Sidebar() {
 
   const { toggleSidebar } = useSidebarContext();
 
-  useEffect(() => {
-  
-      const email = localStorage.getItem('loggedInEmail');
+  const [userRole, setUserRole] = useState(null);
+
+useEffect(() => {
+  const storedUser = localStorage.getItem("loggedInUser");
+  if (storedUser) {
+    const parsedUser = JSON.parse(storedUser);
+    const email = parsedUser.email;
     console.log("Logged-in Email:", email);
     setUserEmail(email);
-  }, []);
+    setUserRole(parsedUser.role);
+  }
+}, []);
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -2895,16 +2901,24 @@ export default function Sidebar() {
     setActiveIndex(prevIndex => (prevIndex === index ? null : index));
   };
 
-  const isMentor = userEmail === "mentor@gmail.com";
-  const isStudent = userEmail === "student@gmail.com";
-  const isAdmin = userEmail === "admin@gmail.com";
+  // const isMentor = userEmail === "mentor@gmail.com";
+  // const isStudent = userEmail === "student@gmail.com";
+  // const isAdmin = userEmail === "admin@gmail.com";
+
+  const isMentor = userRole === "mentor";
+  const isStudent = userRole === "student";
+  const isAdmin = userRole === "admin";
+
 
   
   if (userEmail === null) {
     return null;
   }
 
+  if (!userRole) return null;
+
   
+
 
   return (
     <div className="codex-sidebar">
