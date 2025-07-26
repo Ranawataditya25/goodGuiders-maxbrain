@@ -24,7 +24,7 @@
 //         instagramUrl: 'http://www.instagram.com/',
 //         googlePlusUrl: 'http://www.plus.google.com',
 //       });
-    
+
 //       // Handle input change
 //       const handleInputChange = (e) => {
 //         const { name, value, type, files } = e.target;
@@ -34,7 +34,7 @@
 //           setFormData({ ...formData, [name]: value });
 //         }
 //       };
-    
+
 //   return (
 //     <div className="themebody-wrap">
 //     {/* Breadcrumb Start */}
@@ -198,66 +198,134 @@
 //   )
 // }
 
-
-
-
-
-
-
-
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Row, Col, Card, Form, Container, Button } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import "./css/ProfilePage.css";
+// import { Link } from "react-router-dom";
 // import '../pages/css/ProfilePage.css';
+
 export default function Edit_patient() {
   const [formData, setFormData] = useState({
-    profileImage: null,
-    firstName: "Sarah",
-    lastName: "Smith",
-    dob: "10/12/1999",
-    age: "25",
+    name: "",
+    dob: "",
     gender: "",
-    subject: "",
-    maritalStatus: "",
-    weight: "68 kg", 
-    height: "5.2",
-    email: "example@email.com",
-    phone: "+1 50 456XXX",
-    city: "Barcelona", 
+    mobileNo: "",
+    city: "",
     state: "",
     country: "",
     postalCode: "",
-    status: "",
-    address:
-      "463 Avenida Doutor José Singer,6- Conjunto Residencial Humaitá, São Vicente, SP, Brasil",
-  });
+    address: "",
+    bio: "",
+    experience: "",
+    mentorAbilities: [],
+    specializedIn: "",
 
-    const user = {
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedUser, setSavedUser] = useState(null);
+
+  useEffect(() => {
+    const savedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (savedUser) {
+      setSavedUser(savedUser);
+      setFormData({
+        name: savedUser.name || "",
+        dob: savedUser.dob || "",
+        gender: savedUser.gender || "",
+        mobileNo: savedUser.mobileNo || "",
+        city: savedUser.city || "",
+        state: savedUser.state || "",
+        country: savedUser.country || "",
+        postalCode: savedUser.postalCode || "",
+        address: savedUser.address || "",
+        bio: savedUser.bio || "",
+        experience: savedUser.experience || "",
+        mentorAbilities: savedUser.mentorAbilities || "",
+        specializedIn: savedUser.specializedIn || "",
+      });
+    }
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    if (!savedUser) {
+      alert("No user data found.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...formData, email: savedUser.email }), // your form state
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert("Profile updated successfully!");
+        // Optional: Update localStorage if needed
+        localStorage.setItem("loggedInUser", JSON.stringify(result.user));
+      } else {
+        alert("Error: " + result.msg);
+      }
+      setIsSubmitting(false);
+    } catch (err) {
+      console.error("Update failed:", err);
+      alert("Something went wrong. Please try again later.");
+    }
+  };
+
+  const user = {
     name: "Select Photo",
     email: "john@example.com",
     bio: "Frontend Developer based in India.",
     profilePic: "https://picsum.photos/id/237/200/300",
   };
-  const [profileImage, setProfileImage] = useState(null);
-  const [userEmail, setUserEmail] = useState(null);
+  // const [profileImage, setProfileImage] = useState(null);
+  // const [userEmail, setUserEmail] = useState(null);
 
   // Handle input changes
   const handleInputChange = (e) => {
-    const { name, value, type, files } = e.target;
-    if (type === "file") {
-      setFormData({ ...formData, [name]: files[0] });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
+    const { name, value, type, files, checked } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === "file" ? files[0] : type === "checkbox" ? checked : value,
+    }));
   };
+
+  const handleCancel = () => {
+    if (!savedUser) return;
+
+    setFormData({
+      name: savedUser.name || "",
+      dob: savedUser.dob || "",
+      gender: savedUser.gender || "",
+      mobileNo: savedUser.mobileNo || "",
+      city: savedUser.city || "",
+      state: savedUser.state || "",
+      country: savedUser.country || "",
+      postalCode: savedUser.postalCode || "",
+      address: savedUser.address || "",
+      bio: savedUser.bio || "",
+      experience: savedUser.experience || "",
+      mentorAbilities: savedUser.mentorAbilities || "",
+      specializedIn: savedUser.specializedIn || "",
+    });
+    setIsSubmitting(false);
+  };
+
   return (
     <div className="themebody-wrap">
-     
       <PageBreadcrumb pagename="Edit Mentor" />
-     
+
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
           <Row>
@@ -267,10 +335,9 @@ export default function Edit_patient() {
                   <h4> Mentor Information</h4>
                 </Card.Header>
                 <Card.Body>
-                  <Form>
-                   
-                 <Row>
-              {/* <div className="editprofile-pic">
+                  <Form onSubmit={handleSubmit}>
+                    <Row>
+                      {/* <div className="editprofile-pic">
      
               <img src={user.profilePic} alt="" className="profile-pic" />
             <button style={{ color: 'white', backgroundColor: 'transparent', border: 'none', fontSize: '1.25rem' }}>
@@ -278,36 +345,32 @@ export default function Edit_patient() {
 </button>
             </div> */}
 
-
-            <div className="editprofile-pic">
-     
-              <img src={user.profilePic} alt="" className="profile-picedit" />
-            <button  style={{ color: 'white', backgroundColor: 'transparent', border: 'none', fontSize: '1.25rem' }}>
-  {user.name}
-</button>
-            </div>
-
+                      <div className="editprofile-pic">
+                        <img
+                          src={user.profilePic}
+                          alt=""
+                          className="profile-picedit"
+                        />
+                        <button
+                          style={{
+                            color: "white",
+                            backgroundColor: "transparent",
+                            border: "none",
+                            fontSize: "1.25rem",
+                          }}
+                        >
+                          {user.name}
+                        </button>
+                      </div>
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>First Name</Form.Label>
+                          <Form.Label>Name</Form.Label>
                           <Form.Control
                             type="text"
-                            name="firstName"
-                            value={formData.firstName}
-                            placeholder="First Name"
-                            onChange={handleInputChange}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={4}>
-                        <Form.Group className="mb-20">
-                          <Form.Label>Last Name</Form.Label>
-                          <Form.Control
-                            type="text"
-                            name="lastName"
-                            value={formData.lastName}
-                            placeholder="Last Name"
+                            name="name"
+                            value={formData.name}
+                            placeholder="Your Name"
                             onChange={handleInputChange}
                           />
                         </Form.Group>
@@ -317,7 +380,7 @@ export default function Edit_patient() {
                           <Form.Label>Date of Birth</Form.Label>
                           <input
                             className="datepicker-here form-control"
-                            type="text"
+                            type="date"
                             name="dob"
                             value={formData.dob}
                             data-date-format="dd/mm/yyyy"
@@ -326,32 +389,74 @@ export default function Edit_patient() {
                         </Form.Group>
                       </Col>
 
-   <Col md={4} className="p-0 m-0">
-  <Form.Group className="mt-0 mb-3">
-    <Form.Label>Gender</Form.Label>
-    <Form.Control
-      as="select"
-      name="gender"
-      value={formData.gender}
-      onChange={handleInputChange}
-    >
-      <option value="">Select Gender</option>
-      <option value="Male">Male</option>
-      <option value="Female">Female</option>
-      <option value="Other">Others</option> {/* Fixed duplicated value */}
-    </Form.Control>
-  </Form.Group>
-</Col>
-
+                      <Col md={4} className="p-0 m-0">
+                        <Form.Group className="mt-0 mb-3">
+                          <Form.Label>Gender</Form.Label>
+                          <Form.Control
+                            as="select"
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleInputChange}
+                          >
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Others</option>
+                            {/* Fixed duplicated value */}
+                          </Form.Control>
+                        </Form.Group>
+                      </Col>
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
                           <Form.Label>Phone</Form.Label>
                           <Form.Control
                             type="text"
-                            name="phone"
-                            value={formData.phone}
-                            placeholder=""
+                            name="mobileNo"
+                            value={formData.mobileNo}
+                            placeholder="Enter your number"
+                            onChange={handleInputChange}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-20">
+                          <Form.Label>specializedIn</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="specializedIn"
+                            value={formData.specializedIn}
+                            placeholder="Enter your specialization"
+                            onChange={handleInputChange}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-20">
+                          <Form.Label>mentorAbilities</Form.Label>
+                          <Form.Control
+                              type="text"
+                              name="mentorAbilities"
+                              value={formData.mentorAbilities.join(", ")} 
+                              placeholder="Enter abilities (comma separated)"
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  mentorAbilities: e.target.value.split(",").map((s) => s.trim()),
+                                })
+                              }
+                            />
+
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-20">
+                          <Form.Label>Experience</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="experience"
+                            value={formData.experience}
+                            placeholder="Enter your experience"
                             onChange={handleInputChange}
                           />
                         </Form.Group>
@@ -360,73 +465,37 @@ export default function Edit_patient() {
                         <Form.Group className="mb-20">
                           <Form.Label>City</Form.Label>
                           <Form.Control
-                            as="select"
+                            type="text"
                             name="city"
                             value={formData.city}
                             onChange={handleInputChange}
-                          >
-                            <option value="">Select City</option>
-                            <option value="Tokyo">Tokyo</option>
-                            <option value="Dubai">Dubai</option>
-                            <option value="Barcelona">Barcelona</option>
-                            <option value="Rome">Rome</option>
-                            <option value="Singapore">Singapore</option>
-                            <option value="Amsterdam">Amsterdam</option>
-                            <option value="NewYork">New York</option>
-                          </Form.Control>
+                            placeholder="Enter your city"
+                          />
                         </Form.Group>
                       </Col>
 
-                        <Col md={4}>
-                        <Form.Group className="mb-20">
-                          <Form.Label>district</Form.Label>
-                          <Form.Control
-                            as="select"
-                            name="state"
-                            value={formData.state}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select district</option>
-                            <option value="Washington">Jaipur</option>
-                            <option value="Minnesota">Jaipur</option>
-                            <option value="Utah">Jaipur</option>
-                            <option value="Idaho">Jaipur</option>
-                          </Form.Control>
-                        </Form.Group>
-                      </Col>
                       <Col md={4}>
                         <Form.Group className="mb-20">
                           <Form.Label>State</Form.Label>
                           <Form.Control
-                            as="select"
+                            type="text"
                             name="state"
                             value={formData.state}
                             onChange={handleInputChange}
-                          >
-                            <option value="">Select State</option>
-                            <option value="Washington">Washington</option>
-                            <option value="Minnesota">Minnesota</option>
-                            <option value="Utah">Utah</option>
-                            <option value="Idaho">Idaho</option>
-                          </Form.Control>
+                            placeholder="Enter your state"
+                          />
                         </Form.Group>
                       </Col>
                       <Col md={4}>
                         <Form.Group className="mb-20">
                           <Form.Label>Country</Form.Label>
                           <Form.Control
-                            as="select"
+                            type="text"
                             name="country"
                             value={formData.country}
                             onChange={handleInputChange}
-                          >
-                            <option value="">Select Country</option>
-                            <option value="japan">japan</option>
-                            <option value="india">india</option>
-                            <option value="uk">uk</option>
-                            <option value="itly">itly</option>
-                            <option value="usa">usa</option>
-                          </Form.Control>
+                            placeholder="Enter your country"
+                          />
                         </Form.Group>
                       </Col>
                       <Col md={4}>
@@ -454,6 +523,18 @@ export default function Edit_patient() {
                           ></Form.Control>
                         </Form.Group>
                       </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-20">
+                          <Form.Label>Bio</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            placeholder="Enter bio"
+                            name="bio"
+                            value={formData.bio}
+                            onChange={handleInputChange}
+                          ></Form.Control>
+                        </Form.Group>
+                      </Col>
 
                       {/* <div className="themebody-wrap">
          
@@ -469,7 +550,7 @@ export default function Edit_patient() {
                                     <thead>
                                       <tr>
                                         <th>Class</th>
-                                        
+
                                         <th>Paasout</th>
                                         <th>University/Board </th>
                                         <th>Subject</th>
@@ -494,18 +575,17 @@ export default function Edit_patient() {
                                         <td>Biology</td>
                                         <td>7.9</td>
                                       </tr>
-                                     
 
                                       <tr>
                                         <td>
-                                      <select className="edittext_wid">
+                                          <select className="edittext_wid">
                                             <option selected disabled>
                                               Graduation
                                             </option>
                                             <option>B.Com</option>
                                             <option>Enginering</option>
                                             <option>BBA</option>
-                                              <option>BCA</option>
+                                            <option>BCA</option>
                                             <option>BA</option>
                                             <option>B.Sc</option>
                                           </select>
@@ -516,20 +596,18 @@ export default function Edit_patient() {
                                         <td>5.5</td>
                                       </tr>
 
-                                    
-                                        <tr>
+                                      <tr>
                                         <td>
-                                           <select className="edittext_wid">
+                                          <select className="edittext_wid">
                                             <option selected disabled>
-                                             Post Graduation
+                                              Post Graduation
                                             </option>
                                             <option>M.Com</option>
                                             <option>MCA</option>
                                             <option>MBA</option>
-                                             <option>M.tech</option>
+                                            <option>M.tech</option>
                                             <option>M.A</option>
                                             <option>M.sc</option>
-                                           
                                           </select>
                                         </td>
                                         <td>2012</td>
@@ -537,11 +615,11 @@ export default function Edit_patient() {
                                         <td>Biology</td>
                                         <td>6.6</td>
                                       </tr>
-                                       <tr>
+                                      <tr>
                                         <td>
-                                       <select className="edittext_wid">
+                                          <select className="edittext_wid">
                                             <option selected disabled>
-                                            P.H.D
+                                              P.H.D
                                             </option>
                                             <option>PHD</option>
                                             <option>PHD</option>
@@ -553,8 +631,6 @@ export default function Edit_patient() {
                                         <td>Biology</td>
                                         <td>6.5</td>
                                       </tr>
-
-
 
                                       {/* <tr>
                                                             <td>06</td>
@@ -594,13 +670,17 @@ export default function Edit_patient() {
                       <Form.Group className="text-end mb-0">
                         <Button
                           type="submit"
+                          disabled={isSubmitting}
                           className="btn btn-sm btn-primary"
                         >
-                          Submit
+                          {isSubmitting ? "Updating..." : "Submit"}
                         </Button>
-                        <Link className="btn btn-sm btn-danger ml-8">
+                        <Button
+                          className="btn btn-sm btn-danger ml-8"
+                          onClick={handleCancel}
+                        >
                           Cancel
-                        </Link>
+                        </Button>
                       </Form.Group>
                     </Row>
                   </Form>
@@ -614,5 +694,3 @@ export default function Edit_patient() {
     </div>
   );
 }
-
-

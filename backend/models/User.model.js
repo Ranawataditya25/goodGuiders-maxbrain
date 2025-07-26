@@ -47,6 +47,12 @@ const userSchema = new mongoose.Schema(
     country: String,
     postalCode: String,
     address: String,
+
+     // ✅ Mentor-specific fields
+     specializedIn: String,
+     mentorAbilities: [String], 
+     bio: String,
+     experience: String, 
   },
   {
     timestamps: true,

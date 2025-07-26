@@ -181,7 +181,7 @@ export default function Dashboard2() {
                     </div>
                     <h4>{doctor?.name}</h4>
                     <span>{doctor?.specializedIn}</span>
-                    <p>{doctor?.about}</p>
+                    <p>{doctor?.bio}</p>
                     <div className="group-btn">
                       <Link
                         className="btn btn-primary"

@@ -856,6 +856,7 @@ export default function Edit_patient() {
       postalCode: savedUser.postalCode || "",
       address: savedUser.address || "",
     });
+    setIsSubmitting(false);
   };
   
   
@@ -897,12 +898,12 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>First Name</Form.Label>
+                          <Form.Label>Name</Form.Label>
                           <Form.Control
                             type="text"
                             name="name"
                             value={formData.name}
-                            placeholder="Name"
+                            placeholder="Enter your name"
                             onChange={handleInputChange}
                           />
                         </Form.Group>
@@ -933,7 +934,7 @@ export default function Edit_patient() {
                         </Form.Group>
                       </Col>
 
-   <Col md={4} className="p-0 m-0">
+                      <Col md={4} className="p-0 m-0">
   <Form.Group className="mt-0 mb-3">
     <Form.Label>Gender</Form.Label>
     <Form.Control
@@ -948,7 +949,7 @@ export default function Edit_patient() {
       <option value="Other">Others</option> {/* Fixed duplicated value */}
     </Form.Control>
   </Form.Group>
-</Col>
+                      </Col>
 
 
                       <Col md={4}>
@@ -1016,7 +1017,7 @@ export default function Edit_patient() {
                           <Form.Label>Address</Form.Label>
                           <Form.Control
                             as="textarea"
-                            placeholder="Enter Address"
+                            placeholder="Enter address"
                             name="address"
                             value={formData.address}
                             onChange={handleInputChange}
