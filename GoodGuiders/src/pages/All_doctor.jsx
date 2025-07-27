@@ -14,7 +14,7 @@
 
 //   const Close_btn = () => setShow(false);
 //   const emailcreat = () => setShow(true);
-//   //  Inuut value start 
+//   //  Inuut value start
 //   const [formData, setFormData] = useState({
 //     name: '',
 //     department: '',
@@ -32,7 +32,7 @@
 //       [name]: value,
 //     });
 //   };
-//   // Data Table 
+//   // Data Table
 //   const sales = [
 //     { "image": "avtar/2.jpg", "title": " Anna Mull", "Department": "Math", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23" },
 //     { "image": "avtar/7.jpg", "title": " Hal Appeno", "Department": "Science", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
@@ -59,8 +59,7 @@
 //     )
 //   }
 
-
-//   //  SearchFilter 
+//   //  SearchFilter
 //   const [filters1, setFilters1] = useState({
 //     'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
 //     'name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
@@ -94,7 +93,6 @@
 //     );
 //   }
 //   const header1 = renderHeader('filters1');
-
 
 //   const actionBodyTemplate = () => {
 //     return (
@@ -227,10 +225,6 @@
 //     </>
 //   )
 // }
-
-
-
-
 
 // import React, { useState } from 'react';
 // import { FilterMatchMode, FilterOperator } from 'primereact/api';
@@ -530,34 +524,45 @@
 //   )
 // }
 
+import { useState } from "react";
+import { FilterMatchMode, FilterOperator } from "primereact/api";
+import { DataTable } from "primereact/datatable";
+import FeatherIcon from "feather-icons-react";
 
-
-
-
-import React, { useState } from 'react';
-import { FilterMatchMode, FilterOperator } from 'primereact/api';
-import { DataTable } from 'primereact/datatable';
-import FeatherIcon from 'feather-icons-react';
-
-import { Link } from "react-router-dom";
-import { Container, Row, Col, Card, Form, InputGroup, Modal, Button } from 'react-bootstrap';
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  InputGroup,
+  Modal,
+  Button,
+} from "react-bootstrap";
 
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
-import PageBreadcrumb from '../componets/PageBreadcrumb';
+import PageBreadcrumb from "../componets/PageBreadcrumb";
 
 export default function All_Mentor() {
   const [show, setShow] = useState(false);
   const Close_btn = () => setShow(false);
   const emailcreat = () => setShow(true);
 
+  const navigate = useNavigate();
+
+  const handleTestClick = () => {
+    navigate("/test-page");
+  };
+
   const [formData, setFormData] = useState({
-    name: '',
-    department: '',
-    specialization: '',
-    degree: '',
-    mobile: '',
-    email: '',
-    joiningDate: '',
+    name: "",
+    department: "",
+    specialization: "",
+    degree: "",
+    mobile: "",
+    email: "",
+    joiningDate: "",
   });
 
   const handleInputChange = (e) => {
@@ -569,46 +574,146 @@ export default function All_Mentor() {
   };
 
   const sales = [
-    { "image": "avtar/2.jpg", "title": " Anna Mull", "Department": "Math", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23" },
-    { "image": "avtar/7.jpg", "title": " Hal Appeno", "Department": "Science", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
-    { "image": "avtar/9.jpg", "title": " Pat Agonia", "Department": "Hindi", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
-    { "image": "avtar/3.jpg", "title": " Paul Molive", "Department": "English", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
-    { "image": "avtar/8.jpg", "title": " Polly Tech", "Department": "Sanskrit", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
-    { "image": "avtar/5.jpg", "title": " Poppa Cherry", "Department": "Computer", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
-    { "image": "avtar/6.jpg", "title": " Saul T. Balls", "Department": "Social Study", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
-    { "image": "avtar/4.jpg", "title": " Terry Aki", "Department": "Geogrphy", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
-    { "image": "avtar/1.jpg", "title": " Tiger Nixon", "Department": "Pol.Science", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
-    { "image": "avtar/2.jpg", "title": " Anna Mull", "Department": "Commerce", "Specialization": "Prostate", "Degree": "P.H.D", "Mobile": "+1 25 962689", "Email": "example@email.com", "Joining Date": "05/21/23"},
+    {
+      image: "avtar/2.jpg",
+      title: " Anna Mull",
+      Department: "Math",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
+    {
+      image: "avtar/7.jpg",
+      title: " Hal Appeno",
+      Department: "Science",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
+    {
+      image: "avtar/9.jpg",
+      title: " Pat Agonia",
+      Department: "Hindi",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
+    {
+      image: "avtar/3.jpg",
+      title: " Paul Molive",
+      Department: "English",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
+    {
+      image: "avtar/8.jpg",
+      title: " Polly Tech",
+      Department: "Sanskrit",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
+    {
+      image: "avtar/5.jpg",
+      title: " Poppa Cherry",
+      Department: "Computer",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
+    {
+      image: "avtar/6.jpg",
+      title: " Saul T. Balls",
+      Department: "Social Study",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
+    {
+      image: "avtar/4.jpg",
+      title: " Terry Aki",
+      Department: "Geogrphy",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
+    {
+      image: "avtar/1.jpg",
+      title: " Tiger Nixon",
+      Department: "Pol.Science",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
+    {
+      image: "avtar/2.jpg",
+      title: " Anna Mull",
+      Department: "Commerce",
+      Specialization: "Prostate",
+      Degree: "P.H.D",
+      Mobile: "+1 25 962689",
+      Email: "example@email.com",
+      "Joining Date": "05/21/23",
+    },
   ];
 
   const imageBodyTemplate = ({ image, title }) => (
     <div className="d-flex align-items-center">
-      <img src={IMAGE_URLS[image]} alt={image} className="product-image rounded-50 w-40" />
+      <img
+        src={IMAGE_URLS[image]}
+        alt={image}
+        className="product-image rounded-50 w-40"
+      />
       <span className="ml-10">{title}</span>
     </div>
   );
 
   const [filters1, setFilters1] = useState({
-    'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-    'country.name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-    'representative': { value: null, matchMode: FilterMatchMode.IN },
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    name: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    },
+    "country.name": {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    },
+    representative: { value: null, matchMode: FilterMatchMode.IN },
   });
 
   const filtersMap = {
-    'filters1': { value: filters1, callback: setFilters1 },
+    filters1: { value: filters1, callback: setFilters1 },
   };
 
   const onGlobalFilterChange = (event, filtersKey) => {
     const value = event.target.value;
     let filters = { ...filtersMap[filtersKey].value };
-    filters['global'].value = value;
+    filters["global"].value = value;
     filtersMap[filtersKey].callback(filters);
   };
 
   const renderHeader = (filtersKey) => {
     const filters = filtersMap[filtersKey].value;
-    const value = filters['global'] ? filters['global'].value : '';
+    const value = filters["global"] ? filters["global"].value : "";
     return (
       <div className="d-flex justify-content-end align-align-items-baseline">
         <Form.Group className="d-flex align-items-center">
@@ -617,7 +722,7 @@ export default function All_Mentor() {
             <Form.Control
               type="search"
               className="form-control px-2"
-              value={value || ''}
+              value={value || ""}
               onChange={(e) => onGlobalFilterChange(e, filtersKey)}
               placeholder="Global Search"
             />
@@ -627,7 +732,7 @@ export default function All_Mentor() {
     );
   };
 
-  const header1 = renderHeader('filters1');
+  const header1 = renderHeader("filters1");
 
   const actionBodyTemplate = () => (
     <div className="cart-action">
@@ -640,7 +745,7 @@ export default function All_Mentor() {
     </div>
   );
 
-  const userEmail = localStorage.getItem('loggedInEmail');
+  const userEmail = localStorage.getItem("loggedInEmail");
   console.log("User Email from localStorage by honey:", userEmail);
   const isMentor = userEmail === "mentor@gmail.com";
   const isStudent = userEmail === "student@gmail.com";
@@ -655,9 +760,9 @@ export default function All_Mentor() {
               <Col>
                 <Card>
                   <Card.Body>
+                    <Button className="fs-25" onClick={handleTestClick}>TEST</Button>
                     <Row className="Product_list">
-                    
-                        {/* <Col md={12}>
+                      {/* <Col md={12}>
 
                           <Link className="btn btn-primary float-end mb-15" onClick={emailcreat}>
  
@@ -665,14 +770,17 @@ export default function All_Mentor() {
                           </Link> 
                        </Col> */}
 
-                       {isAdmin && (
-  <Col md={12}>
-    <Link className="btn btn-primary float-end mb-15" onClick={emailcreat}>
-      <i className="fa fa-plus me-2"></i> Add Mentor
-    </Link>
-  </Col>
-)}
-                 
+                      {isAdmin && (
+                        <Col md={12}>
+                          <Link
+                            className="btn btn-primary float-end mb-15"
+                            onClick={emailcreat}
+                          >
+                            <i className="fa fa-plus me-2"></i> Add Mentor
+                          </Link>
+                        </Col>
+                      )}
+
                       <DataTable
                         value={sales}
                         rows={10}
@@ -686,14 +794,37 @@ export default function All_Mentor() {
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                         className="p-datatable-customers"
                       >
-                        <div header="Name" sortable body={imageBodyTemplate}></div>
-                        <div field="Department" header="Department" sortable></div>
-                        <div field="Specialization" header="Specialization" sortable></div>
+                        <div
+                          header="Name"
+                          sortable
+                          body={imageBodyTemplate}
+                        ></div>
+                        <div
+                          field="Department"
+                          header="Department"
+                          sortable
+                        ></div>
+                        <div
+                          field="Specialization"
+                          header="Specialization"
+                          sortable
+                        ></div>
                         <div field="Degree" header="Degree" sortable></div>
                         <div field="Mobile" header="Mobile" sortable></div>
                         <div field="Email" header="Email" sortable></div>
-                        <div field="Joining Date" header="Joining Date" sortable></div>
-                        <div field="Action" header="Action" sortable body={actionBodyTemplate} exportable={false} style={{ minWidth: '8rem' }}></div>
+                        <div
+                          field="Joining Date"
+                          header="Joining Date"
+                          sortable
+                        ></div>
+                        <div
+                          field="Action"
+                          header="Action"
+                          sortable
+                          body={actionBodyTemplate}
+                          exportable={false}
+                          style={{ minWidth: "8rem" }}
+                        ></div>
                       </DataTable>
                     </Row>
                   </Card.Body>
@@ -716,15 +847,30 @@ export default function All_Mentor() {
         <Modal.Body className="modal-body">
           <Form>
             <Row>
-              {["name", "department", "specialization", "degree", "mobile", "email", "joiningDate"].map((field, idx) => (
+              {[
+                "name",
+                "department",
+                "specialization",
+                "degree",
+                "mobile",
+                "email",
+                "joiningDate",
+              ].map((field, idx) => (
                 <Col md={6} key={field}>
                   <Form.Group className="mb-20">
-                    <Form.Label>{field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, " $1")}</Form.Label>
+                    <Form.Label>
+                      {field.charAt(0).toUpperCase() +
+                        field.slice(1).replace(/([A-Z])/g, " $1")}
+                    </Form.Label>
                     <Form.Control
                       type={field === "email" ? "email" : "text"}
                       name={field}
                       required
-                      placeholder={field === "joiningDate" ? "DD/MM/YYYY" : `Enter ${field}`}
+                      placeholder={
+                        field === "joiningDate"
+                          ? "DD/MM/YYYY"
+                          : `Enter ${field}`
+                      }
                       value={formData[field]}
                       onChange={handleInputChange}
                     />
@@ -736,10 +882,11 @@ export default function All_Mentor() {
         </Modal.Body>
         <Modal.Footer className="modal-footer">
           <Button className="btn btn-primary">Save</Button>
-          <Button className="btn btn-danger" onClick={Close_btn}>Close</Button>
+          <Button className="btn btn-danger" onClick={Close_btn}>
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
     </>
   );
 }
-
