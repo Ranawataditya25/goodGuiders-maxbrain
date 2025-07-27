@@ -29,6 +29,7 @@ import DoctorProfile from "./pages/DoctorProfile";
 import Status from "./pages/Status";
 import { TestPage } from './pages/TestPage';
 import { TestStart } from './pages/TestStart';
+import TestEnd from './pages/TestEnd';
 import Forgot_password from "./pages/Forgot_password";
 import New_password from "./pages/New_password";
 import Verify_email from "./pages/Verify_email";
@@ -128,6 +129,7 @@ function AppContent() {
 
                 <Route exact path="/test-page" element={<TestPage />} />
                 <Route exact path="/test-start" element={<TestStart />} />
+                <Route exact path="/test-end" element={<TestEnd />} />
                 
                 <Route exact path="/doctor-schedule" element={<Doctor_schedule />} />
                 <Route exact path="/add-appointment" element={<Add_appointment />} />

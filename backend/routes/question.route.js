@@ -101,9 +101,11 @@
 
 import express from "express";
 import Question from "../models/Question.model.js";
+import Submission from "../models/Submission.model.js"; 
 
 const router = express.Router();
 
+// POST /api/questions/fetch
 router.post("/fetch", async (req, res) => {
   try {
     const { subject, type, count } = req.body;
@@ -144,4 +146,36 @@ router.post("/fetch", async (req, res) => {
   }
 });
 
+
+// POST /api/questions/submit
+router.post("/submit", async (req, res) => {
+  try {
+    const { userEmail, class: className, subjects, type, answers } = req.body;
+
+    if (!userEmail || !className || !subjects || !type || !answers) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
+    const newSubmission = new Submission({
+      userEmail,
+      class: className,
+      subjects,
+      type,
+      answers,
+    });
+
+    await newSubmission.save();
+
+    res.status(201).json({ message: "Test submitted successful" });
+  } catch (err) {
+    console.error("Error submitting test:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;
+
+
+
+
+

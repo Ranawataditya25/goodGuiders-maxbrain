@@ -73,7 +73,7 @@ export const TestPage = () => {
               <Form.Label>Subjects (max 3, comma separated)</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="e.g. Math, Science, English"
+                placeholder="Select from ''Math, Science, English, History''"
                 value={subjectInput}
                 onChange={handleSubjectsChange}
                 required
