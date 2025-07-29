@@ -35,11 +35,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-
     dob: String,
     gender: {
       type: String,
-      enum: ["Male", "Female", "Other" , ""],
+      enum: ["Male", "Female", "Other", ""],
       default: "",
     },
     city: String,
@@ -47,12 +46,16 @@ const userSchema = new mongoose.Schema(
     country: String,
     postalCode: String,
     address: String,
+    profileImage: {
+      type: String, // Store the relative path like "/uploads/abc.jpg"
+      default: "/default-avatar.png", 
+    },
 
-     // ✅ Mentor-specific fields
-     specializedIn: String,
-     mentorAbilities: [String], 
-     bio: String,
-     experience: String, 
+    // ✅ Mentor-specific fields
+    specializedIn: String,
+    mentorAbilities: [String],
+    bio: String,
+    experience: String,
   },
   {
     timestamps: true,

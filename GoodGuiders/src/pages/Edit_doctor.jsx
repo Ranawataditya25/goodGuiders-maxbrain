@@ -1,209 +1,8 @@
-// import React, { useState } from 'react';
-// import { Link } from "react-router-dom";
-// import { Row, Col, Card, Form, Container } from 'react-bootstrap';
-// import SimpleBar from 'simplebar-react';
-// import PageBreadcrumb from '../componets/PageBreadcrumb';
-
-// export default function Edit_doctor() {
-//     const [formData, setFormData] = useState({
-//         firstName: 'Elizabeth',
-//         lastName: 'Blackwell',
-//         dob: '',
-//         gender: '',
-//         profileImage: null,
-//         education: 'M.B.B.S',
-//         designation: 'Physician',
-//         department: '',
-//         website: 'http://www.example.com',
-//         email: 'example@email.com',
-//         phone: '+1 50 456XXX',
-//         password: 'Example@pass',
-//         confirmPassword: 'Example@pass',
-//         facebookUrl: 'http://www.facebook.com/',
-//         twitterUrl: 'http://www.twitter.com/',
-//         instagramUrl: 'http://www.instagram.com/',
-//         googlePlusUrl: 'http://www.plus.google.com',
-//       });
-
-//       // Handle input change
-//       const handleInputChange = (e) => {
-//         const { name, value, type, files } = e.target;
-//         if (type === 'file') {
-//           setFormData({ ...formData, [name]: files[0] });
-//         } else {
-//           setFormData({ ...formData, [name]: value });
-//         }
-//       };
-
-//   return (
-//     <div className="themebody-wrap">
-//     {/* Breadcrumb Start */}
-//     <PageBreadcrumb pagename="Edit Mentor" />
-//     {/* Breadcrumb End */}
-//     {/* theme body start */}
-//     <SimpleBar className="theme-body common-dash">
-//       <Container fluid >
-//         <Row>
-//           <Col md={12}>
-//             <Card>
-//               <Card.Header>
-//                 <h4>Personal Information</h4>
-//               </Card.Header>
-//               <Card.Body>
-//                 <Form>
-//                   <Row>
-//                     <Col md={4}>
-//                       <Form.Group className="mb-20">
-//                         <Form.Label>First Name</Form.Label>
-//                         <Form.Control  type="text" placeholder="First Name" name="firstName"  value={formData.firstName}  onChange={handleInputChange} />
-//                       </Form.Group>
-//                     </Col>
-//                     <Col md={4}>
-//                       <Form.Group className="mb-20">
-//                         <Form.Label>last name</Form.Label>
-//                         <Form.Control  type="text" placeholder="Last Name" name="lastName"  value={formData.lastName}  onChange={handleInputChange} />
-//                       </Form.Group>
-//                     </Col>
-//                     <Col md={4}>
-//                       <Form.Group className="mb-20">
-//                         <Form.Label>Date of Birth</Form.Label>
-//                         <Form.Control  className="datepicker-here form-control" type="text"  placeholder="DD/MM/YYYY" name="dob"  value={formData.dob}  onChange={handleInputChange} />
-//                       </Form.Group>
-//                     </Col>
-//                     <Col md={4}>
-//                       <Form.Group className="mb-20">
-//                         <Form.Label>Gender</Form.Label>
-//                         <select className="form-select" name="gender"  value={formData.gender}  onChange={handleInputChange}>
-//                           <option value="Gender">Select Gender</option>
-//                           <option value="Male">Male</option>
-//                           <option value="Female">Female</option>
-//                         </select>
-//                       </Form.Group>
-//                     </Col>
-//                     <Col md={4}>
-//                       <Form.Group className="mb-20">
-//                         <Form.Label>Profile Image</Form.Label>
-//                         <Form.Control  type="file" name="profileImage" onChange={handleInputChange}/>
-//                       </Form.Group>
-//                     </Col>
-//                     <Col md={4}>
-//                       <Form.Group className="mb-20">
-//                         <Form.Label>Education</Form.Label>
-//                         <Form.Control  type="text" placeholder="Enter Education" name="education"  value={formData.education}  onChange={handleInputChange}/>
-//                       </Form.Group>
-//                     </Col>
-//                     <Col md={4}>
-//                       <Form.Group className="mb-20">
-//                         <Form.Label>Designation</Form.Label>
-//                         <Form.Control  type="text" placeholder="Enter Designation" name="designation"  value={formData.designation}  onChange={handleInputChange}/>
-//                       </Form.Group>
-//                     </Col>
-//                     <Col md={4}>
-//                       <Form.Group className="mb-20">
-//                         <Form.Label>Department</Form.Label>
-//                         <select className="form-select hidesearch" name="department"  value={formData.department}  onChange={handleInputChange}>
-//                           <option value="Audiologists">Audiologists</option>
-//                           <option value="Cardiologists">Cardiologists</option>
-//                           <option value="Endocrinologist">Endocrinologist</option>
-//                           <option value="Oncologists">Oncologists</option>
-//                           <option value="Neurology">Neurology</option>
-//                           <option value="Orthopedics">Orthopedics</option>
-//                           <option value="Gynaecology">Gynaecology</option>
-//                           <option value="Microbiology">Microbiology</option>
-//                         </select>
-//                       </Form.Group>
-//                     </Col>
-//                     <Col md={4}>
-//                       <Form.Group className="mb-20">
-//                         <Form.Label>Website URL</Form.Label>
-//                         <Form.Control  type="text" placeholder="Speciality" name="website"  value={formData.website}  onChange={handleInputChange} />
-//                       </Form.Group>
-//                     </Col>
-//                     <Form.Group>
-//                       <Link className="btn btn-sm btn-primary" href="javascript:void(0);">Save</Link>
-//                       <Link className="btn btn-sm btn-danger ml-8" href="javascript:void(0);">Cancle</Link>
-//                     </Form.Group>
-//                   </Row>
-//                 </Form>
-//               </Card.Body>
-//             </Card>
-//           </Col>
-//           <Col md={6}>
-//             <Card>
-//               <Card.Header>
-//                 <h4>Mentor Account Info</h4>
-//               </Card.Header>
-//               <Card.Body>
-//                 <Form>
-//                   <Form.Group className="mb-20">
-//                     <Form.Label>Email</Form.Label>
-//                     <Form.Control  type="text" placeholder="" name="email"  value={formData.email}  onChange={handleInputChange} />
-//                   </Form.Group>
-//                   <Form.Group className="mb-20">
-//                     <Form.Label>Phone</Form.Label>
-//                     <Form.Control  type="text" placeholder="" name="phone"  value={formData.phone}  onChange={handleInputChange}/>
-//                   </Form.Group>
-//                   <Form.Group className="mb-20">
-//                     <Form.Label>Password</Form.Label>
-//                     <Form.Control  type="password" placeholder="" name="password"  value={formData.password}  onChange={handleInputChange}/>
-//                   </Form.Group>
-//                   <Form.Group className="mb-20">
-//                     <Form.Label>Confirm Password</Form.Label>
-//                     <Form.Control  type="password" placeholder="" name="confirmPassword"  value={formData.confirmPassword}  onChange={handleInputChange}/>
-//                   </Form.Group>
-//                   <Form.Group>
-//                     <Link className="btn btn-sm btn-primary" href="javascript:void(0);">Save</Link>
-//                     <Link className="btn btn-sm btn-danger ml-8" href="javascript:void(0);">Cancle</Link>
-//                   </Form.Group>
-//                 </Form>
-//               </Card.Body>
-//             </Card>
-//           </Col>
-//           <Col md={6}>
-//             <Card>
-//               <Card.Header>
-//                 <h4>Mentor Social Media Info</h4>
-//               </Card.Header>
-//               <Card.Body>
-//                 <Form>
-//                   <Form.Group className="mb-20">
-//                     <Form.Label>Facebook URL</Form.Label>
-//                     <Form.Control  type="url"  value={formData.facebookUrl}  onChange={handleInputChange}/>
-//                   </Form.Group>
-//                   <Form.Group className="mb-20">
-//                     <Form.Label>Twitter URL</Form.Label>
-//                     <Form.Control  type="url"  value={formData.twitterUrl}  onChange={handleInputChange}/>
-//                   </Form.Group>
-//                   <Form.Group className="mb-20">
-//                     <Form.Label>Instagram URL</Form.Label>
-//                     <Form.Control  type="url" value={formData.instagramUrl}  onChange={handleInputChange}/>
-//                   </Form.Group>
-//                   <Form.Group className="mb-20">
-//                     <Form.Label>Google Plus URL</Form.Label>
-//                     <Form.Control  type="url" value={formData.googlePlusUrl}  onChange={handleInputChange}/>
-//                   </Form.Group>
-//                   <Form.Group>
-//                     <Link className="btn btn-sm btn-primary" href="javascript:void(0);">Save</Link>
-//                     <Link className="btn btn-sm btn-danger ml-8" href="javascript:void(0);">Cancle</Link>
-//                   </Form.Group>
-//                 </Form>
-//               </Card.Body>
-//             </Card>
-//           </Col>
-//         </Row>
-//       </Container>
-//     </SimpleBar>
-//     {/* theme body end */}
-//   </div>
-//   )
-// }
-
 import { useEffect, useState } from "react";
 import { Row, Col, Card, Form, Container, Button } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import "./css/ProfilePage.css";
-// import { Link } from "react-router-dom";
 // import '../pages/css/ProfilePage.css';
 
 export default function Edit_patient() {
@@ -221,7 +20,7 @@ export default function Edit_patient() {
     experience: "",
     mentorAbilities: [],
     specializedIn: "",
-
+    profileImage: null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedUser, setSavedUser] = useState(null);
@@ -242,8 +41,14 @@ export default function Edit_patient() {
         address: savedUser.address || "",
         bio: savedUser.bio || "",
         experience: savedUser.experience || "",
-        mentorAbilities: savedUser.mentorAbilities || "",
+        mentorAbilities: Array.isArray(savedUser.mentorAbilities)
+          ? savedUser.mentorAbilities
+          : [],
         specializedIn: savedUser.specializedIn || "",
+        profileImage:
+          typeof savedUser.profileImage === "string"
+            ? savedUser.profileImage
+            : null,
       });
     }
   }, []);
@@ -251,53 +56,55 @@ export default function Edit_patient() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+
     if (!savedUser) {
       alert("No user data found.");
       return;
     }
 
     try {
+      const data = new FormData();
+
+      // Loop through formData keys
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "mentorAbilities") {
+          // Convert array to JSON string
+          data.append(key, JSON.stringify(value));
+        } else if (value !== null) {
+          data.append(key, value);
+        }
+      });
+
+      // Append email separately
+      data.append("email", savedUser.email);
+
       const res = await fetch("http://localhost:5000/api/profile", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ...formData, email: savedUser.email }), // your form state
+        body: data, // no headers needed for FormData
       });
 
       const result = await res.json();
 
       if (res.ok) {
         alert("Profile updated successfully!");
-        // Optional: Update localStorage if needed
         localStorage.setItem("loggedInUser", JSON.stringify(result.user));
       } else {
         alert("Error: " + result.msg);
       }
-      setIsSubmitting(false);
     } catch (err) {
       console.error("Update failed:", err);
       alert("Something went wrong. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const user = {
-    name: "Select Photo",
-    email: "john@example.com",
-    bio: "Frontend Developer based in India.",
-    profilePic: "https://picsum.photos/id/237/200/300",
-  };
-  // const [profileImage, setProfileImage] = useState(null);
-  // const [userEmail, setUserEmail] = useState(null);
-
   // Handle input changes
   const handleInputChange = (e) => {
-    const { name, value, type, files, checked } = e.target;
-
+    const { name, type, value, files } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === "file" ? files[0] : type === "checkbox" ? checked : value,
+      [name]: type === "file" ? files[0] : value,
     }));
   };
 
@@ -318,6 +125,7 @@ export default function Edit_patient() {
       experience: savedUser.experience || "",
       mentorAbilities: savedUser.mentorAbilities || "",
       specializedIn: savedUser.specializedIn || "",
+      profileImage: typeof savedUser.profileImage === "string" ? savedUser.profileImage : null,
     });
     setIsSubmitting(false);
   };
@@ -337,31 +145,39 @@ export default function Edit_patient() {
                 <Card.Body>
                   <Form onSubmit={handleSubmit}>
                     <Row>
-                      {/* <div className="editprofile-pic">
-     
-              <img src={user.profilePic} alt="" className="profile-pic" />
-            <button style={{ color: 'white', backgroundColor: 'transparent', border: 'none', fontSize: '1.25rem' }}>
-  {user.name}
-</button>
-            </div> */}
+                      <Col md={4}>
+                        <Form.Group className="mb-20">
+                          <Form.Label>Upload Profile Image</Form.Label>
+                          <Form.Control
+                            type="file"
+                            name="profileImage"
+                            accept="image/*"
+                            onChange={handleInputChange}
+                          />
+                        </Form.Group>
+                      </Col>
 
-                      <div className="editprofile-pic">
-                        <img
-                          src={user.profilePic}
-                          alt=""
-                          className="profile-picedit"
-                        />
-                        <button
-                          style={{
-                            color: "white",
-                            backgroundColor: "transparent",
-                            border: "none",
-                            fontSize: "1.25rem",
-                          }}
-                        >
-                          {user.name}
-                        </button>
-                      </div>
+                      {formData.profileImage &&
+                        (typeof formData.profileImage === "string" ||
+                          formData.profileImage instanceof File) && (
+                            <div className="editprofile-pic">
+                            <img
+                              src={
+                                formData.profileImage
+                                  ? typeof formData.profileImage === "string" &&
+                                    formData.profileImage.startsWith("/profilePhotoUploads")
+                                    ? `http://localhost:5000${formData.profileImage}`
+                                    : formData.profileImage instanceof File
+                                    ? URL.createObjectURL(formData.profileImage)
+                                    : `${import.meta.env.BASE_URL}default-avatar.png`
+                                  : `${import.meta.env.BASE_URL}default-avatar.png`
+                              }
+                              alt="Profile"
+                              className="profile-picedit"
+                            />
+                          </div>
+                          
+                        )}
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
@@ -435,18 +251,19 @@ export default function Edit_patient() {
                         <Form.Group className="mb-20">
                           <Form.Label>mentorAbilities</Form.Label>
                           <Form.Control
-                              type="text"
-                              name="mentorAbilities"
-                              value={formData.mentorAbilities.join(", ")} 
-                              placeholder="Enter abilities (comma separated)"
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  mentorAbilities: e.target.value.split(",").map((s) => s.trim()),
-                                })
-                              }
-                            />
-
+                            type="text"
+                            name="mentorAbilities"
+                            value={formData.mentorAbilities.join(", ")}
+                            placeholder="Enter abilities (comma separated)"
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                mentorAbilities: e.target.value
+                                  .split(",")
+                                  .map((s) => s.trim()),
+                              })
+                            }
+                          />
                         </Form.Group>
                       </Col>
                       <Col md={4}>

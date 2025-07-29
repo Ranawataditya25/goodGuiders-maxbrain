@@ -23,6 +23,7 @@ mongoose.connect(process.env.MONGO_URI)
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/profilePhotoUploads", express.static("profilePhotoUploads"));
 
 
 

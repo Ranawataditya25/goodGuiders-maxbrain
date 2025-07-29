@@ -110,7 +110,7 @@ export default function Dashboard2() {
                           <strong>Mobile No:</strong> {doctor?.mobileNo}
                         </p>
                         <p>
-                          <strong>Role:</strong>{" "}
+                          <strong>Role:</strong>
                           {doctor?.role}
                         </p>
                         <p>
@@ -174,9 +174,17 @@ export default function Dashboard2() {
                   <div className="profile-head">
                     <div className="proimg-wrap">
                       <img
-                        className="img-fluid"
-                        src={IMAGE_URLS["avtar/1.jpg"]}
-                        alt=""
+                        src={
+                          doctor?.profileImage
+                            ? doctor?.profileImage.startsWith(
+                                "/profilePhotoUploads"
+                              )
+                              ? `http://localhost:5000${doctor?.profileImage}`
+                              : `${import.meta.env.BASE_URL}default-avatar.png`
+                            : `${import.meta.env.BASE_URL}default-avatar.png`
+                        }
+                        alt="Profile"
+                        className="profile-pic"
                       />
                     </div>
                     <h4>{doctor?.name}</h4>

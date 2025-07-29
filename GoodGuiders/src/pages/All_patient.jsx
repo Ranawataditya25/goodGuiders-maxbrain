@@ -340,18 +340,55 @@
 
 // src/components/ProfilePage.js
 
-import React from "react";
 import "./css/ProfilePage.css";
-import { Row, Col, Card, Form, Container } from "react-bootstrap";
+import { useState, useEffect } from "react";
+import { Container, Spinner, Alert } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
-import { Link } from "react-router-dom";
+
 const ProfilePage = () => {
-  const user = {
-    name: "Shubham",
-    email: "john@example.com",
-    bio: "Frontend Developer based in India.",
-    profilePic: "https://picsum.photos/id/237/200/300",
-  };
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+        console.log("Stored User:", storedUser);
+
+        if (!storedUser?.email)
+          throw new Error("User not found in localStorage");
+
+        const res = await fetch(
+          `http://localhost:5000/api/profile?email=${storedUser?.email}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch user data");
+
+        const data = await res.json();
+        setUser(data);
+      } catch (err) {
+        console.error(err);
+        setError("Unable to load profile. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading)
+    return (
+      <div className="text-center mt-5">
+        <Spinner animation="border" />
+      </div>
+    );
+  if (error)
+    return (
+      <Alert variant="danger" className="mt-3 text-center">
+        {error}
+      </Alert>
+    );
 
   return (
     <div className="themebody-wrap">
@@ -359,43 +396,56 @@ const ProfilePage = () => {
         <Container fluid>
           <div className="profile-container">
             <div className="profile-left">
-              <img src={user.profilePic} alt="" className="profile-pic" />
+              <img
+                src={
+                  user?.profileImage
+                    ? user.profileImage.startsWith("/profilePhotoUploads")
+                      ? `http://localhost:5000${user.profileImage}`
+                      : `${import.meta.env.BASE_URL}default-avatar.png`
+                    : `${import.meta.env.BASE_URL}default-avatar.png`
+                }
+                alt="Profile"
+                className="profile-pic"
+              />
+
               <h2>{user.name}</h2>
+              {/* <p className="bio">{user.bio}</p> */}
             </div>
 
             <div className="profile-right">
               <p className="bio">
-                <strong>Email:</strong> {user.email}
-              </p>
-
-              <p className="bio">
-                <strong>Date of Birth:</strong> {user.email}
-              </p>
-
-              <p className="bio">
-                <strong>Gender:</strong> {user.email}
+                <strong>Name:</strong> {user?.name}
               </p>
               <p className="bio">
-                <strong>Phone Number:</strong> {user.email}
-              </p>
-
-              <p className="bio">
-                <strong>Address:</strong> {user.email}
+                <strong>Email:</strong> {user?.email}
               </p>
               <p className="bio">
-                <strong>Zip Code:</strong> {user.email}
-              </p>
-
-              <p className="bio">
-                <strong>Graducation:</strong> {user.email}
-              </p>
-
-              <p className="bio">
-                <strong>Post Graducation:</strong> {user.email}
+                <strong>Date of Birth:</strong> {user?.dob}
               </p>
               <p className="bio">
-                <strong>PHD:</strong> {user.email}
+                <strong>Gender:</strong> {user?.gender}
               </p>
+              <p className="bio">
+                <strong>Phone Number:</strong> {user?.mobileNo}
+              </p>
+              <p className="bio">
+                <strong>City:</strong> {user?.city}
+              </p>
+              <p className="bio">
+                <strong>State:</strong> {user?.state}
+              </p>
+              <p className="bio">
+                <strong>Country:</strong> {user?.country}
+              </p>
+              <p className="bio">
+                <strong>Address:</strong> {user?.address}
+              </p>
+              <p className="bio">
+                <strong>Zip Code:</strong> {user?.postalCode}
+              </p>
+              {/* <p className="bio"><strong>Graduation:</strong> {user.graduation}</p>
+              <p className="bio"><strong>Post Graduation:</strong> {user.postGraduation}</p>
+              <p className="bio"><strong>PhD:</strong> {user.phd}</p> */}
             </div>
           </div>
         </Container>
@@ -405,58 +455,3 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-
-// import React from "react";
-// import './css/ProfilePage.css';
-// import { Row, Col, Card, Form, Container } from 'react-bootstrap';
-// import SimpleBar from 'simplebar-react';
-// import { Link } from "react-router-dom";
-// const ProfilePage = () => {
-//   const user = {
-//     name: "John Doe",
-//     email: "john@example.com",
-//     bio: "Frontend Developer based in India.",
-//     profilePic: "https://via.placeholder.com/150",
-//   };
-
-//   return (
-
-//       <div className="themebody-wrap">
-//          <SimpleBar className="theme-body common-dash">
-//           <Container fluid >
-//             <div>
-//     <div className="profile-container">
-//       <div className="profile-left">
-//         <img src={user.profilePic} alt="Profile" className="profile-pic" />
-
-//       </div>
-
-//       <h2>{user.name}</h2>
-//      </div>
-//       <div className="profile-right">
-//         {/* <h2>{user.name}</h2> */}
-
-//         <p className="bio"><strong>Email:</strong> {user.email}</p>
-
-//             <p className="bio"><strong>Date of Birth:</strong> {user.email}</p>
-
-//                 <p className="bio"><strong>Gender:</strong> {user.email}</p>
-//                     <p className="bio"><strong>Phone Number:</strong> {user.email}</p>
-
-//                         <p className="bio"><strong>Address:</strong> {user.email}</p>
-//                             <p className="bio"><strong>Zip Code:</strong> {user.email}</p>
-
-//                               <p className="bio"><strong>Graducation:</strong> {user.email}</p>
-
-//                                <p className="bio"><strong>Post Graducation:</strong> {user.email}</p>
-//                                 <p className="bio"><strong>PHD:</strong> {user.email}</p>
-
-//       </div>
-//     </div>
-//     </Container>
-// </SimpleBar>
-//     </div>
-//   );
-// };
-
-// export default ProfilePage;

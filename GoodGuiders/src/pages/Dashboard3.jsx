@@ -370,24 +370,12 @@
 //   );
 // }
 
-
-
-
-
-
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Row, Col, Card, Table, Container, Spinner } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
-import Chart from "react-apexcharts";
-import {
-  bloodpreport,
-  heartrate,
-  glucoserate,
-  clolesterol,
-  bloodlevel,
-} from "./js/Dashboard3";
+// import Chart from "react-apexcharts";
+// import { bloodpreport, heartrate, glucoserate, clolesterol, bloodlevel } from "./js/Dashboard3";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
 export default function Dashboard3() {
@@ -396,8 +384,22 @@ export default function Dashboard3() {
   const [referralInput, setReferralInput] = useState("");
 
   const visitData = [
-    { name: "Tiger Nixon", date: "10/05/2023", time: "09:30 Am", treatment: "Hindi", charge: "$80", status: "Active" },
-    { name: "Hal Appeno", date: "05/06/2023", time: "08:00 Am", treatment: "Engineering", charge: "$50", status: "Active" },
+    {
+      name: "Tiger Nixon",
+      date: "10/05/2023",
+      time: "09:30 Am",
+      treatment: "Hindi",
+      charge: "$80",
+      status: "Active",
+    },
+    {
+      name: "Hal Appeno",
+      date: "05/06/2023",
+      time: "08:00 Am",
+      treatment: "Engineering",
+      charge: "$50",
+      status: "Active",
+    },
   ];
 
   useEffect(() => {
@@ -407,7 +409,6 @@ export default function Dashboard3() {
       return;
     }
 
-    
     fetch(`http://localhost:5000/api/auth/dashboard?email=${loggedIn.email}`)
       .then((res) => res.json())
       .then((data) => {
@@ -426,7 +427,7 @@ export default function Dashboard3() {
       alert("Please enter a referral code.");
       return;
     }
-  
+
     try {
       const res = await fetch("http://localhost:5000/api/auth/use-referral", {
         method: "POST",
@@ -436,12 +437,12 @@ export default function Dashboard3() {
           referralCode: referralInput.trim(),
         }),
       });
-  
+
       const data = await res.json();
-  
+
       if (res.ok) {
         alert(`✅ ${data.msg}`);
-  
+
         // assume your backend returns updated credits
         if (data.updatedCredits) {
           setUser((prev) => ({
@@ -449,25 +450,22 @@ export default function Dashboard3() {
             credits: data.updatedCredits,
           }));
         }
-  
+
         setReferralInput(""); // clear input
-  
       } else {
         alert(`❌ ${data.msg}`);
       }
-  
     } catch (err) {
       console.error(err);
       alert("Server error. Please try again.");
     }
   };
-  
+
   return (
     <div className="themebody-wrap">
       <PageBreadcrumb pagename="Student Dashboard" />
       <div className="theme-body">
         <Container fluid className="cdxuser-profile">
-
           {/* 👇 New Top Section */}
           <Row className="mb-4">
             <Col xl={12}>
@@ -477,15 +475,27 @@ export default function Dashboard3() {
                 </Card.Header>
                 <Card.Body>
                   {loading ? (
-                    <div className="text-center"><Spinner animation="border" /></div>
+                    <div className="text-center">
+                      <Spinner animation="border" />
+                    </div>
                   ) : user ? (
                     <Row>
                       <Col md={6} className="mb-3">
-                        <p><strong>Name:</strong> {user?.name}</p>
-                        <p><strong>Email:</strong> {user?.email}</p>
-                        <p><strong>Mobile No:</strong> {user?.mobileNo}</p>
-                        <p><strong>Role:</strong> {user?.role}</p>
-                        <p><strong>Credits:</strong> {user?.credits}</p>
+                        <p>
+                          <strong>Name:</strong> {user?.name}
+                        </p>
+                        <p>
+                          <strong>Email:</strong> {user?.email}
+                        </p>
+                        <p>
+                          <strong>Mobile No:</strong> {user?.mobileNo}
+                        </p>
+                        <p>
+                          <strong>Role:</strong> {user?.role}
+                        </p>
+                        <p>
+                          <strong>Credits:</strong> {user?.credits}
+                        </p>
                       </Col>
                       <Col md={6}>
                         <div className="mb-3">
@@ -498,7 +508,9 @@ export default function Dashboard3() {
                             <button
                               className="btn btn-outline-primary btn-sm"
                               onClick={() => {
-                                navigator.clipboard.writeText(user.yourReferralCode || user.referralCode);
+                                navigator.clipboard.writeText(
+                                  user.yourReferralCode || user.referralCode
+                                );
                                 alert("Referral code copied!");
                               }}
                             >
@@ -547,12 +559,27 @@ export default function Dashboard3() {
                     </Card.Header>
                     <Card.Body>
                       <ul className="contact-list">
-                        <li><span>Name:</span> {user?.name}</li>
-                        <li><span>Date of Birth:</span>{user?.dob}</li>
-                        <li><span>Gender:</span>{user?.gender}</li>
-                        <li><span>Address:</span>{user?.address}</li>
-                        <li><span>Phone:</span> {user?.mobileNo}</li>
-                        <li><span>Email:</span> {user?.email}</li>
+                        <li>
+                          <span>Name:</span> {user?.name}
+                        </li>
+                        <li>
+                          <span>Date of Birth:</span>
+                          {user?.dob}
+                        </li>
+                        <li>
+                          <span>Gender:</span>
+                          {user?.gender}
+                        </li>
+                        <li>
+                          <span>Address:</span>
+                          {user?.address}
+                        </li>
+                        <li>
+                          <span>Phone:</span> {user?.mobileNo}
+                        </li>
+                        <li>
+                          <span>Email:</span> {user?.email}
+                        </li>
                       </ul>
                     </Card.Body>
                   </Card>
@@ -563,9 +590,21 @@ export default function Dashboard3() {
                       <div className="profile-head">
                         <div className="proimg-wrap">
                           <img
-                            className="img-fluid"
-                            src={IMAGE_URLS["avtar/1.jpg"]}
-                            alt=""
+                            src={
+                              user?.profileImage
+                                ? user.profileImage.startsWith(
+                                    "/profilePhotoUploads"
+                                  )
+                                  ? `http://localhost:5000${user.profileImage}`
+                                  : `${
+                                      import.meta.env.BASE_URL
+                                    }default-avatar.png`
+                                : `${
+                                    import.meta.env.BASE_URL
+                                  }default-avatar.png`
+                            }
+                            alt="Profile"
+                            className="profile-pic"
                           />
                         </div>
                         <h4>Cedric Kelly</h4>
@@ -574,15 +613,26 @@ export default function Dashboard3() {
                       </div>
                     </Card.Body>
                     <ul className="docactivity-list">
-                      <li><h4>50kg</h4><span>Weight</span></li>
-                      <li><h4>170cm</h4><span>Height</span></li>
-                      <li><h4>55kg</h4><span>Goal</span></li>
+                      <li>
+                        <h4>50kg</h4>
+                        <span>Weight</span>
+                      </li>
+                      <li>
+                        <h4>170cm</h4>
+                        <span>Height</span>
+                      </li>
+                      <li>
+                        <h4>55kg</h4>
+                        <span>Goal</span>
+                      </li>
                     </ul>
                   </Card>
                 </Col>
                 <Col xxl={12} lg={6}>
                   <Card>
-                    <Card.Header><h4>Notifications</h4></Card.Header>
+                    <Card.Header>
+                      <h4>Notifications</h4>
+                    </Card.Header>
                     <Card.Body>
                       <ul className="docnoti-list">
                         {[1, 2, 3, 4].map((num, i) => (
@@ -597,7 +647,9 @@ export default function Dashboard3() {
                                 <h6>Anna sent you a photo</h6>
                                 <span className="text-light">Date Here</span>
                               </div>
-                              <div className="badge badge-primary">10:00 Pm</div>
+                              <div className="badge badge-primary">
+                                10:00 Pm
+                              </div>
                             </div>
                           </li>
                         ))}
@@ -618,7 +670,9 @@ export default function Dashboard3() {
                 {/* Existing cards … */}
                 <Col xl={12}>
                   <Card>
-                    <Card.Header><h4>Student Visits</h4></Card.Header>
+                    <Card.Header>
+                      <h4>Student Visits</h4>
+                    </Card.Header>
                     <Card.Body>
                       <div className="table-responsive">
                         <Table className="table table-bordered">
@@ -640,7 +694,14 @@ export default function Dashboard3() {
                                 <td>{item.time}</td>
                                 <td>{item.treatment}</td>
                                 <td>{item.charge}</td>
-                                <td style={{ color: item.status === "Active" ? "green" : "red" }}>
+                                <td
+                                  style={{
+                                    color:
+                                      item.status === "Active"
+                                        ? "green"
+                                        : "red",
+                                  }}
+                                >
                                   {item.status}
                                 </td>
                               </tr>
