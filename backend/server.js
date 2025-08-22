@@ -8,6 +8,8 @@ import cors from "cors";
 import authRoutes from "./routes/auth.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import questionRoutes from "./routes/question.route.js";
+import questionPaperRoutes from "./routes/questionPaper.route.js";
+
 
 // assignment/test APIs (already present)
 import assignmentRoutes from "./routes/assignment.route.js";
@@ -37,6 +39,8 @@ mongoose
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/api/question-papers", questionPaperRoutes);
+
 
 // Mount both routers under /api
 app.use("/api", assignmentRoutes);
