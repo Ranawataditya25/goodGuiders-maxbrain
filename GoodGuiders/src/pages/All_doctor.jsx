@@ -555,6 +555,10 @@ export default function All_Mentor() {
     navigate("/test-page");
   };
 
+  const assignTestClick = () => {
+    navigate("/assign-test");
+  };
+
   const [formData, setFormData] = useState({
     name: "",
     department: "",
@@ -760,7 +764,27 @@ export default function All_Mentor() {
               <Col>
                 <Card>
                   <Card.Body>
-                    <Button className="fs-25" onClick={handleTestClick}>TEST</Button>
+                    <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="px-4 rounded-pill shadow-sm"
+                        onClick={handleTestClick}
+                      >
+                        <FeatherIcon icon="plus-circle" className="me-2" />
+                        Create Mock Test
+                      </Button>
+
+                      <Button
+                        variant="success"
+                        size="lg"
+                        className="px-4 rounded-pill shadow-sm"
+                        onClick={assignTestClick}
+                      >
+                        <FeatherIcon icon="send" className="me-2" />
+                        Assign Test
+                      </Button>
+                    </div>
                     <Row className="Product_list">
                       {/* <Col md={12}>
 

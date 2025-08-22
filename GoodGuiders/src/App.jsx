@@ -9,6 +9,10 @@ import All_doctor from "./pages/All_doctor";
 import Add_doctor from "./pages/Add_doctor";
 import Edit_doctor from "./pages/Edit_doctor";
 
+import AssignTest from "./pages/AssignTest";
+import AssignedTestsPage from "./pages/AssignedTestsPage";
+import TestPlayer from "./pages/TestPlayer";
+
 import All_patient from "./pages/All_patient";
 import Add_patient from "./pages/Add_patient";
 import Edit_patient from "./pages/Edit_patient";
@@ -122,6 +126,13 @@ function AppContent() {
                 <Route exact path="/all-doctors" element={<All_doctor />} />
                 <Route exact path="/add-doctor" element={<Add_doctor />} />
                 <Route exact path="/edit-doctor" element={<Edit_doctor />} />
+
+                {/* Mentor assigning test */}
+                <Route exact path="/assign-test" element={<AssignTest />} />
+
+                <Route exact path="/assigned-tests" element={<AssignedTestsPage />} />
+
+                <Route exact path="/test-player/:assignmentId" element={<TestPlayer />} />
 
                 <Route exact path="/all-patients" element={<All_patient />} />
                 <Route exact path="/add-patient" element={<Add_patient />} />

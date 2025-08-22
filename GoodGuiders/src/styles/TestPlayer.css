@@ -1,0 +1,178 @@
+/* ===== Test Player hardening (scoped) ===== */
+.test-player {
+  position: relative;
+  z-index: 0;
+  --topbar-offset: 64px; /* tweak to match your fixed header */
+}
+
+/* kill any global clipping that hides content */
+.test-player .container-fluid,
+.test-player .row,
+.test-player .col,
+.test-player .card,
+.test-player .card-body {
+  overflow: visible !important;
+}
+
+/* main column above side rails */
+.test-player .questions-col { position: relative; z-index: 2; }
+
+/* each question card can stack safely */
+.test-player .question-card {
+  position: relative;
+  z-index: 1;
+  scroll-margin-top: calc(var(--topbar-offset) + 16px);
+}
+
+/* sticky header */
+.test-player .tp-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+}
+
+/* ===== Question header (bigger than options) ===== */
+.test-player .question-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.test-player .qno {
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+  margin-top: 2px;
+  min-width: 2.6rem;
+  flex: 0 0 auto;
+  font-size: 1.25rem;          /* bigger number */
+}
+
+.test-player .question-title {
+  color: #0b0b0b;
+  line-height: 1.45;
+  word-break: break-word;
+  flex: 1 1 auto;
+  font-size: 1.25rem;          /* bigger title */
+  font-weight: 600;
+}
+
+/* ===== Options ===== */
+.test-player .option-row {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  border: 1px solid #e6e9ef;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: #fff;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.test-player .option-row:hover { background: #f8fbff; }
+.test-player .option-row.is-selected {
+  border-color: #0d6efd33;
+  background: #f3f7ff;
+}
+
+/* Undo aggressive globals and bump font size for answers */
+.test-player .option-row .form-check,
+.test-player .option-row .form-check-label {
+  white-space: normal !important;
+  line-height: 1.5 !important;
+  position: static !important;
+  margin: 0;
+  font-size: 1.05rem;          /* bigger answer text */
+}
+
+.test-player .option-row .form-check-input {
+  position: static !important;
+  margin-right: 12px;
+  flex: 0 0 auto;
+  transform: scale(1.15);      /* bigger radio */
+}
+
+/* Inline A/B/C/D marker */
+.test-player .option-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.test-player .opt-letter {
+  font-weight: 700;
+  min-width: 1.6rem;           /* keeps alignment */
+  text-transform: uppercase;
+}
+.test-player .opt-text { flex: 1 1 auto; }
+
+/* palettes/badges sometimes get clipped by themes */
+.test-player .badge { overflow: visible !important; }
+
+/* Left rail spacing if you have a fixed sidebar */
+@media (min-width: 992px) {
+  .test-player .with-left-rail {
+    padding-left: 64px;         /* adjust to your sidebar width */
+    padding-top: var(--topbar-offset);
+  }
+}
+
+/* ===== Right rail: timer + palette ===== */
+.test-player .sticky-card { position: sticky; top: 16px; }
+
+.test-player .palette {
+  display: grid;
+  grid-template-columns: repeat(5, 48px);
+  gap: 10px;
+  justify-content: start;
+  margin-top: 6px;
+}
+
+.test-player .qbtn {
+  width: 48px;
+  height: 42px;
+  border-radius: 6px;
+  border: 0;
+  color: #fff;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+.test-player .qbtn:not(.current):hover { filter: brightness(1.06); }
+.test-player .qbtn:focus-visible { outline: 2px solid #94c0ff; outline-offset: 2px; }
+
+.test-player .qbtn.answered    { background: #1e9e53; }   /* green */
+.test-player .qbtn.current     { background: #0d6efd; }   /* blue */
+.test-player .qbtn.seen        { background: #6c757d; }   /* grey */
+.test-player .qbtn.not-visited { background: #0b0b0b; }   /* black */
+
+.test-player .legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.test-player .legend .leg {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #fff;
+}
+.test-player .legend .answered    { background: #1e9e53; }
+.test-player .legend .current     { background: #0d6efd; }
+.test-player .legend .seen        { background: #6c757d; }
+.test-player .legend .not-visited { background: #0b0b0b; }
+
+/* Responsive palette sizing */
+@media (max-width: 991.98px) {
+  .test-player .palette { grid-template-columns: repeat(8, 42px); }
+  .test-player .qbtn { width: 42px; height: 38px; }
+  .test-player .qno,
+  .test-player .question-title { font-size: 1.15rem; } /* slightly smaller on mobile */
+  .test-player .option-row .form-check-label { font-size: 1rem; }
+}

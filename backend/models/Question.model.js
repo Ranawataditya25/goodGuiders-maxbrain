@@ -1,21 +1,76 @@
-import mongoose from 'mongoose';
+// import mongoose from 'mongoose';
 
-const questionSchema = new mongoose.Schema({
-  class: String,
-  subject: String,
-  type: {
-    type: String,
-    enum: ['mcq', 'subjective'],
-    required: true
+// const questionSchema = new mongoose.Schema({
+//   class: String,
+//   subject: String,
+//   type: {
+//     type: String,
+//     enum: ['mcq', 'subjective'],
+//     required: true
+//   },
+//   difficulty: {
+//     type: String,
+//     enum: ['beginner', 'intermediate', 'advanced']
+//   },
+//   question: String,
+//   options: [String], // Only for MCQ
+//   correctAnswer: String, // Only for MCQ
+// });
+
+
+// export default mongoose.model('Question', questionSchema);
+
+
+
+import mongoose from "mongoose";
+
+const QuestionSchema = new mongoose.Schema(
+  {
+    type: { type: String, enum: ["mcq", "subjective"], required: true },
+    question: { type: String, default: "" },
+
+    // MCQ only
+    options: { type: [String], default: undefined },
+    correctAnswer: { type: String, default: "" },
+
+    // Subjective only
+    suggestedAnswer: { type: String, default: "" },
+
+    marks: { type: Number, min: 0, default: 1 },
   },
-  difficulty: {
-    type: String,
-    enum: ['beginner', 'intermediate', 'advanced']
+  { _id: false }
+);
+
+const TestSchema = new mongoose.Schema(
+  {
+    class: { type: String, required: true }, // "6".."12"
+    subjects: {
+      type: [String],
+      default: [],
+      validate: (v) => v.length <= 3,
+    },
+    testType: {
+      type: String,
+      enum: ["mcq", "subjective", "mcq+subjective"],
+      required: true,
+    },
+    difficulty: {
+      type: String,
+      enum: ["beginner", "intermediate", "advanced"],
+      required: true,
+    },
+
+    // counts (support both single-type and mixed)
+    numberOfQuestion: { type: Number, min: 0, default: 0 },
+    mcqCount: { type: Number, min: 0, default: 0 },
+    subjectiveCount: { type: Number, min: 0, default: 0 },
+
+    // optional (if you later add it to UI)
+    mixOrder: { type: String, enum: ["grouped", "alternate"], default: "grouped" },
+
+    questions: { type: [QuestionSchema], default: [] },
   },
-  question: String,
-  options: [String], // Only for MCQ
-  correctAnswer: String, // Only for MCQ
-});
+  { timestamps: true }
+);
 
-
-export default mongoose.model('Question', questionSchema);
+export default mongoose.model("Question", TestSchema);

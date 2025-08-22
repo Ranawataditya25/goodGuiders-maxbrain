@@ -1,435 +1,388 @@
-// import React from "react";
-// import { Link } from "react-router-dom";
-// import { Row, Col, Card, Table, Container } from "react-bootstrap";
-// import PageBreadcrumb from "../componets/PageBreadcrumb";
-
-// import Chart from "react-apexcharts";
-// import {
-//   bloodpreport,
-//   heartrate,
-//   glucoserate,
-//   clolesterol,
-//   bloodlevel,
-// } from "./js/Dashboard3";
-// import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
-
-// export default function Dashboard3() {
-
-//   const status = document.getElementById("status");
-//   if (status.innerText.trim() === "Active") {
-//     status.classList.add("status-active");
-//   } else {
-//     status.classList.add("status-inactive");
-//   }
-
-//   return (
-//     <div className="themebody-wrap">
-//       {/* Breadcrumb Start */}
-//       <PageBreadcrumb pagename="Student Dashboard" />
-//       {/* Breadcrumb End */}
-//       {/* theme body start */}
-//       <div className="theme-body">
-//         <Container fluid className="cdxuser-profile">
-//           <Row>
-//             <Col xxl={4} xl={12}>
-//               <Row>
-//                 <Col xxl={12} md={6}>
-//                   <Card>
-//                     <Card.Header>
-//                       <h4>Personal Information</h4>
-//                     </Card.Header>
-//                     <Card.Body>
-//                       <div className="table-responsive">
-//                         <ul className="contact-list">
-//                           <li>
-//                             {" "}
-//                             <span>name:</span>Daniel Smith
-//                           </li>
-//                           <li>
-//                             {" "}
-//                             <span>date of birth:</span>18-09-2015
-//                           </li>
-//                           <li>
-//                             {" "}
-//                             <span>Gender:</span>Male
-//                           </li>
-//                           <li>
-//                             {" "}
-//                             <span>Address:</span>Live In Uk
-//                           </li>
-//                           <li>
-//                             {" "}
-//                             <span>Phone:</span>+1 80 606590
-//                           </li>
-//                           <li>
-//                             {" "}
-//                             <span>Email:</span>daniel@example.com
-//                           </li>
-//                         </ul>
-//                       </div>
-//                     </Card.Body>
-//                   </Card>
-//                 </Col>
-//                 <Col xxl={12} md={6}>
-//                   <Card className="doctor-probox">
-//                     <div className="img-wrap"></div>
-//                     <Card.Body>
-//                       <div className="profile-head">
-//                         <div className="proimg-wrap">
-//                           <img
-//                             className="img-fluid"
-//                             src={IMAGE_URLS["avtar/1.jpg"]}
-//                             alt=""
-//                           />
-//                         </div>
-//                         <h4>Cedric Kelly</h4>
-//                         <span>25 years, California</span>
-//                         <p>
-//                           Lorem ipsum dolor sit amet, consectetur adipisicing
-//                           elit, sed do eiusmod tempor incididunt ut labore et
-//                           dolore magna aliqua. Ut enim ad minim veniam,
-//                         </p>
-//                       </div>
-//                     </Card.Body>
-//                     <ul className="docactivity-list">
-//                       <li>
-//                         <h4>50kg</h4>
-//                         <span>Weight</span>
-//                       </li>
-//                       <li>
-//                         <h4>170cm</h4>
-//                         <span>Height</span>
-//                       </li>
-//                       <li>
-//                         <h4>55kg</h4>
-//                         <span>Goal</span>
-//                       </li>
-//                     </ul>
-//                   </Card>
-//                 </Col>
-//                 <Col xxl={12} lg={6}>
-//                   <Card>
-//                     <Card.Header>
-//                       <h4>Notifications</h4>
-//                     </Card.Header>
-//                     <Card.Body>
-//                       <ul className="docnoti-list">
-//                         <li>
-//                           <div className="media">
-//                             <img
-//                               className="rounded-50 w-40"
-//                               src={IMAGE_URLS["avtar/1.jpg"]}
-//                               alt=""
-//                             />
-//                             <div className="media-body">
-//                               <h6> Anna Send you Photo</h6>
-//                               <span className="text-light">10, Feb ,2023</span>
-//                             </div>
-//                             <div className="badge badge-primary">10:15 Pm</div>
-//                           </div>
-//                         </li>
-//                         <li>
-//                           <div className="media">
-//                             <img
-//                               className="rounded-50 w-40"
-//                               src={IMAGE_URLS["avtar/2.jpg"]}
-//                               alt=""
-//                             />
-//                             <div className="media-body">
-//                               <h6> Anna Send you Photo</h6>
-//                               <span className="text-light">
-//                                 05, March ,2023
-//                               </span>
-//                             </div>
-//                             <div className="badge badge-primary">09:20 Pm</div>
-//                           </div>
-//                         </li>
-//                         <li>
-//                           <div className="media">
-//                             <img
-//                               className="rounded-50 w-40"
-//                               src={IMAGE_URLS["avtar/3.jpg"]}
-//                               alt=""
-//                             />
-//                             <div className="media-body">
-//                               <h6> Anna Send you Photo</h6>
-//                               <span className="text-light">01, Jan ,2023</span>
-//                             </div>
-//                             <div className="badge badge-primary">03:40 Pm</div>
-//                           </div>
-//                         </li>
-//                         <li>
-//                           <div className="media">
-//                             <img
-//                               className="rounded-50 w-40"
-//                               src={IMAGE_URLS["avtar/4.jpg"]}
-//                               alt=""
-//                             />
-//                             <div className="media-body">
-//                               <h6> Anna Send you Photo</h6>
-//                               <span className="text-light">25, Feb ,2023</span>
-//                             </div>
-//                             <div className="badge badge-primary">05:26 Am </div>
-//                           </div>
-//                         </li>
-//                       </ul>
-//                     </Card.Body>
-//                     <Card.Footer>
-//                       <Link className="btn btn-primary d-block mx-auto btn-lg">
-//                         See All Notification{" "}
-//                       </Link>
-//                     </Card.Footer>
-//                   </Card>
-//                 </Col>
-//               </Row>
-//             </Col>
-//             <Col xxl={8} xl={12}>
-//               <Row>
-//                 <Col sm={6}>
-//                   <div className="card patientreport-card">
-//                     <div className="card-header border-0">
-//                       <div>
-//                         <h4>student pressure</h4>
-//                         <span>In the normal</span>
-//                       </div>
-//                       <div className="report-count">
-//                         <h3 className="text-primary">120/80</h3>
-//                         <span>mmHG</span>
-//                       </div>
-//                     </div>
-//                     <div className="card-body p-0">
-//                       <Chart
-//                         options={bloodpreport}
-//                         series={bloodpreport.series}
-//                         height={200}
-//                         type="area"
-//                       />
-//                     </div>
-//                   </div>
-//                 </Col>
-//                 <Col sm={6}>
-//                   <div className="card patientreport-card">
-//                     <div className="card-header border-0">
-//                       <div>
-//                         <h4>Student Rate</h4>
-//                         <span>Above the normal</span>
-//                       </div>
-//                       <div className="report-count">
-//                         <h3 className="text-secondary">99</h3>
-//                         <span>Per min</span>
-//                       </div>
-//                     </div>
-//                     <div className="card-body p-0">
-//                       <Chart
-//                         options={heartrate}
-//                         series={heartrate.series}
-//                         height={200}
-//                         type="area"
-//                       />
-//                     </div>
-//                   </div>
-//                 </Col>
-//                 <Col sm={6}>
-//                   <div className="card patientreport-card">
-//                     <div className="card-header border-0">
-//                       <div>
-//                         <h4>Sucess Rate</h4>
-//                         <span>In the normal</span>
-//                       </div>
-//                       <div className="report-count">
-//                         <h3 className="text-success">97</h3>
-//                         <span>mg/dl</span>
-//                       </div>
-//                     </div>
-//                     <div className="card-body p-0">
-//                       <Chart
-//                         options={glucoserate}
-//                         series={glucoserate.series}
-//                         height={200}
-//                         type="area"
-//                       />
-//                     </div>
-//                   </div>
-//                 </Col>
-//                 <Col sm={6}>
-//                   <div className="card patientreport-card">
-//                     <div className="card-header border-0">
-//                       <div>
-//                         <h4>Guide</h4>
-//                         <span>In the normal</span>
-//                       </div>
-//                       <div className="report-count">
-//                         <h3 className="text-warning">124</h3>
-//                         <span>mg/dl</span>
-//                       </div>
-//                     </div>
-//                     <div className="card-body p-0">
-//                       <Chart
-//                         options={clolesterol}
-//                         series={clolesterol.series}
-//                         height={200}
-//                         type="area"
-//                       />
-//                     </div>
-//                   </div>
-//                 </Col>
-//                 <Col xl={12}>
-//                   <div className="card">
-//                     <div className="card-header">
-//                       <h4>Student Visits</h4>
-//                     </div>
-//                     <div className="card-body">
-//                       <div className="table-responsive">
-//                         <Table className="table table-bordered">
-//                           <thead>
-//                             <tr>
-//                               <th>Mentor Name</th>
-//                               <th>visit Date</th>
-//                               <th>visit Time </th>
-//                               <th>Treatment</th>
-//                               <th>Charges</th>
-//                               <th>Status </th>
-//                             </tr>
-//                           </thead>
-//                           <tbody>
-//                             <tr>
-//                               <td> Tiger Nixon</td>
-//                               <td>10/05/2023</td>
-//                               <td>09:30 Am</td>
-//                               <td>Hindi</td>
-//                               <td>$80</td>
-//                               <td>Active</td>
-//                             </tr>
-//                             <tr>
-//                               <td> Hal Appeno</td>
-//                               <td>05/06/2023</td>
-//                               <td>08:00 Am</td>
-//                               <td>Engineering</td>
-//                               <td>$50</td>
-//                               <td>Active</td>
-//                             </tr>
-//                             <tr>
-//                               <td> Pat Agonia</td>
-//                               <td>20/02/2023</td>
-//                               <td>10:30 Am</td>
-//                               <td>Science</td>
-//                               <td>$75</td>
-//                               <td>Active</td>
-//                             </tr>
-//                             <tr>
-//                               <td> Paul Molive</td>
-//                               <td>15/08/2023</td>
-//                               <td>03:00 Pm</td>
-//                               <td>Sports</td>
-//                               <td>$60</td>
-//                               <td>InActive</td>
-//                             </tr>
-//                             <tr>
-//                               <td>Polly Tech</td>
-//                               <td>12/07/2023</td>
-//                               <td>12:00 Pm</td>
-//                               <td>Socal Science</td>
-//                               <td>$40</td>
-//                               <td
-//                                 style={{
-//                                   color: status === "Active" ? "green" : "red",
-//                                 }}
-//                               >
-//                                 {status}
-//                               </td>
-//                             </tr>
-//                           </tbody>
-//                         </Table>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </Col>
-//                 <Col xl={12}>
-//                   <div className="card">
-//                     <div className="card-header">
-//                       <h4>Student Activities</h4>
-//                     </div>
-//                     <div className="card-body">
-//                       {/* <div id="bloodlevel"></div> */}
-//                       <Chart
-//                         options={bloodlevel}
-//                         series={bloodlevel.series}
-//                         height={375}
-//                         type="line"
-//                       />
-//                     </div>
-//                   </div>
-//                 </Col>
-//               </Row>
-//             </Col>
-//           </Row>
-//         </Container>
-//       </div>
-//       {/* theme body end */}
-//     </div>
-//   );
-// }
-
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Row, Col, Card, Table, Container, Spinner } from "react-bootstrap";
-import PageBreadcrumb from "../componets/PageBreadcrumb";
-// import Chart from "react-apexcharts";
-// import { bloodpreport, heartrate, glucoserate, clolesterol, bloodlevel } from "./js/Dashboard3";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Row,
+  Col,
+  Card,
+  Table,
+  Container,
+  Spinner,
+  Badge,
+  Button,
+  Collapse,
+} from "react-bootstrap";
+import FeatherIcon from "feather-icons-react";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
+import PageBreadcrumb from "../componets/PageBreadcrumb";
+
+const API = "http://localhost:5000/api";
+
+/** --------------------------
+ *  Helpers to normalize shapes
+ *  -------------------------- */
+function coerceArray(x) {
+  if (!x) return [];
+  if (Array.isArray(x)) return x;
+  if (typeof x === "string") {
+    // handle comma-separated
+    return x
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+// Normalize array of strings or objects with common name keys
+function normalizeStringList(list) {
+  const arr = coerceArray(list);
+  return arr
+    .map((item) => {
+      if (item == null) return null;
+      if (typeof item === "string") return item.trim();
+      if (typeof item === "object") {
+        return (
+          item.name ??
+          item.title ??
+          item.subject ??
+          item.label ??
+          item.value ??
+          ""
+        )
+          .toString()
+          .trim();
+      }
+      return String(item).trim();
+    })
+    .filter(Boolean);
+}
+
+function pickTestObj(a) {
+  // Some backends send a populated `test`, others `testId` (as object or id), some `exam`
+  return a?.test || a?.testId || a?.exam || null;
+}
+
+function pickSubjects(test) {
+  // subjects can be: array, CSV string, or nested
+  const arr =
+    normalizeStringList(test?.subjects) ||
+    normalizeStringList(test?.subjectNames) ||
+    normalizeStringList(test?.tags);
+  return arr && arr.length ? arr : [];
+}
+
+function pickType(test) {
+  // type can be testType / type / mode / format
+  return test?.testType || test?.type || test?.mode || test?.format || "—";
+}
+
+function pickClass(test) {
+  // class can be `class`, `className`, `klass`, `grade`, `standard`
+  const val =
+    test?.class ??
+    test?.className ??
+    test?.klass ??
+    test?.grade ??
+    test?.standard ??
+    null;
+  if (val === 0 || val === "0") return "0";
+  if (!val && val !== 0) return "—";
+  return typeof val === "string" ? val : String(val);
+}
+
+function asLocale(dt) {
+  try {
+    return dt ? new Date(dt).toLocaleString() : "—";
+  } catch {
+    return "—";
+  }
+}
+
+// extract ID whether it's a string, object with _id/id, or falsy
+const extractId = (x) => {
+  if (!x) return null;
+  if (typeof x === "string") return x;
+  if (typeof x === "object") return x._id || x.id || null;
+  return null;
+};
 
 export default function Dashboard3() {
+  // ----- profile -----
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  // ----- referral (small) -----
+  const [activeTab, setActiveTab] = useState("avail");
   const [referralInput, setReferralInput] = useState("");
+  const [referName, setReferName] = useState("");
+  const [referEmail, setReferEmail] = useState("");
+  const [referMobile, setReferMobile] = useState("");
 
-  const visitData = [
-    {
-      name: "Tiger Nixon",
-      date: "10/05/2023",
-      time: "09:30 Am",
-      treatment: "Hindi",
-      charge: "$80",
-      status: "Active",
-    },
-    {
-      name: "Hal Appeno",
-      date: "05/06/2023",
-      time: "08:00 Am",
-      treatment: "Engineering",
-      charge: "$50",
-      status: "Active",
-    },
-  ];
+  // ----- assignments -----
+  const [assignLoading, setAssignLoading] = useState(true);
+  const [assignments, setAssignments] = useState([]);
+  const [assignErr, setAssignErr] = useState("");
 
+  // ----- debug inspector -----
+  const [showDebug, setShowDebug] = useState(false);
+  const [rawSample, setRawSample] = useState(null);
+
+  // ----- start button state -----
+  const [startingId, setStartingId] = useState(null);
+  const navigate = useNavigate();
+
+  // demo table content that was already in your page
+  const visitData = useMemo(
+    () => [
+      {
+        name: "Tiger Nixon",
+        date: "10/05/2023",
+        time: "09:30 Am",
+        treatment: "Hindi",
+        charge: "$80",
+        status: "Active",
+      },
+      {
+        name: "Hal Appeno",
+        date: "05/06/2023",
+        time: "08:00 Am",
+        treatment: "Engineering",
+        charge: "$50",
+        status: "Active",
+      },
+    ],
+    []
+  );
+
+  /** -------- 1) Load student profile -------- */
   useEffect(() => {
     const loggedIn = JSON.parse(localStorage.getItem("loggedInUser"));
     if (!loggedIn?.email) {
-      alert("No user logged in");
+      setLoadingUser(false);
+      console.warn("No loggedInUser in localStorage");
       return;
     }
 
-    fetch(`http://localhost:5000/api/auth/dashboard?email=${loggedIn.email}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setUser({ ...loggedIn, ...data });
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        alert("Failed to load profile");
-        setLoading(false);
-      });
+    (async () => {
+      try {
+        const res = await fetch(
+          `${API}/auth/dashboard?email=${encodeURIComponent(loggedIn.email)}`
+        );
+        const json = await res.json();
+
+        // Server might send {data}, {user}, or the object
+        const backendUser = json?.data || json?.user || json;
+
+        // lock a usable _id no matter how payload looks
+        const resolvedId =
+          backendUser?._id ||
+          backendUser?.user?._id ||
+          loggedIn?._id ||
+          null;
+
+        setUser({ ...loggedIn, ...backendUser, _id: resolvedId });
+      } catch (err) {
+        console.error("Profile load failed:", err);
+      } finally {
+        setLoadingUser(false);
+      }
+    })();
   }, []);
 
+  /** Helper: render display values safely */
+  const renderSubjects = (a, test) => {
+    // Try test-level, then assignment-level as fallback
+    const list =
+      pickSubjects(test) ||
+      normalizeStringList(a?.subjects) ||
+      normalizeStringList(a?.subjectNames) ||
+      normalizeStringList(a?.subject) ||
+      normalizeStringList(a?.tags) ||
+      [];
+    return list.length ? list.join(", ") : "—";
+  };
+  const renderType = (a, test) =>
+    pickType(test) ||
+    a?.testType ||
+    a?.type ||
+    a?.mode ||
+    a?.format ||
+    "—";
+
+  const renderClass = (a, test) => {
+    const val =
+      pickClass(test) !== "—"
+        ? pickClass(test)
+        : (a?.class ??
+            a?.className ??
+            a?.klass ??
+            a?.grade ??
+            a?.standard ??
+            "—");
+    const cls = val === "—" ? "—" : typeof val === "string" ? val : String(val);
+    return cls === "—" ? cls : `Class ${cls}`;
+  };
+
+  /** -------- 2) Load assignments (uses studentId or email) -------- */
+  const fetchAssignments = useCallback(async () => {
+    if (!user?.email && !user?._id) return;
+
+    setAssignLoading(true);
+    setAssignErr("");
+
+    try {
+      const url = new URL(`${API}/assignments`);
+      // Our API supports either one; provide both for robustness
+      if (user?._id) url.searchParams.set("studentId", user._id);
+      if (user?.email) url.searchParams.set("studentEmail", user.email);
+
+      const res = await fetch(url.toString());
+      const json = await res.json();
+
+      // Accept multiple common shapes
+      const payload =
+        (Array.isArray(json) && json) ||
+        (Array.isArray(json?.data) && json.data) ||
+        (Array.isArray(json?.assignments) && json.assignments) ||
+        (Array.isArray(json?.data?.data) && json.data.data) ||
+        [];
+
+      setAssignments(payload);
+      setRawSample(payload[0] || null); // save one sample for the debug viewer
+      if (!res.ok || json?.ok === false) {
+        // still show what we got but warn
+        setAssignErr(json?.message || "Server error while fetching assignments");
+      }
+    } catch (err) {
+      console.error("[Assignments] Error:", err);
+      setAssignments([]);
+      setRawSample(null);
+      setAssignErr("Server error while fetching assignments");
+    } finally {
+      setAssignLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.email || user?._id) fetchAssignments();
+  }, [user, fetchAssignments]);
+
+  /** -------- Start Attempt + Navigate to Paper -------- */
+
+  // Try many common locations for a test id on the row payload
+  const getPaperIdFromRow = (a) => {
+    const cand =
+      a?.test ??
+      a?.testId ??
+      a?.exam ??
+      a?.examId ??
+      a?.paper ??
+      a?.paperId ??
+      a?.meta?.testId ??
+      a?.metadata?.testId ??
+      null;
+    return extractId(cand);
+  };
+
+  // If the row didn't have a test id, ask the detail endpoint
+  const fetchPaperIdFromDetail = async (assignmentId) => {
+    try {
+      const r = await fetch(`${API}/assignments/${assignmentId}`);
+      const j = await r.json();
+      const a = j?.data || j?.assignment || j || {};
+      const cand =
+        a?.test ??
+        a?.testId ??
+        a?.exam ??
+        a?.examId ??
+        a?.paper ??
+        a?.paperId ??
+        a?.meta?.testId ??
+        a?.metadata?.testId ??
+        null;
+      return extractId(cand);
+    } catch {
+      return null;
+    }
+  };
+
+  const handleStartAssignment = async (a) => {
+    try {
+      setStartingId(a._id);
+
+      // 1) Resolve testId as aggressively as possible
+      let paperId = getPaperIdFromRow(a);
+      if (!paperId) {
+        paperId = await fetchPaperIdFromDetail(a._id);
+      }
+
+      // 2) Create/start attempt (if your backend supports it)
+      let attemptId = null;
+      try {
+        const res = await fetch(`${API}/assignments/${a._id}/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            studentId: user?._id,
+            studentEmail: user?.email,
+            testId: paperId || undefined,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          attemptId =
+            data?.attemptId || data?.data?._id || data?.attempt?._id || null;
+          // use testId from server if it comes back (last-resort)
+          paperId =
+            paperId ||
+            extractId(
+              data?.test ||
+                data?.testId ||
+                data?.exam ||
+                data?.paper ||
+                data?.data?.test ||
+                data?.data?.testId
+            );
+        }
+      } catch (e) {
+        console.warn("Start endpoint failed; proceeding with navigation anyway.", e);
+      }
+
+      // 3) Build query params for the player
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries({
+            testId: paperId || undefined,
+            attemptId: attemptId || undefined,
+          }).filter(([, v]) => !!v)
+        )
+      ).toString();
+
+      if (!paperId) {
+        alert(
+          "This assignment does not have a test linked yet. Please ask your mentor to attach a paper."
+        );
+      }
+
+      // 4) Navigate (even if paperId missing, the player will show a helpful message)
+      navigate(`/test-player/${a._id}${query ? `?${query}` : ""}`);
+    } catch (err) {
+      console.error("Failed to start assignment:", err);
+      // Fallback: still open player with whatever we have
+      navigate(`/test-player/${a._id}`);
+    } finally {
+      setStartingId(null);
+    }
+  };
+
+  /** -------- referral handler -------- */
   const handleUseReferral = async () => {
     if (!referralInput.trim()) {
       alert("Please enter a referral code.");
       return;
     }
-
     try {
-      const res = await fetch("http://localhost:5000/api/auth/use-referral", {
+      const res = await fetch(`${API}/auth/use-referral`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -437,21 +390,13 @@ export default function Dashboard3() {
           referralCode: referralInput.trim(),
         }),
       });
-
       const data = await res.json();
-
       if (res.ok) {
         alert(`✅ ${data.msg}`);
-
-        // assume your backend returns updated credits
         if (data.updatedCredits) {
-          setUser((prev) => ({
-            ...prev,
-            credits: data.updatedCredits,
-          }));
+          setUser((prev) => ({ ...prev, credits: data.updatedCredits }));
         }
-
-        setReferralInput(""); // clear input
+        setReferralInput("");
       } else {
         alert(`❌ ${data.msg}`);
       }
@@ -466,78 +411,224 @@ export default function Dashboard3() {
       <PageBreadcrumb pagename="Student Dashboard" />
       <div className="theme-body">
         <Container fluid className="cdxuser-profile">
-          {/* 👇 New Top Section */}
+          {/* ========================== TOP: PROFILE + SHORTCUTS ========================== */}
           <Row className="mb-4">
             <Col xl={12}>
               <Card>
-                <Card.Header>
-                  <h4>Your Profile & Referral</h4>
+                <Card.Header className="d-flex align-items-center justify-content-between">
+                  <div>
+                    <h4 className="mb-0">Your Profile & Referral</h4>
+                    <small className="text-muted">
+                      <strong>Credits:</strong> {user?.credits ?? "—"}
+                    </small>
+                  </div>
+                  <div className="d-flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline-primary"
+                      as={Link}
+                      to="/bootstrapreact/medixo/my-assignments"
+                    >
+                      <FeatherIcon icon="list" className="me-2" />
+                      My Assignments
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline-success"
+                      as={Link}
+                      to="/bootstrapreact/medixo/assign-test"
+                    >
+                      <FeatherIcon icon="send" className="me-2" />
+                      Assignments Hub
+                    </Button>
+                  </div>
                 </Card.Header>
+
                 <Card.Body>
-                  {loading ? (
+                  {loadingUser ? (
                     <div className="text-center">
                       <Spinner animation="border" />
                     </div>
                   ) : user ? (
                     <Row>
-                      <Col md={6} className="mb-3">
-                        <p>
-                          <strong>Name:</strong> {user?.name}
-                        </p>
-                        <p>
-                          <strong>Email:</strong> {user?.email}
-                        </p>
-                        <p>
-                          <strong>Mobile No:</strong> {user?.mobileNo}
-                        </p>
-                        <p>
-                          <strong>Role:</strong> {user?.role}
-                        </p>
-                        <p>
-                          <strong>Credits:</strong> {user?.credits}
-                        </p>
+                      {/* Left: snapshot */}
+                      <Col xxl={4} md={6}>
+                        <Card className="mt-3 shadow-sm">
+                          <Card.Header>
+                            <h5 className="mb-0">Personal Information</h5>
+                          </Card.Header>
+                          <Card.Body>
+                            <ul className="contact-list">
+                              <li className="d-flex align-items-center mb-2">
+                                <FeatherIcon icon="user" />
+                                <h6 className="mb-0 ms-2">{user?.name || "—"}</h6>
+                              </li>
+                              <li className="d-flex align-items-center mb-2">
+                                <FeatherIcon icon="bookmark" />
+                                <h6 className="mb-0 ms-2">{user?.role || "—"}</h6>
+                              </li>
+                              <li className="d-flex align-items-center mb-2">
+                                <FeatherIcon icon="phone-call" />
+                                <h6 className="mb-0 ms-2">
+                                  <a href={`tel:${user?.mobileNo || ""}`}>
+                                    {user?.mobileNo || "—"}
+                                  </a>
+                                </h6>
+                              </li>
+                              <li className="d-flex align-items-center mb-2">
+                                <FeatherIcon icon="mail" />
+                                <h6 className="mb-0 ms-2">
+                                  <a href={`mailto:${user?.email || ""}`}>
+                                    {user?.email || "—"}
+                                  </a>
+                                </h6>
+                              </li>
+                              <li className="d-flex align-items-center mb-2">
+                                <FeatherIcon icon="map-pin" />
+                                <h6 className="mb-0 ms-2">{user?.address || "—"}</h6>
+                              </li>
+                            </ul>
+                          </Card.Body>
+                        </Card>
                       </Col>
-                      <Col md={6}>
-                        <div className="mb-3">
-                          <h5>Refer & Earn</h5>
-                          <p>Your Referral Code:</p>
-                          <div className="d-flex align-items-center gap-2">
-                            <span className="badge bg-primary fs-15">
-                              {user.yourReferralCode || user.referralCode}
-                            </span>
-                            <button
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(
-                                  user.yourReferralCode || user.referralCode
-                                );
-                                alert("Referral code copied!");
+
+                      {/* Right: referral */}
+                      <Col xxl={8} md={6}>
+                        <Card className="mt-3 shadow-sm" style={{ minHeight: 400 }}>
+                          <Card.Body>
+                            <div
+                              className="d-flex justify-content-center gap-3 mb-3"
+                              style={{
+                                backgroundColor: "rgba(102, 151, 159, 0.12)",
+                                padding: 10,
+                                borderRadius: 8,
                               }}
                             >
-                              Copy Code
-                            </button>
-                          </div>
-                        </div>
+                              <Button
+                                variant={activeTab === "avail" ? "primary" : "light"}
+                                className="px-4 rounded-pill"
+                                onClick={() => setActiveTab("avail")}
+                              >
+                                Avail Benefits
+                              </Button>
+                              <Button
+                                variant={activeTab === "refer" ? "primary" : "light"}
+                                className="px-4 rounded-pill"
+                                onClick={() => setActiveTab("refer")}
+                              >
+                                Refer & Earn
+                              </Button>
+                            </div>
 
-                        <div className="mt-4">
-                          <h5>Avail Benefits</h5>
-                          <p>Enter your friend’s referral code:</p>
-                          <div className="d-flex gap-2">
-                            <input
-                              type="text"
-                              className="form-control"
-                              placeholder="Enter Referral Code"
-                              value={referralInput}
-                              onChange={(e) => setReferralInput(e.target.value)}
-                            />
-                            <button
-                              className="btn btn-success"
-                              onClick={handleUseReferral}
-                            >
-                              Apply
-                            </button>
-                          </div>
-                        </div>
+                            {activeTab === "avail" && (
+                              <>
+                                <div className="d-flex align-items-center gap-2 justify-content-center">
+                                  <span className="badge bg-primary fs-6">
+                                    {user?.yourReferralCode ||
+                                      user?.referralCode ||
+                                      "—"}
+                                  </span>
+                                  <button
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => {
+                                      const code =
+                                        user?.yourReferralCode || user?.referralCode;
+                                      if (code) {
+                                        navigator.clipboard.writeText(code);
+                                        alert("Referral code copied!");
+                                      }
+                                    }}
+                                  >
+                                    Copy Code
+                                  </button>
+                                </div>
+
+                                <div className="mt-4 text-center">
+                                  <p>Enter your friend’s referral code:</p>
+                                  <div className="d-flex justify-content-center">
+                                    <input
+                                      type="text"
+                                      className="form-control"
+                                      placeholder="Enter Referral Code"
+                                      value={referralInput}
+                                      onChange={(e) => setReferralInput(e.target.value)}
+                                      style={{ width: 350 }}
+                                    />
+                                  </div>
+                                  <div className="mt-3">
+                                    <button
+                                      className="btn btn-success"
+                                      style={{ width: 200 }}
+                                      onClick={handleUseReferral}
+                                    >
+                                      Apply
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            {activeTab === "refer" && (
+                              <div className="mt-3">
+                                <div className="d-flex align-items-center gap-3 mt-3">
+                                  <label style={{ width: 250 }}>
+                                    <strong>Name:</strong>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Enter Name"
+                                    value={referName}
+                                    onChange={(e) => setReferName(e.target.value)}
+                                    style={{ width: 350 }}
+                                  />
+                                </div>
+
+                                <div className="d-flex align-items-center gap-3 mt-3">
+                                  <label style={{ width: 250 }}>
+                                    <strong>Friend's Email ID:</strong>
+                                  </label>
+                                  <input
+                                    type="email"
+                                    className="form-control"
+                                    placeholder="Enter Email ID"
+                                    value={referEmail}
+                                    onChange={(e) => setReferEmail(e.target.value)}
+                                    style={{ width: 350 }}
+                                  />
+                                </div>
+
+                                <div className="d-flex align-items-center gap-3 mt-3">
+                                  <label style={{ width: 250 }}>
+                                    <strong>Friend's Mobile Number:</strong>
+                                  </label>
+                                  <input
+                                    type="tel"
+                                    className="form-control"
+                                    placeholder="Enter Mobile Number"
+                                    value={referMobile}
+                                    onChange={(e) => setReferMobile(e.target.value)}
+                                    style={{ width: 350 }}
+                                  />
+                                </div>
+
+                                <div className="d-flex justify-content-center">
+                                  <button
+                                    className="btn btn-success"
+                                    style={{ width: 200, marginTop: 25 }}
+                                    onClick={() =>
+                                      alert(
+                                        `Refer to ${referName}, ${referEmail}, ${referMobile}`
+                                      )
+                                    }
+                                  >
+                                    Refer
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </Card.Body>
+                        </Card>
                       </Col>
                     </Row>
                   ) : (
@@ -548,45 +639,176 @@ export default function Dashboard3() {
             </Col>
           </Row>
 
-          {/* 👇 Existing UI */}
+          {/* ========================== ASSIGNED TESTS ========================== */}
+          <Card className="mb-4">
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <div className="d-flex align-items-center gap-2">
+                <h4 className="mb-0">Assigned Tests</h4>
+                <Badge bg={assignments.length ? "primary" : "secondary"}>
+                  {assignments.length} {assignments.length === 1 ? "Test" : "Tests"}
+                </Badge>
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline-secondary"
+                  onClick={fetchAssignments}
+                >
+                  <FeatherIcon icon="refresh-cw" className="me-2" />
+                  Refresh
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline-dark"
+                  onClick={() => setShowDebug((s) => !s)}
+                >
+                  <FeatherIcon icon="bug" className="me-2" />
+                  Debug
+                </Button>
+                <Button
+                  as={Link}
+                  to="/bootstrapreact/medixo/my-assignments"
+                  size="sm"
+                  variant="outline-primary"
+                >
+                  View All
+                </Button>
+              </div>
+            </Card.Header>
+
+            <Card.Body>
+              {assignErr ? (
+                <div className="alert alert-warning py-2">{assignErr}</div>
+              ) : assignLoading ? (
+                <div className="text-center">
+                  <Spinner animation="border" />
+                </div>
+              ) : assignments.length === 0 ? (
+                <div className="text-muted">
+                  No tests assigned yet. If a mentor assigns one, it will appear
+                  here.
+                </div>
+              ) : (
+                <>
+                  <div className="table-responsive">
+                    <Table hover className="align-middle">
+                      <thead>
+                        <tr>
+                          <th>Subjects</th>
+                          <th>Type</th>
+                          <th>Class</th>
+                          <th>Due</th>
+                          <th>Status</th>
+                          <th />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {assignments.slice(0, 3).map((a) => {
+                          const t = pickTestObj(a) || {};
+                          const due = asLocale(a?.dueAt);
+                          const stat = a?.status || "assigned";
+                          const statusVariant =
+                            stat === "completed"
+                              ? "success"
+                              : stat === "in_progress"
+                              ? "info"
+                              : "warning";
+
+                          return (
+                            <tr key={a._id}>
+                              <td>{renderSubjects(a, t)}</td>
+                              <td>
+                                <Badge bg="dark">{renderType(a, t)}</Badge>
+                              </td>
+                              <td>
+                                <Badge bg="secondary">{renderClass(a, t)}</Badge>
+                              </td>
+                              <td>{due}</td>
+                              <td>
+                                <Badge bg={statusVariant}>{stat}</Badge>
+                              </td>
+                              <td className="text-end">
+                                {String(stat).toLowerCase() === "completed" ? (
+                                  <Link
+                                    className="btn btn-sm btn-outline-secondary"
+                                    to={`/test-player/${a._id}`}
+                                  >
+                                    Review
+                                  </Link>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="primary"
+                                    onClick={() => handleStartAssignment(a)}
+                                    disabled={startingId === a._id}
+                                  >
+                                    {startingId === a._id ? (
+                                      <>
+                                        <Spinner animation="border" size="sm" className="me-2" />
+                                        Starting…
+                                      </>
+                                    ) : (
+                                      "Start"
+                                    )}
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </Table>
+                  </div>
+                </>
+              )}
+
+              {/* ---- Debug inspector (toggle) ---- */}
+              <Collapse in={showDebug}>
+                <div className="mt-3">
+                  <Card bg="light" body className="border">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <strong>Assignments Debug Sample</strong>
+                      <small className="text-muted">
+                        (showing the first item only)
+                      </small>
+                    </div>
+                    <pre
+                      className="mt-2"
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                        fontSize: 12,
+                        maxHeight: 300,
+                        overflow: "auto",
+                        background: "#f8f9fa",
+                        padding: 12,
+                        borderRadius: 8,
+                        border: "1px solid #e9ecef",
+                      }}
+                    >
+{JSON.stringify(rawSample, null, 2)}
+                    </pre>
+                    <div className="mt-2 text-muted" style={{ fontSize: 12 }}>
+                      <div>Detected test path: <code>assignment.test || assignment.testId || assignment.exam</code></div>
+                      <div>Detected subjects path (fallbacks too): <code>test.subjects | test.subjectNames | test.tags | assignment.subjects | assignment.subjectNames | assignment.subject | assignment.tags</code></div>
+                      <div>Detected class path (fallbacks too): <code>test.class | className | klass | grade | standard (and same on assignment)</code></div>
+                      <div>Detected type path (fallbacks too): <code>test.testType | type | mode | format (and same on assignment)</code></div>
+                      <div>On Start: tries to resolve <code>testId</code> from row → if missing fetches detail → POST <code>/assignments/:id/start</code> → navigate to <code>/test-player/:assignmentId?testId=&amp;attemptId=</code></div>
+                    </div>
+                  </Card>
+                </div>
+              </Collapse>
+            </Card.Body>
+          </Card>
+
+          {/* ========================== THE REST OF YOUR EXISTING UI ========================== */}
           <Row>
             <Col xxl={4} xl={12}>
               <Row>
                 <Col xxl={12} md={6}>
-                  <Card>
-                    <Card.Header>
-                      <h4>Personal Information</h4>
-                    </Card.Header>
-                    <Card.Body>
-                      <ul className="contact-list">
-                        <li>
-                          <span>Name:</span> {user?.name}
-                        </li>
-                        <li>
-                          <span>Date of Birth:</span>
-                          {user?.dob}
-                        </li>
-                        <li>
-                          <span>Gender:</span>
-                          {user?.gender}
-                        </li>
-                        <li>
-                          <span>Address:</span>
-                          {user?.address}
-                        </li>
-                        <li>
-                          <span>Phone:</span> {user?.mobileNo}
-                        </li>
-                        <li>
-                          <span>Email:</span> {user?.email}
-                        </li>
-                      </ul>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                <Col xxl={12} md={6}>
                   <Card className="doctor-probox">
                     <Card.Body>
+                      <div className="img-wrap" />
                       <div className="profile-head">
                         <div className="proimg-wrap">
                           <img
@@ -596,12 +818,8 @@ export default function Dashboard3() {
                                     "/profilePhotoUploads"
                                   )
                                   ? `http://localhost:5000${user.profileImage}`
-                                  : `${
-                                      import.meta.env.BASE_URL
-                                    }default-avatar.png`
-                                : `${
-                                    import.meta.env.BASE_URL
-                                  }default-avatar.png`
+                                  : `${import.meta.env.BASE_URL}default-avatar.png`
+                                : `${import.meta.env.BASE_URL}default-avatar.png`
                             }
                             alt="Profile"
                             className="profile-pic"
@@ -628,6 +846,7 @@ export default function Dashboard3() {
                     </ul>
                   </Card>
                 </Col>
+
                 <Col xxl={12} lg={6}>
                   <Card>
                     <Card.Header>
@@ -635,8 +854,8 @@ export default function Dashboard3() {
                     </Card.Header>
                     <Card.Body>
                       <ul className="docnoti-list">
-                        {[1, 2, 3, 4].map((num, i) => (
-                          <li key={i}>
+                        {[1, 2, 3, 4].map((num) => (
+                          <li key={num}>
                             <div className="media">
                               <img
                                 className="rounded-50 w-40"
@@ -647,9 +866,7 @@ export default function Dashboard3() {
                                 <h6>Anna sent you a photo</h6>
                                 <span className="text-light">Date Here</span>
                               </div>
-                              <div className="badge badge-primary">
-                                10:00 Pm
-                              </div>
+                              <div className="badge badge-primary">10:00 Pm</div>
                             </div>
                           </li>
                         ))}
@@ -667,11 +884,10 @@ export default function Dashboard3() {
 
             <Col xxl={8} xl={12}>
               <Row>
-                {/* Existing cards … */}
                 <Col xl={12}>
                   <Card>
                     <Card.Header>
-                      <h4>Student Visits</h4>
+                      <h4>Mentor Visits</h4>
                     </Card.Header>
                     <Card.Body>
                       <div className="table-responsive">
@@ -696,10 +912,7 @@ export default function Dashboard3() {
                                 <td>{item.charge}</td>
                                 <td
                                   style={{
-                                    color:
-                                      item.status === "Active"
-                                        ? "green"
-                                        : "red",
+                                    color: item.status === "Active" ? "green" : "red",
                                   }}
                                 >
                                   {item.status}

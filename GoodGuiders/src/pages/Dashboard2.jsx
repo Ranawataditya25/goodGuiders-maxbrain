@@ -14,6 +14,9 @@ export default function Dashboard2() {
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [referralInput, setReferralInput] = useState("");
+  const [activeTab, setActiveTab] = useState("avail"); // Default tab
+const [referEmail, setReferEmail] = useState(""); // For referral input
+const [referMobile, setReferMobile] = useState(""); 
 
   useEffect(() => {
     const doctorData = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -80,84 +83,339 @@ export default function Dashboard2() {
 
   return (
     <div className="themebody-wrap">
-      {/* Breadcrumb Start */}
+    
       <PageBreadcrumb pagename="Mentor Dashboard" />
-      {/* Breadcrumb End */}
-      {/* theme body start */}
+     
       <div className="theme-body">
         <Container fluid className="cdxuser-profile">
           <Row>
             <Col xl={12} className="mb-4">
               <Card>
-                <Card.Header>
+                 <Card.Header>
                   <h4>Your Profile & Referral</h4>
+                           <p>
+                    <strong>Credits:</strong> {doctor?.credits}
+                  </p>
+                         
                 </Card.Header>
-                <Card.Body>
+              <Card.Body>
                   {loading ? (
                     <div className="text-center">
                       <Spinner animation="border" />
                     </div>
                   ) : doctor ? (
                     <Row>
-                      <Col md={6} className="mb-3">
-                        <p>
-                          <strong>Name:</strong> {doctor?.name}
-                        </p>
-                        <p>
-                          <strong>Email:</strong> {doctor?.email}
-                        </p>
-                        <p>
-                          <strong>Mobile No:</strong> {doctor?.mobileNo}
-                        </p>
-                        <p>
-                          <strong>Role:</strong>
-                          {doctor?.role}
-                        </p>
-                        <p>
-                          <strong>Credits:</strong> {doctor?.credits}
-                        </p>
-                      </Col>
-                      <Col md={6}>
-                        <div className="mb-3">
-                          <h5>Refer & Earn</h5>
-                          <p>Your Referral Code:</p>
-                          <div className="d-flex align-items-center gap-2">
-                            <span className="badge bg-primary fs-15">
-                              {doctor.yourReferralCode || doctor.referralCode}
-                            </span>
-                            <button
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(
-                                  doctor.yourReferralCode || doctor.referralCode
-                                );
-                                alert("Referral code copied!");
+                     
+
+{/* 
+ <Col xxl={4} md={6}>
+                        <Card className="mt-3 shadow">
+                          <div className="card">
+                            <Card.Header>
+                              <h4>Personal Information</h4>
+                         </Card.Header>
+                            <Card.Body>
+                              <ul className="contact-list">
+                                <li>
+                                  <FeatherIcon icon="user" />
+                                  <h6>{doctor.name}</h6>
+                                </li>
+                                <li>
+                                  <FeatherIcon icon="bookmark" />
+                                  <h6>{doctor.specializedIn}</h6>
+                                </li>
+                                <li>
+                                  <FeatherIcon icon="phone-call" />
+                                  <h6>
+                                    <a href={`tel:${doctor.mobileNo}`}>
+                                      {doctor.mobileNo}
+                                    </a>
+                                  </h6>
+                                </li>
+                                <li>
+                                  <FeatherIcon icon="mail" />
+                                  <h6>
+                                    <a href={`mailto:${doctor.email}`}>
+                                      {doctor.email}
+                                    </a>
+                                  </h6>
+                                </li>
+                                <li>
+                                  <FeatherIcon icon="map-pin" />
+                                  <h6>{doctor.address}</h6>
+                                </li>
+                                <li>
+                                  <FeatherIcon icon="globe" />
+                                  <h6>https://DK@Dk.components.com</h6>
+                                </li>
+                              </ul>
+                            </Card.Body>
+                          </div>
+                        </Card>
+                      </Col> */}
+
+ <Col xxl={4} md={6}>
+              <div className="card">
+                <Card.Header>
+                  <h4>Personal Information</h4>
+                </Card.Header>
+                <Card.Body>
+                  <ul className="contact-list">
+                    <li>
+                      <div className="iocn-item">
+                        <FeatherIcon icon="user" />
+                      </div>
+                      <h6>{doctor?.name}</h6>
+                    </li>
+                    <li>
+                      <div className="iocn-item">
+                        <FeatherIcon icon="bookmark" />
+                      </div>
+                      <h6>{doctor?.specializedIn}</h6>
+                    </li>
+                    <li>
+                      <div className="iocn-item">
+                        <FeatherIcon icon="phone-call" />
+                      </div>
+                      <h6>
+                        {" "}
+                        <Link href="tel:+9588489584">{doctor?.mobileNo}</Link>
+                      </h6>
+                    </li>
+                    <li>
+                      <div className="iocn-item">
+                        <FeatherIcon icon="mail" />
+                      </div>
+                      <h6>
+                        {" "}
+                        <Link href="mailto:test@example.com">
+                          {doctor?.email}
+                        </Link>
+                      </h6>
+                    </li>
+                    <li>
+                      <div className="iocn-item">
+                        <FeatherIcon icon="map-pin" />
+                      </div>
+                      <h6>{doctor?.address}</h6>
+                    </li>
+                    <li>
+                      <div className="iocn-item">
+                        <FeatherIcon icon="globe" />
+                      </div>
+                      <h6> https://DK@Dk.components.com</h6>
+                    </li>
+                  </ul>
+                </Card.Body>
+              </div>
+            </Col>
+
+                      
+                       <Col xxl={8} md={6}>
+                        <Card
+                          className="mt-3 shadow"
+                          style={{ height: "400px" }}
+                        >
+                          <Card.Body>
+                            <div
+                              className="d-flex justify-content-center gap-3 mb-3"
+                              style={{
+                                backgroundColor: "rgba(102, 151, 159, 0.2)",
+                                padding: "10px",
+                                borderRadius: "5px",
                               }}
                             >
-                              Copy Code
-                            </button>
-                          </div>
-                        </div>
+                              <h5
+                                style={{
+                                  backgroundColor:
+                                    activeTab === "avail"
+                                      ? "#F1FCFE"
+                                      : "transparent",
+                                  cursor: "pointer",
+                                  width: "300px",
+                                  textAlign: "center",
+                                  padding: "10px 20px",
+                                  borderRadius: "5px",
 
-                        <div className="mt-4">
-                          <h5>Avail Benefits</h5>
-                          <p>Enter your friend’s referral code:</p>
-                          <div className="d-flex gap-2">
-                            <input
-                              type="text"
-                              className="form-control"
-                              placeholder="Enter Referral Code"
-                              value={referralInput}
-                              onChange={(e) => setReferralInput(e.target.value)}
-                            />
-                            <button
-                              className="btn btn-success"
-                              onClick={handleUseReferral}
-                            >
-                              Apply
-                            </button>
-                          </div>
-                        </div>
+                                  boxShadow:
+                                    activeTab === "avail"
+                                      ? "0 4px 6px rgba(0, 0, 0, 0.1)"
+                                      : "none",
+                                }}
+                                onClick={() => setActiveTab("avail")}
+                              >
+                                Avail Benefits
+                              </h5>
+
+                              <h5
+                                style={{
+                                  backgroundColor:
+                                    activeTab === "refer"
+                                      ? "#F1FCFE"
+                                      : "transparent",
+                                  cursor: "pointer",
+                                  width: "300px",
+                                  textAlign: "center",
+                                  padding: "10px 20px",
+                                  borderRadius: "5px",
+                                  boxShadow:
+                                    activeTab === "refer"
+                                      ? "0 4px 6px rgba(0, 0, 0, 0.1)"
+                                      : "none",
+                                }}
+                                onClick={() => setActiveTab("refer")}
+                              >
+                                Refer & Earn
+                              </h5>
+                            </div>
+
+                            {activeTab === "avail" && (
+                              <>
+                                <div
+                                  className="d-flex align-items-center gap-2 justify-content-center"
+                                  style={{ marginTop: "15px" }}
+                                >
+                                  <span className="badge bg-primary fs-15">
+                                    {doctor.yourReferralCode ||
+                                      doctor.referralCode}
+                                  </span>
+                                  <button
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(
+                                        doctor.yourReferralCode ||
+                                          doctor.referralCode
+                                      );
+                                      alert("Referral code copied!");
+                                    }}
+                                  >
+                                    Copy Code
+                                  </button>
+                                </div>
+
+                                <div className="mt-4">
+                                  ,
+                                  <p
+                                    style={{
+                                      textAlign: "center",
+                                      marginBottom: "10px",
+                                    }}
+                                  >
+                                    Enter your friend’s referral code:
+                                  </p>
+                                  <div
+                                    className="d-flex justify-content-center"
+                                    style={{
+                                      marginBottom: "10px",
+                                      marginTop: "12px",
+                                    }}
+                                  >
+                                    <input
+                                      type="text"
+                                      className="form-control"
+                                      placeholder="Enter Referral Code"
+                                      value={referralInput}
+                                      onChange={(e) =>
+                                        setReferralInput(e.target.value)
+                                      }
+                                      style={{ width: "350px" }}
+                                    />
+                                  </div>
+                                  <div
+                                    style={{ marginTop: 15 }}
+                                    className="d-flex justify-content-center"
+                                  >
+                                    <button
+                                      className="btn btn-success"
+                                      style={{ width: "200px", marginTop: 15 }}
+                                      onClick={handleUseReferral}
+                                    >
+                                      Apply
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            {activeTab === "refer" && (
+                              <div className="mt-3 ">
+                                <div
+                                  className="d-flex align-items-center gap-3"
+                                  style={{ marginTop: "22px" }}
+                                >
+                                  <label style={{ margin: 0, width: "250px" }}>
+                                    <strong>Name:</strong>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Enter Name"
+                                    value={referEmail}
+                                    onChange={(e) =>
+                                      setReferEmail(e.target.value)
+                                    }
+                                    style={{ width: "350px" }}
+                                  />
+                                </div>
+
+                                <div
+                                  className="d-flex align-items-center gap-3"
+                                  style={{ marginTop: "15px" }}
+                                >
+                                  <label style={{ margin: 0, width: "250px" }}>
+                                    <strong>Friend's Email ID:</strong>
+                                  </label>
+                                  <input
+                                    type="email"
+                                    className="form-control mb-2"
+                                    placeholder="Enter Email ID"
+                                    value={referEmail}
+                                    onChange={(e) =>
+                                      setReferEmail(e.target.value)
+                                    }
+                                    style={{ width: "350px" }}
+                                  />
+                                </div>
+
+                                <div
+                                  className="d-flex align-items-center gap-3"
+                                  style={{ marginTop: "15px" }}
+                                >
+                                  <label style={{ margin: 0, width: "250px" }}>
+                                    <strong>Friend's Mobile Number:</strong>
+                                  </label>
+                                  <input
+                                    type="tel"
+                                    className="form-control mb-3"
+                                    placeholder="Enter Mobile Number"
+                                    value={referMobile}
+                                    onChange={(e) =>
+                                      setReferMobile(e.target.value)
+                                    }
+                                    style={{ width: "350px" }}
+                                  />
+                                </div>
+
+                                <div className="d-flex justify-content-center">
+                                  <button
+                                    className="btn btn-success"
+                                    style={{
+                                      width: "200px",
+                                      marginTop: "25px",
+                                    }}
+                                    onClick={() => {
+                                      alert(
+                                        `Refer to ${referEmail}, ${referMobile}`
+                                      );
+                                    }}
+                                  >
+                                    Refer
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </Card.Body>
+                        </Card>
                       </Col>
                     </Row>
                   ) : (
@@ -191,11 +449,11 @@ export default function Dashboard2() {
                     <span>{doctor?.specializedIn}</span>
                     <p>{doctor?.bio}</p>
                     <div className="group-btn">
-                      <Link
+                      <Link  to="/edit-doctor"
                         className="btn btn-primary"
                         href="javascript:void(0);"
                       >
-                        Send Email
+                        Edit Profile
                       </Link>
                       <Link
                         className="btn btn-secondary"
@@ -297,7 +555,7 @@ export default function Dashboard2() {
             <Col xxl={4} md={6}>
               <div className="card">
                 <Card.Header>
-                  <h4>Skill</h4>
+                  <h4>Ratings:</h4>
                 </Card.Header>
                 <Card.Body>
                   <Chart
@@ -309,7 +567,7 @@ export default function Dashboard2() {
                 </Card.Body>
               </div>
             </Col>
-            <Col xxl={4} md={6}>
+            {/* <Col xxl={4} md={6}>
               <div className="card">
                 <Card.Header>
                   <h4>Personal Information</h4>
@@ -363,7 +621,7 @@ export default function Dashboard2() {
                   </ul>
                 </Card.Body>
               </div>
-            </Col>
+            </Col> */}
             <Col xxl={4} md={6}>
               <div className="card">
                 <Card.Header>
