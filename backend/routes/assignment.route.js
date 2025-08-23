@@ -362,6 +362,9 @@ router.get("/student/email/:email", async (req, res) => {
       .populate("testId")
       .populate("studentIds", "email"); // only include email field
 
+      if (!assignments || assignments.length === 0) {
+      return res.status(404).json({ message: "No Assigned Test Records Found" });
+    }
 
     res.json({ ok: true, data: assignments });
   } catch (err) {
