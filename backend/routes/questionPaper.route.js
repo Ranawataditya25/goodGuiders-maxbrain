@@ -4,17 +4,21 @@ import QuestionPaper from "../models/Question.model.js";
 
 const router = express.Router();
 
-// ✅ Get all question papers but remove correctAnswer & suggestedAnswer
+// Get all question papers/questions but remove correctAnswer & suggestedAnswer
 router.get("/", async (req, res) => {
   try {
-    // projection: exclude `questions.correctAnswer` and `questions.suggestedAnswer`
+    // Exclude top-level correctAnswer/suggestedAnswer AND nested ones
     const papers = await QuestionPaper.find(
       {},
       {
+        correctAnswer: 0,
+        suggestedAnswer: 0,
         "questions.correctAnswer": 0,
         "questions.suggestedAnswer": 0,
       }
-    ).lean();
+    )
+      .sort({ createdAt: -1 }) // newest first
+      .lean();
 
     res.json({ ok: true, data: papers });
   } catch (err) {
