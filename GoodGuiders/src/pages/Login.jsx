@@ -889,7 +889,6 @@ export default function Login() {
       if (res.ok) {
         alert("✅ Login successful!");
 
-
         // Save user data locally if needed
         localStorage.setItem("loggedInUser", JSON.stringify(data.user));
 
@@ -897,7 +896,7 @@ export default function Login() {
 
         // Navigate based on role
         if (data.user.role === "admin") {
-          navigate("/admin-dashboard");
+          navigate("/");
         } else if (data.user.role === "student") {
           navigate("/patient-dashboard");
         } else if (data.user.role === "mentor") {

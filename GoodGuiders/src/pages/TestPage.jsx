@@ -160,7 +160,7 @@ export const TestPage = () => {
     };
 
     try {
-      await axios.post(`${API_URL}/tests`, payload);
+      await axios.post(`${API_URL}/questions`, payload);
       navigate("/assign-test");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create test");

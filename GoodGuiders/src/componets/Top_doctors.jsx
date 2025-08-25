@@ -8,37 +8,37 @@ export default function Top_doctors() {
         {
             "imgsrc": "avtar/1.jpg",
             "title": " Anna Mull",
-            "subtitle": "Cardiologists",
+            "subtitle": "M.Tech",
             "text": "20 Bowman St, South Windsor, Mt 39508",
         },
         {
             "imgsrc": "avtar/2.jpg",
             "title": " Anna Mull",
-            "subtitle": "Cardiologists",
+            "subtitle": "Phd",
             "text": "50 Bowman St, South Windsor, Mt 39508",
         },
         {
             "imgsrc": "avtar/3.jpg",
             "title": " Anna Mull",
-            "subtitle": "Cardiologists",
+            "subtitle": "B.Tech",
             "text": "30 Bowman St, South Windsor, Mt 39508",
         },
         {
             "imgsrc": "avtar/4.jpg",
             "title": " Anna Mull",
-            "subtitle": "Cardiologists",
+            "subtitle": "M.Com",
             "text": "30 Bowman St, South Windsor, Mt 39508",
         },
         {
             "imgsrc": "avtar/5.jpg",
             "title": " Anna Mull",
-            "subtitle": "Cardiologists",
+            "subtitle": "B.sc",
             "text": "30 Bowman St, South Windsor, Mt 39508",
         },
         {
             "imgsrc": "avtar/6.jpg",
             "title": " Anna Mull",
-            "subtitle": "Cardiologists",
+            "subtitle": "M.Tech",
             "text": "30 Bowman St, South Windsor, Mt 39508",
         },
       
