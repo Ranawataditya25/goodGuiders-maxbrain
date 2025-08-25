@@ -13,6 +13,9 @@ import uploadsRouter from "./routes/uploads.route.js";
 import authRoutes from "./routes/auth.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import questionRoutes from "./routes/question.route.js";
+import questionPaperRoutes from "./routes/questionPaper.route.js";
+
+// assignment/test APIs (already present)
 import assignmentRoutes from "./routes/assignment.route.js";
 import attemptsRoutes from "./routes/attempts.route.js";
 // import testsRouter from "./routes/tests.route.js";
@@ -72,6 +75,8 @@ app.use("/api/classes", classesRouter);
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/api/question-papers", questionPaperRoutes);
+
 
 // some of your routers are already scoped inside the files;
 // using "/api" here is fine if those define subpaths internally
