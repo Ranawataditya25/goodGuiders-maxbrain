@@ -2859,6 +2859,7 @@ const menuPaths = {
   Dashboards: ["/index", "/doctor-dashboard", "/patient-dashboard"],
   Mentor: ["/all-doctors", "/add-doctor", "/edit-doctor"],
   Student: ["/all-patients", "/add-patient", "/edit-patient"],
+  Classes: ["/classes"],
   Appointments: ["/doctor-schedule", "/add-appointment", "/edit-appointment", "/appointment-list"],
   Billing: ["/payment-list", "/add-payment", "/patient-invoice"],
   EventManagement: ["/event-management"],
@@ -2955,6 +2956,7 @@ useEffect(() => {
       <li><Link to="/">Super Admin Dashboard</Link></li>
       <li><Link to="/doctor-dashboard">Mentor Dashboard</Link></li>
       <li><Link to="/patient-dashboard">Student Dashboard</Link></li>
+      <li><Link to="/classes">Class Management</Link></li>
     </>
   )}
 
@@ -2994,6 +2996,35 @@ useEffect(() => {
               {isAdmin && <span>Student</span>  }
                 {isMentor && <span>My Profile</span>  }
                   {isStudent && <span>My Profile</span>  }
+
+              <i className="fa fa-angle-down"></i>
+            </Link>
+            <ul className="submenu-list">
+
+                {isAdmin && <li><Link to="/all-patients">All Student</Link></li>}
+                {isMentor && <li><Link to="/all-patients">Profile</Link></li>}
+                {isStudent && <li><Link to="/all-patients">Profile</Link></li> }
+            
+        {isStudent &&  <li><Link to="/edit-patient">Edit Profile</Link></li>}
+            {isMentor &&  <li><Link to="/edit-doctor">Edit Profile</Link></li>}
+              {isAdmin && (
+                <>
+                  <li><Link to="/add-patient">Add Student</Link></li>
+              
+                  <li><Link to="/edit-patient">Edit Student</Link></li>
+                </>
+              )}
+            </ul>
+          </li>
+
+          {/* Student */}
+          <li onClick={() => handleMenuClick(8)} className={`menu-item ${activeIndex === 8 ? "active" : ""}`}>
+            <Link>
+              <div className="icon-item"><i className="fa fa-wheelchair" aria-hidden="true"></i></div>
+              {/* <span>Student</span> */}
+              {isAdmin && <span>Assigned Test</span>  }
+                {isMentor && <span>Test Assigned To Students</span>  }
+                  {isStudent && <span>My Tests</span>  }
 
               <i className="fa fa-angle-down"></i>
             </Link>

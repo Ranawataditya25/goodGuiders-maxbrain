@@ -10,7 +10,7 @@ export default function List() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const [expanded, setExpanded] = useState({}); // { [classId]: true|false }
+  const [expanded, setExpanded] = useState({});
   const navigate = useNavigate();
 
   const fetchAll = async () => {
@@ -31,13 +31,18 @@ export default function List() {
     fetchAll();
   }, []);
 
-  const totals = useMemo(() => {
-    return rows.map((r) => {
-      const subjects = r.subjects?.length || 0;
-      const chapters = (r.subjects || []).reduce((acc, s) => acc + (s.chapters?.length || 0), 0);
-      return { subjects, chapters };
-    });
-  }, [rows]);
+  const totals = useMemo(
+    () =>
+      rows.map((r) => {
+        const subjects = r.subjects?.length || 0;
+        const chapters = (r.subjects || []).reduce(
+          (acc, s) => acc + (s.chapters?.length || 0),
+          0
+        );
+        return { subjects, chapters };
+      }),
+    [rows]
+  );
 
   const onDelete = async (id) => {
     if (!window.confirm("Delete this class?")) return;
@@ -65,6 +70,15 @@ export default function List() {
 
     return (
       <div className="p-3 bg-light rounded border">
+        {item.educationBoard ? (
+          <div className="mb-2">
+            <Badge bg="info" className="me-2">
+              Board
+            </Badge>
+            <span>{item.educationBoard}</span>
+          </div>
+        ) : null}
+
         {subjects.map((s, si) => (
           <div key={si} className="mb-3">
             <div className="d-flex align-items-center mb-1">
@@ -75,34 +89,111 @@ export default function List() {
             {(s.chapters || []).length ? (
               <ul className="mb-0" style={{ listStyle: "disc", paddingLeft: "1.2rem" }}>
                 {s.chapters.map((c, ci) => (
-                  <li key={ci} className="mb-1">
-                    <span className="me-2">{c.name || `Chapter #${ci + 1}`}</span>
+                  <li key={ci} className="mb-2">
+                    <div>
+                      <span className="me-2">{c.name || `Chapter #${ci + 1}`}</span>
+                      {c.onePagePdfUrl && (
+                        <a
+                          href={c.onePagePdfUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="me-2 small"
+                          title="1-Page Notes PDF"
+                        >
+                          <FeatherIcon icon="file-text" className="me-1" size={14} />
+                          1-page
+                        </a>
+                      )}
+                      {c.fullPdfUrl && (
+                        <a
+                          href={c.fullPdfUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="small"
+                          title="Full Notes PDF"
+                        >
+                          <FeatherIcon icon="file" className="me-1" size={14} />
+                          full
+                        </a>
+                      )}
+                    </div>
 
-                    {/* PDF links (if present) */}
-                    {c.onePagePdfUrl && (
-                      <a
-                        href={c.onePagePdfUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="me-2 small"
-                        title="1-Page Notes PDF"
+                    {c.subTopics?.length ? (
+                      <ul
+                        className="mb-0 mt-1"
+                        style={{ listStyle: "circle", paddingLeft: "1.2rem" }}
                       >
-                        <FeatherIcon icon="file-text" className="me-1" size={14} />
-                        1-page
-                      </a>
-                    )}
-                    {c.fullPdfUrl && (
-                      <a
-                        href={c.fullPdfUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="small"
-                        title="Full Notes PDF"
-                      >
-                        <FeatherIcon icon="file" className="me-1" size={14} />
-                        full
-                      </a>
-                    )}
+                        {c.subTopics.map((t, ti) => (
+                          <li key={ti} className="mb-1">
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                              <span className="small">{t.name}</span>
+                              {t.onePagePdfUrl && (
+                                <a
+                                  href={t.onePagePdfUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="small"
+                                >
+                                  1-page
+                                </a>
+                              )}
+                              {t.fullPdfUrl && (
+                                <a
+                                  href={t.fullPdfUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="small"
+                                >
+                                  full
+                                </a>
+                              )}
+                              <Link
+                                to={`/test-page?class=${encodeURIComponent(
+                                  item.name
+                                )}&subject=${encodeURIComponent(
+                                  s.name
+                                )}&chapter=${encodeURIComponent(
+                                  c.name
+                                )}&topic=${encodeURIComponent(
+                                  t.name
+                                )}&difficulty=beginner`}
+                                className="btn btn-xs btn-outline-success"
+                              >
+                                Beginner
+                              </Link>
+                              <Link
+                                to={`/test-page?class=${encodeURIComponent(
+                                  item.name
+                                )}&subject=${encodeURIComponent(
+                                  s.name
+                                )}&chapter=${encodeURIComponent(
+                                  c.name
+                                )}&topic=${encodeURIComponent(
+                                  t.name
+                                )}&difficulty=intermediate`}
+                                className="btn btn-xs btn-outline-warning"
+                              >
+                                Intermediate
+                              </Link>
+                              <Link
+                                to={`/test-page?class=${encodeURIComponent(
+                                  item.name
+                                )}&subject=${encodeURIComponent(
+                                  s.name
+                                )}&chapter=${encodeURIComponent(
+                                  c.name
+                                )}&topic=${encodeURIComponent(
+                                  t.name
+                                )}&difficulty=advanced`}
+                                className="btn btn-xs btn-outline-danger"
+                              >
+                                Advanced
+                              </Link>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -142,6 +233,7 @@ export default function List() {
               <th style={{ width: 56 }}></th>
               <th>#</th>
               <th>Class Name</th>
+              <th>Board</th>
               <th>Subjects</th>
               <th>Chapters</th>
               <th>Created</th>
@@ -151,11 +243,11 @@ export default function List() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7}>Loading…</td>
+                <td colSpan={8}>Loading…</td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={7}>No classes yet.</td>
+                <td colSpan={8}>No classes yet.</td>
               </tr>
             ) : (
               rows.map((r, i) => {
@@ -182,8 +274,16 @@ export default function List() {
   );
 }
 
-/** A helper component that renders a normal row + an expandable details row */
-function FragmentRow({ index, item, totals, isOpen, onToggle, onEdit, onDelete, renderDetails }) {
+function FragmentRow({
+  index,
+  item,
+  totals,
+  isOpen,
+  onToggle,
+  onEdit,
+  onDelete,
+  renderDetails,
+}) {
   return (
     <>
       <tr>
@@ -193,13 +293,13 @@ function FragmentRow({ index, item, totals, isOpen, onToggle, onEdit, onDelete, 
             size="sm"
             onClick={onToggle}
             aria-expanded={isOpen}
-            title={isOpen ? "Hide details" : "Show details"}
           >
             <FeatherIcon icon={isOpen ? "chevron-up" : "chevron-down"} size={16} />
           </Button>
         </td>
         <td className="align-middle">{index + 1}</td>
         <td className="align-middle">{item.name}</td>
+        <td className="align-middle">{item.educationBoard || "-"}</td>
         <td className="align-middle">{totals.subjects}</td>
         <td className="align-middle">{totals.chapters}</td>
         <td className="align-middle">
@@ -219,10 +319,8 @@ function FragmentRow({ index, item, totals, isOpen, onToggle, onEdit, onDelete, 
           </div>
         </td>
       </tr>
-
-      {/* Details row */}
       <tr>
-        <td colSpan={7} className="p-0 border-0">
+        <td colSpan={8} className="p-0 border-0">
           <Collapse in={isOpen}>
             <div className="p-3 pt-0">{renderDetails()}</div>
           </Collapse>

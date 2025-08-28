@@ -16,7 +16,7 @@ const TestAssignmentSchema = new Schema(
      */
     testId: {
       type: Schema.Types.ObjectId,
-      ref: "Question",        // <- your paper/test model name
+      ref: "Questions",        // <- your paper/test model name
       required: true,
       index: true,
       set: toObjectId,
@@ -61,7 +61,7 @@ const TestAssignmentSchema = new Schema(
  * This matches the frontend which tries a?.test || a?.testId.
  */
 TestAssignmentSchema.virtual("test", {
-  ref: "Question",          // same collection as `testId` ref
+  ref: "Questions",          // same collection as `testId` ref
   localField: "testId",
   foreignField: "_id",
   justOne: true,

@@ -31,9 +31,11 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import DoctorProfile from "./pages/DoctorProfile";
 import Status from "./pages/Status";
-import { TestPage } from './pages/TestPage';
+
+import TestPage from "./pages/TestPage.jsx";
 import { TestStart } from './pages/TestStart';
 import TestEnd from './pages/TestEnd';
+
 import Forgot_password from "./pages/Forgot_password";
 import New_password from "./pages/New_password";
 import Verify_email from "./pages/Verify_email";

@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+// goodGuiderss/src/pages/TestPage.jsx
+import { useMemo, useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -15,13 +16,14 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api"; // Adjust to your backend
+const API_URL = import.meta.env?.VITE_API_URL || "http://localhost:5000/api";
 
-export const TestPage = () => {
+export default function TestPage() {
   const [formData, setFormData] = useState({
+    educationBoard: "",   // <-- NEW
     class: "",
     subjects: [],
     testType: "",
@@ -33,11 +35,40 @@ export const TestPage = () => {
   });
 
   const [subjectInput, setSubjectInput] = useState("");
+  const [context, setContext] = useState({ chapter: "", topic: "" }); // topic = sub-topic
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const location = useLocation();
   const navigate = useNavigate();
 
+  // ------------ Prefill from query params ------------
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const qBoard = params.get("board");     // optional
+    const qClass = params.get("class");
+    const qSubject = params.get("subject");
+    const qDifficulty = params.get("difficulty");
+    const qChapter = params.get("chapter");
+    const qTopic = params.get("topic");
+
+    if (qBoard) {
+      setFormData((prev) => ({ ...prev, educationBoard: qBoard }));
+    }
+
+    if (qClass) {
+      // Accept "Class 11" or just "11"
+      const match = String(qClass).match(/\d+/);
+      setFormData((prev) => ({ ...prev, class: match ? match[0] : qClass }));
+    }
+
+    if (qSubject) setSubjectInput(qSubject);
+    if (qDifficulty) setFormData((prev) => ({ ...prev, difficulty: qDifficulty }));
+    if (qChapter || qTopic) setContext({ chapter: qChapter || "", topic: qTopic || "" });
+  }, [location.search]);
+
+  // ------------ Helpers ------------
   const isMixed = formData.testType === "mcq+subjective";
   const totalMixed =
     (parseInt(formData.mcqCount || 0, 10) || 0) +
@@ -53,6 +84,7 @@ export const TestPage = () => {
 
   const setFD = (patch) => setFormData((prev) => ({ ...prev, ...patch }));
 
+  // ------------ UI actions ------------
   const generateQuestions = () => {
     setError("");
 
@@ -61,80 +93,65 @@ export const TestPage = () => {
       return;
     }
 
+    const make = (type = "mcq") => ({
+      type, // "mcq" | "subjective"
+      question: "",
+      options: type === "mcq" ? ["", "", "", ""] : undefined,
+      correctAnswer: type === "mcq" ? "" : undefined,
+      marks: 1,
+    });
+
+    let next = [];
+
     if (!isMixed) {
       if (totalSingle < 1) return setError("Enter at least 1 question.");
-      if (totalSingle > 50) return setError("Maximum 50 questions.");
-    } else {
-      if (totalMixed < 1) return setError("Enter at least 1 question in total.");
-      if (totalMixed > 50) return setError("Maximum 50 questions in total.");
-    }
-
-    const next = [];
-    if (!isMixed) {
-      const count = totalSingle;
-      const isMCQ = formData.testType === "mcq";
-      for (let i = 0; i < count; i++) {
-        next.push(baseQuestion(isMCQ ? "mcq" : "subjective"));
-      }
+      const type = formData.testType === "mcq" ? "mcq" : "subjective";
+      for (let i = 0; i < totalSingle; i++) next.push(make(type));
     } else {
       const m = parseInt(formData.mcqCount || 0, 10) || 0;
       const s = parseInt(formData.subjectiveCount || 0, 10) || 0;
-
+      if (m + s < 1) return setError("Enter at least 1 question in total.");
       if (formData.mixOrder === "alternate") {
-        // Interleave while respecting counts
-        let i = 0,
-          j = 0;
+        let i = 0, j = 0;
         while (i < m || j < s) {
-          if (i < m) next.push(baseQuestion("mcq")), i++;
-          if (j < s) next.push(baseQuestion("subjective")), j++;
+          if (i < m) next.push(make("mcq")), i++;
+          if (j < s) next.push(make("subjective")), j++;
         }
       } else {
-        // grouped: MCQs first, then Subjectives
-        for (let i = 0; i < m; i++) next.push(baseQuestion("mcq"));
-        for (let i = 0; i < s; i++) next.push(baseQuestion("subjective"));
+        for (let i = 0; i < m; i++) next.push(make("mcq"));
+        for (let i = 0; i < s; i++) next.push(make("subjective"));
       }
     }
+
     setQuestions(next);
   };
 
-  const baseQuestion = (type) =>
-    type === "mcq"
-      ? {
-          type: "mcq",
-          question: "",
-          options: ["", "", "", ""],
-          correctAnswer: "",
-          suggestedAnswer: undefined,
-          marks: 1,
-        }
-      : {
-          type: "subjective",
-          question: "",
-          options: [],
-          correctAnswer: undefined,
-          suggestedAnswer: "",
-          marks: 5,
-        };
+  const updateQuestion = (idx, patch) =>
+    setQuestions((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], ...patch };
+      return next;
+    });
 
-  const updateQuestion = (index, field, value) => {
-    const updated = [...questions];
-    if (field === "options") {
-      updated[index].options = value;
-    } else {
-      updated[index][field] = value;
-    }
-    setQuestions(updated);
-  };
+  const removeQuestion = (idx) =>
+    setQuestions((prev) => prev.filter((_, i) => i !== idx));
 
-  const updateOption = (questionIndex, optionIndex, value) => {
-    const updated = [...questions];
-    if (!updated[questionIndex].options) updated[questionIndex].options = ["", "", "", ""];
-    updated[questionIndex].options[optionIndex] = value;
-    setQuestions(updated);
-  };
-
-  const removeQuestion = (index) => {
-    setQuestions((prev) => prev.filter((_, i) => i !== index));
+  const clearAll = () => {
+    setFormData({
+      educationBoard: "",
+      class: "",
+      subjects: [],
+      testType: "",
+      difficulty: "",
+      numberOfQuestion: "",
+      mcqCount: "",
+      subjectiveCount: "",
+      mixOrder: "grouped",
+    });
+    setSubjectInput("");
+    setContext({ chapter: "", topic: "" });
+    setQuestions([]);
+    setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -153,14 +170,36 @@ export const TestPage = () => {
       return;
     }
 
+    if (!formData.class) {
+      setError("Please select a class.");
+      setLoading(false);
+      return;
+    }
+    if (!formData.testType) {
+      setError("Please choose a test type.");
+      setLoading(false);
+      return;
+    }
+    if (!formData.difficulty) {
+      setError("Please choose a difficulty.");
+      setLoading(false);
+      return;
+    }
+    if (questions.length === 0) {
+      setError("Generate questions first.");
+      setLoading(false);
+      return;
+    }
+
     const payload = {
       ...formData,
       subjects: subjectList,
       questions,
+      context, // { chapter, topic }
     };
 
     try {
-      await axios.post(`${API_URL}/questions`, payload);
+      await axios.post(`${API_URL}/tests`, payload);
       navigate("/assign-test");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create test");
@@ -192,6 +231,39 @@ export const TestPage = () => {
           </Card.Body>
         </Card>
 
+        {/* Page-level context preview */}
+        {(context.chapter || context.topic) && (
+          <div className="alert alert-info mb-4">
+            <div className="d-flex flex-wrap gap-3 align-items-center mb-0">
+              <strong className="me-2">Context:</strong>
+              {formData.educationBoard && (
+                <span>
+                  Board:{" "}
+                  <Badge bg="light" text="dark">
+                    {formData.educationBoard}
+                  </Badge>
+                </span>
+              )}
+              {context.chapter && (
+                <span>
+                  Chapter:{" "}
+                  <Badge bg="light" text="dark">
+                    {context.chapter}
+                  </Badge>
+                </span>
+              )}
+              {context.topic && (
+                <span>
+                  Sub-topic:{" "}
+                  <Badge bg="light" text="dark">
+                    {context.topic}
+                  </Badge>
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="alert alert-danger" role="alert">
             {error}
@@ -200,12 +272,31 @@ export const TestPage = () => {
 
         <Form onSubmit={handleSubmit}>
           <Row className="g-4">
-            {/* Basics */}
+            {/* BASICS */}
             <Col lg={6}>
-              <Card>
+              <Card className="mb-3">
+                <Card.Header className="fw-semibold">Basics</Card.Header>
                 <Card.Body>
-                  <Card.Title className="mb-3">Basics</Card.Title>
+                  {/* Education Board */}
+                  <Form.Group className="mb-3">
+                    <Form.Label>Education Board</Form.Label>
+                    <Form.Control
+                      list="boardOptions"
+                      placeholder="e.g., CBSE"
+                      value={formData.educationBoard}
+                      onChange={(e) => setFD({ educationBoard: e.target.value })}
+                    />
+                    <datalist id="boardOptions">
+                      <option value="CBSE" />
+                      <option value="ICSE" />
+                      <option value="State Board" />
+                      <option value="IB (International Baccalaureate)" />
+                      <option value="Cambridge (IGCSE)" />
+                      <option value="Other" />
+                    </datalist>
+                  </Form.Group>
 
+                  {/* Class */}
                   <Form.Group className="mb-3">
                     <Form.Label>Class</Form.Label>
                     <Form.Select
@@ -222,6 +313,7 @@ export const TestPage = () => {
                     </Form.Select>
                   </Form.Group>
 
+                  {/* Subjects */}
                   <Form.Group className="mb-3">
                     <Form.Label>Subjects (Max 3, Comma Separated)</Form.Label>
                     <Form.Control
@@ -245,6 +337,33 @@ export const TestPage = () => {
                     </div>
                   </Form.Group>
 
+                  {/* Chapter + Sub-topic neatly side-by-side */}
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Chapter</Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="e.g., Motion"
+                          value={context.chapter}
+                          onChange={(e) => setContext((c) => ({ ...c, chapter: e.target.value }))}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Sub-topic</Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="e.g., Pulley"
+                          value={context.topic}
+                          onChange={(e) => setContext((c) => ({ ...c, topic: e.target.value }))}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Difficulty */}
                   <Form.Group className="mb-3">
                     <Form.Label>Difficulty</Form.Label>
                     <Form.Select
@@ -262,14 +381,13 @@ export const TestPage = () => {
               </Card>
             </Col>
 
-            {/* Composition */}
+            {/* COMPOSITION */}
             <Col lg={6}>
               <Card>
+                <Card.Header className="fw-semibold">Composition</Card.Header>
                 <Card.Body>
-                  <Card.Title className="mb-3">Composition</Card.Title>
-
                   <div className="mb-3">
-                    <Form.Label className="me-2">Test Type</Form.Label>
+                    <div className="mb-2">Test Type</div>
                     <ButtonGroup>
                       {[
                         { value: "mcq", label: "MCQ" },
@@ -280,13 +398,13 @@ export const TestPage = () => {
                           key={opt.value}
                           id={`tt-${opt.value}`}
                           type="radio"
-                          variant={formData.testType === opt.value ? "primary" : "outline-secondary"}
+                          variant={formData.testType === opt.value ? "primary" : "outline-primary"}
                           name="testType"
                           value={opt.value}
                           checked={formData.testType === opt.value}
                           onChange={(e) => {
                             setFD({ testType: e.currentTarget.value });
-                            setQuestions([]); // reset preview when type changes
+                            setQuestions([]);
                           }}
                         >
                           {opt.label}
@@ -295,45 +413,30 @@ export const TestPage = () => {
                     </ButtonGroup>
                   </div>
 
+                  {/* Counts */}
                   {!isMixed && (
                     <Form.Group className="mb-3">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <Form.Label className="mb-0">Number Of Questions</Form.Label>
-                        <Badge bg="secondary">{totalSingle}</Badge>
-                      </div>
-                      <InputGroup className="mt-1">
-                        <Form.Control
-                          type="number"
-                          min="1"
-                          max="50"
-                          value={formData.numberOfQuestion}
-                          onChange={(e) => setFD({ numberOfQuestion: e.target.value })}
-                          placeholder="e.g., 10"
-                          required
-                        />
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip>Allowed range: 1–50</Tooltip>}
-                        >
-                          <InputGroup.Text>?</InputGroup.Text>
-                        </OverlayTrigger>
-                      </InputGroup>
+                      <Form.Label>Number Of Questions</Form.Label>
+                      <Form.Control
+                        type="number"
+                        min={1}
+                        value={formData.numberOfQuestion}
+                        onChange={(e) => setFD({ numberOfQuestion: e.target.value })}
+                        placeholder="e.g., 10"
+                        required
+                      />
                     </Form.Group>
                   )}
 
                   {isMixed && (
                     <>
-                      <Row className="g-3">
-                        <Col sm={6}>
-                          <Form.Group>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <Form.Label className="mb-0">MCQ Count</Form.Label>
-                              <Badge bg="secondary">{parseInt(formData.mcqCount || 0, 10) || 0}</Badge>
-                            </div>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>MCQ Count</Form.Label>
                             <Form.Control
                               type="number"
-                              min="0"
-                              max="50"
+                              min={0}
                               value={formData.mcqCount}
                               onChange={(e) => setFD({ mcqCount: e.target.value })}
                               placeholder="e.g., 10"
@@ -341,18 +444,12 @@ export const TestPage = () => {
                             />
                           </Form.Group>
                         </Col>
-                        <Col sm={6}>
-                          <Form.Group>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <Form.Label className="mb-0">Subjective Count</Form.Label>
-                              <Badge bg="secondary">
-                                {parseInt(formData.subjectiveCount || 0, 10) || 0}
-                              </Badge>
-                            </div>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Subjective Count</Form.Label>
                             <Form.Control
                               type="number"
-                              min="0"
-                              max="50"
+                              min={0}
                               value={formData.subjectiveCount}
                               onChange={(e) => setFD({ subjectiveCount: e.target.value })}
                               placeholder="e.g., 5"
@@ -362,175 +459,133 @@ export const TestPage = () => {
                         </Col>
                       </Row>
 
-                      <div className="mt-2 small text-muted">
-                        Total planned: <strong>{totalMixed}</strong> (limit 50)
-                      </div>
-
-                      <Form.Group className="mt-3">
-                        <Form.Label className="me-2">Order in Paper</Form.Label>
-                        <ButtonGroup>
-                          {[
-                            { value: "grouped", label: "Group by Type" },
-                            { value: "alternate", label: "Alternate (MCQ, Subj…)" },
-                          ].map((opt) => (
-                            <ToggleButton
-                              key={opt.value}
-                              id={`ord-${opt.value}`}
-                              type="radio"
-                              variant={
-                                formData.mixOrder === opt.value ? "secondary" : "outline-secondary"
-                              }
-                              name="mixOrder"
-                              value={opt.value}
-                              checked={formData.mixOrder === opt.value}
-                              onChange={(e) => setFD({ mixOrder: e.currentTarget.value })}
-                            >
-                              {opt.label}
-                            </ToggleButton>
-                          ))}
-                        </ButtonGroup>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Mix Order</Form.Label>
+                        <Form.Select
+                          value={formData.mixOrder}
+                          onChange={(e) => setFD({ mixOrder: e.target.value })}
+                        >
+                          <option value="grouped">Grouped (MCQs first)</option>
+                          <option value="alternate">Alternate (Interleaved)</option>
+                        </Form.Select>
                       </Form.Group>
                     </>
                   )}
 
-                  <div className="mt-3 d-flex align-items-center gap-2">
-                    <Button variant="warning" onClick={generateQuestions}>
+                  <div className="d-flex gap-2">
+                    <Button variant="outline-secondary" onClick={generateQuestions}>
                       Generate Questions
                     </Button>
-                    <span className="small text-muted">
-                      This will refresh the preview below.
-                    </span>
+                    <Button variant="outline-danger" onClick={clearAll}>
+                      Clear
+                    </Button>
                   </div>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
 
-          {/* Preview & progress */}
+          {/* QUESTIONS */}
           <Card className="mt-4">
+            <Card.Header className="fw-semibold">
+              Questions ({questions.length})
+              <span className="ms-3 small text-muted">Filled:</span>
+              <span className="ms-1 small">{completion}%</span>
+              <ProgressBar now={completion} className="mt-2" />
+            </Card.Header>
             <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <Card.Title className="mb-0">Questions Preview</Card.Title>
-                <div className="d-flex align-items-center gap-2">
-                  <Badge bg="info" text="dark">
-                    {questions.length} generated
-                  </Badge>
-                  <div style={{ minWidth: 160 }}>
-                    <ProgressBar now={completion} label={`${completion}%`} />
-                  </div>
-                </div>
-              </div>
-
               {questions.length === 0 ? (
-                <div className="text-muted">
-                  No questions yet. Choose test type and counts, then click{" "}
-                  <strong>Generate Questions</strong>.
-                </div>
+                <div className="text-muted">No questions generated yet.</div>
               ) : (
                 <Accordion alwaysOpen>
-                  {questions.map((q, index) => {
-                    const isMCQ = q.type === "mcq";
-                    return (
-                      <Accordion.Item eventKey={String(index)} key={index} className="mb-2">
-                        <Accordion.Header>
-                          <div className="me-2">
-                            <Badge bg={isMCQ ? "primary" : "warning"} text="dark">
-                              {isMCQ ? "MCQ" : "Subjective"}
-                            </Badge>
-                          </div>
-                          <strong className="me-2">Q{index + 1}</strong>
-                          <span className="text-muted small">
-                            {((q.question || "").trim().length > 0 && "• filled") || "• empty"}
-                          </span>
-                        </Accordion.Header>
-                        <Accordion.Body>
+                  {questions.map((q, idx) => (
+                    <Accordion.Item eventKey={String(idx)} key={idx}>
+                      <Accordion.Header>
+                        <span className="me-2">Q{idx + 1}.</span>
+                        <Badge bg={q.type === "mcq" ? "primary" : "secondary"}>
+                          {q.type.toUpperCase()}
+                        </Badge>
+                      </Accordion.Header>
+                      <Accordion.Body>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Question</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={2}
+                            value={q.question}
+                            onChange={(e) => updateQuestion(idx, { question: e.target.value })}
+                            placeholder="Type your question here"
+                            required
+                          />
+                        </Form.Group>
+
+                        {q.type === "mcq" ? (
+                          <>
+                            <Row className="g-2">
+                              {q.options?.map((opt, oi) => (
+                                <Col md={6} key={oi}>
+                                  <Form.Group className="mb-2">
+                                    <InputGroup>
+                                      <InputGroup.Text>{String.fromCharCode(65 + oi)}</InputGroup.Text>
+                                      <Form.Control
+                                        value={opt}
+                                        onChange={(e) => {
+                                          const next = [...(q.options || [])];
+                                          next[oi] = e.target.value;
+                                          updateQuestion(idx, { options: next });
+                                        }}
+                                        placeholder={`Option ${oi + 1}`}
+                                      />
+                                    </InputGroup>
+                                  </Form.Group>
+                                </Col>
+                              ))}
+                            </Row>
+                            <Form.Group className="mb-3">
+                              <Form.Label>Correct Answer</Form.Label>
+                              <Form.Select
+                                value={q.correctAnswer || ""}
+                                onChange={(e) => updateQuestion(idx, { correctAnswer: e.target.value })}
+                              >
+                                <option value="">-- Select --</option>
+                                {q.options?.map((opt, oi) => (
+                                  <option key={oi} value={opt}>
+                                    {opt || `Option ${oi + 1}`}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                          </>
+                        ) : (
                           <Form.Group className="mb-3">
-                            <Form.Label>Question</Form.Label>
+                            <Form.Label>Marks</Form.Label>
                             <Form.Control
-                              as="textarea"
-                              rows={isMCQ ? 2 : 3}
-                              value={q.question}
-                              onChange={(e) => updateQuestion(index, "question", e.target.value)}
-                              required
+                              type="number"
+                              min={1}
+                              value={q.marks || 1}
+                              onChange={(e) =>
+                                updateQuestion(idx, {
+                                  marks: parseInt(e.target.value, 10) || 1,
+                                })
+                              }
+                              placeholder="e.g., 5"
                             />
                           </Form.Group>
+                        )}
 
-                          {isMCQ ? (
-                            <>
-                              <Row className="g-2">
-                                {q.options.map((opt, i) => (
-                                  <Col md={6} key={i}>
-                                    <Form.Control
-                                      placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                                      value={opt}
-                                      onChange={(e) => updateOption(index, i, e.target.value)}
-                                      required
-                                    />
-                                  </Col>
-                                ))}
-                              </Row>
-
-                              <Form.Group className="mt-3">
-                                <Form.Label>Correct Answer</Form.Label>
-                                <Form.Select
-                                  value={q.correctAnswer}
-                                  onChange={(e) =>
-                                    updateQuestion(index, "correctAnswer", e.target.value)
-                                  }
-                                  required
-                                >
-                                  <option value="">Select</option>
-                                  {q.options.map((opt, i) => (
-                                    <option key={i} value={opt}>
-                                      {String.fromCharCode(65 + i)}: {opt || "(empty)"}
-                                    </option>
-                                  ))}
-                                </Form.Select>
-                              </Form.Group>
-                            </>
-                          ) : (
-                            <Form.Group>
-                              <Form.Label>Suggested Answer (optional)</Form.Label>
-                              <Form.Control
-                                as="textarea"
-                                rows={2}
-                                value={q.suggestedAnswer}
-                                onChange={(e) =>
-                                  updateQuestion(index, "suggestedAnswer", e.target.value)
-                                }
-                              />
-                            </Form.Group>
-                          )}
-
-                          <Row className="align-items-center mt-3">
-                            <Col xs="auto">
-                              <Form.Label className="mb-0">Marks</Form.Label>
-                            </Col>
-                            <Col xs="auto">
-                              <Form.Control
-                                type="number"
-                                min="1"
-                                value={q.marks}
-                                onChange={(e) =>
-                                  updateQuestion(index, "marks", parseInt(e.target.value || 1, 10))
-                                }
-                                style={{ width: 100 }}
-                              />
-                            </Col>
-                            <Col className="text-end">
-                              <Button
-                                variant="outline-danger"
-                                size="sm"
-                                onClick={() => removeQuestion(index)}
-                              >
-                                Remove Question
-                              </Button>
-                            </Col>
-                          </Row>
-                        </Accordion.Body>
-                      </Accordion.Item>
-                    );
-                  })}
+                        <div className="d-flex justify-content-end">
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip id={`tip-del-${idx}`}>Remove this question</Tooltip>}
+                          >
+                            <Button variant="outline-danger" size="sm" onClick={() => removeQuestion(idx)}>
+                              Remove
+                            </Button>
+                          </OverlayTrigger>
+                        </div>
+                      </Accordion.Body>
+                    </Accordion.Item>
+                  ))}
                 </Accordion>
               )}
             </Card.Body>
@@ -545,6 +600,4 @@ export const TestPage = () => {
       </Container>
     </div>
   );
-};
-
-export default TestPage;
+}
