@@ -49,6 +49,41 @@ router.get("/", async (_req, res) => {
   }
 });
 
+/**
+ * @route   GET /api/classes/grouped
+ * @desc    Get all classes grouped by educationBoard
+ */
+router.get("/grouped", async (req, res) => {
+  try {
+    // aggregation pipeline
+    const result = await ClassModel.aggregate([
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $or: [{ $eq: ["$educationBoard", null] }, { $eq: ["$educationBoard", ""] }] },
+              "Other",
+              "$educationBoard"
+            ]
+          },
+          classes: { $push: "$$ROOT" }
+        }
+      }
+    ]);
+
+    // convert to object {board: [classes]}
+    const grouped = {};
+    result.forEach(item => {
+      grouped[item._id] = item.classes;
+    });
+
+    res.json({ ok: true, data: grouped });
+  } catch (err) {
+    console.error("Error grouping classes:", err);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
 // Read one
 router.get("/:id", async (req, res) => {
   try {
@@ -83,39 +118,6 @@ router.delete("/:id", async (req, res) => {
     if (!del) return res.status(404).json({ ok: false, message: "Not found" });
     res.json({ ok: true });
   } catch {
-    res.status(500).json({ ok: false, message: "Server error." });
-  }
-});
-
-/**
- * @route   GET /api/classes
- * @desc    Get all classes with their subjects and chapters
- * @access  Public (works for both web + app dropdowns)
- */
-router.get("/", async (_req, res) => {
-  try {
-    const classes = await ClassModel.find()
-      .sort({ createdAt: -1 })
-      .lean();
-
-    const formatted = classes.map(cls => ({
-      id: cls._id,
-      name: cls.name,
-      subjects: cls.subjects.map(sub => ({
-        id: sub._id,
-        name: sub.name,
-        chapters: sub.chapters.map(chap => ({
-          id: chap._id,
-          name: chap.name,
-          onePagePdfUrl: chap.onePagePdfUrl || null,
-          fullPdfUrl: chap.fullPdfUrl || null,
-        })),
-      })),
-    }));
-
-    res.json({ ok: true, classes: formatted });
-  } catch (err) {
-    console.error("Error fetching classes:", err);
     res.status(500).json({ ok: false, message: "Server error." });
   }
 });
