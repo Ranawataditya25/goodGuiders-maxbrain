@@ -87,4 +87,38 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+/**
+ * @route   GET /api/classes
+ * @desc    Get all classes with their subjects and chapters
+ * @access  Public (works for both web + app dropdowns)
+ */
+router.get("/", async (_req, res) => {
+  try {
+    const classes = await ClassModel.find()
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const formatted = classes.map(cls => ({
+      id: cls._id,
+      name: cls.name,
+      subjects: cls.subjects.map(sub => ({
+        id: sub._id,
+        name: sub.name,
+        chapters: sub.chapters.map(chap => ({
+          id: chap._id,
+          name: chap.name,
+          onePagePdfUrl: chap.onePagePdfUrl || null,
+          fullPdfUrl: chap.fullPdfUrl || null,
+        })),
+      })),
+    }));
+
+    res.json({ ok: true, classes: formatted });
+  } catch (err) {
+    console.error("Error fetching classes:", err);
+    res.status(500).json({ ok: false, message: "Server error." });
+  }
+});
+
+
 export default router;
