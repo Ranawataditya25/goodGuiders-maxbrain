@@ -49,6 +49,41 @@ router.get("/", async (_req, res) => {
   }
 });
 
+/**
+ * @route   GET /api/classes/grouped
+ * @desc    Get all classes grouped by educationBoard
+ */
+router.get("/grouped", async (req, res) => {
+  try {
+    // aggregation pipeline
+    const result = await ClassModel.aggregate([
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $or: [{ $eq: ["$educationBoard", null] }, { $eq: ["$educationBoard", ""] }] },
+              "Other",
+              "$educationBoard"
+            ]
+          },
+          classes: { $push: "$$ROOT" }
+        }
+      }
+    ]);
+
+    // convert to object {board: [classes]}
+    const grouped = {};
+    result.forEach(item => {
+      grouped[item._id] = item.classes;
+    });
+
+    res.json({ ok: true, data: grouped });
+  } catch (err) {
+    console.error("Error grouping classes:", err);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
 // Read one
 router.get("/:id", async (req, res) => {
   try {

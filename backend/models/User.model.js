@@ -45,6 +45,7 @@ const userSchema = new mongoose.Schema(
     state: String,
     country: String,
     postalCode: String,
+    location: String,
     address: String,
     profileImage: {
       type: String, // Store the relative path like "/uploads/abc.jpg"
