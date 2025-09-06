@@ -13,6 +13,11 @@ import AssignTest from "./pages/AssignTest";
 import AssignedTestsPage from "./pages/AssignedTestsPage";
 import TestPlayer from "./pages/TestPlayer";
 
+import TestResult from "./pages/TestResult";
+import MyAssignments from "./pages/MyAssignments";
+
+import ExamInstructions from "./pages/ExamInstructions";
+
 import All_patient from "./pages/All_patient";
 import Add_patient from "./pages/Add_patient";
 import Edit_patient from "./pages/Edit_patient";
@@ -135,7 +140,14 @@ function AppContent() {
         {/* Mentor assigning test */}
         <Route exact path="/assign-test" element={<AssignTest />} />
         <Route exact path="/assigned-tests" element={<AssignedTestsPage />} />
+
+        <Route path="/test-instructions/:assignmentId" element={<ExamInstructions />} />
+        
         <Route exact path="/test-player/:assignmentId" element={<TestPlayer />} />
+
+        <Route exact path="/test-result/:attemptId" element={<TestResult />} />
+
+        <Route exact path="/my-assignments" element={<MyAssignments />} />
 
         <Route exact path="/all-patients" element={<All_patient />} />
         <Route exact path="/add-patient" element={<Add_patient />} />

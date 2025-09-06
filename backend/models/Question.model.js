@@ -73,4 +73,4 @@ const TestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Question", TestSchema);
+export default mongoose.model("Questions", TestSchema);
