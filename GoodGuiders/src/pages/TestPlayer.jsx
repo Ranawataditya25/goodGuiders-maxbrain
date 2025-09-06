@@ -1,21 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams, Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Container,
-  Card,
-  Button,
-  Spinner,
-  Form,
-  Badge,
-  Alert,
-  ProgressBar,
-  Row,
-  Col,
+  Container, Card, Button, Spinner, Form, Badge, Alert, ProgressBar, Row, Col, Table,
 } from "react-bootstrap";
 import "../styles/TestPlayer.css";
 
 const API = "http://localhost:5000/api";
 const AUTOSAVE_DEBOUNCE_MS = 400;
+
+// Base path helper so navigation respects your /bootstrapreact/medixo prefix
+const withBase = (p) => {
+  const base = (import.meta && import.meta.env && import.meta.env.BASE_URL) || "/bootstrapreact/medixo/";
+  return `${base.replace(/\/+$/, "")}/${String(p).replace(/^\/+/, "")}`;
+};
+
+// ---- local storage progress (for dashboard/list fallbacks) ----
+const LS_KEY = "assignProgressByAssignment";
+const readProgressMap = () => { try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; } };
+const writeProgress = (assignmentId, patch) => {
+  try {
+    const all = readProgressMap();
+    const prev = all[assignmentId] || {};
+    all[assignmentId] = { ...prev, ...patch, updatedAt: new Date().toISOString() };
+    localStorage.setItem(LS_KEY, JSON.stringify(all));
+  } catch {}
+};
 
 export default function TestPlayer() {
   const { assignmentId } = useParams();
@@ -23,47 +32,39 @@ export default function TestPlayer() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Optional query params
   const queryTestId = search.get("testId") || null;
   const queryAttemptId = search.get("attemptId") || null;
 
-  // UI state
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
-  const [debugOpen, setDebugOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
 
-  // Data
   const [assignment, setAssignment] = useState(null);
   const [paper, setPaper] = useState(null);
   const [attemptId, setAttemptId] = useState(queryAttemptId);
-  const [attemptReady, setAttemptReady] = useState(false); // <-- gate network saves
-  const [answers, setAnswers] = useState({}); // { [qid]: value }
-  const [result, setResult] = useState(null);
+  const [attemptReady, setAttemptReady] = useState(false);
+  const [answers, setAnswers] = useState({});
 
-  // Navigation (one question at a time)
+  // NOTE: removed in-page result banner. We redirect instead.
+
   const [currentIdx, setCurrentIdx] = useState(0);
   const [visited, setVisited] = useState(new Set([0]));
 
-  // Buttons
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Timer
+  // timer
   const [secondsLeft, setSecondsLeft] = useState(null);
   const tickRef = useRef(null);
 
-  // Refs (optional jump targets)
-  const questionRefs = useRef({});
-
-  // AUTOSAVE state
+  // autosave
   const [autoSaving, setAutoSaving] = useState(false);
   const [autoSavedAt, setAutoSavedAt] = useState(null);
   const [autosaveDisabled, setAutosaveDisabled] = useState(false);
-  const pendingRef = useRef({});   // accumulated deltas not yet sent
+  const pendingRef = useRef({});
   const debRef = useRef(null);
   const inflightRef = useRef(false);
 
-  // ---------- Helpers ----------
   const getId = (x) => x?._id || x?.id || null;
 
   const normalizePaper = (raw) => {
@@ -75,21 +76,13 @@ export default function TestPlayer() {
       [];
     const subjects = Array.isArray(p?.subjects)
       ? p.subjects
-          .map((s) =>
-            typeof s === "string" ? s : (s?.name || s?.label || s?.title || "").toString()
-          )
+          .map((s) => (typeof s === "string" ? s : (s?.name || s?.label || s?.title || "")))
           .filter(Boolean)
       : [];
     return { ...p, questions: qs, subjects };
   };
 
-  const tryJson = async (res) => {
-    try {
-      return await res.json();
-    } catch {
-      return null;
-    }
-  };
+  const tryJson = async (res) => { try { return await res.json(); } catch { return null; } };
 
   const fetchAssignment = async (id) => {
     let r = await fetch(`${API}/assignments/${id}`);
@@ -115,15 +108,11 @@ export default function TestPlayer() {
   const fetchPaperByTestId = async (tid) => {
     let r = await fetch(`${API}/tests/${encodeURIComponent(tid)}`);
     if (r.ok) return normalizePaper(await tryJson(r));
-
-    // fallback
     r = await fetch(`${API}/assignments/${assignmentId}/paper`);
     if (r.ok) return normalizePaper(await tryJson(r));
-
     throw new Error(`Could not fetch paper for testId=${tid}`);
   };
 
-  // Remove attemptId from URL if we detect it's stale (prevents future reload issues)
   const stripAttemptIdFromUrl = () => {
     const params = new URLSearchParams(location.search);
     if (params.has("attemptId")) {
@@ -132,12 +121,9 @@ export default function TestPlayer() {
     }
   };
 
-  // Create or validate attempt; only enable autosave once it's confirmed
   const ensureAttempt = async (tid) => {
     try {
       setAttemptReady(false);
-
-      // 1) If we have an attemptId (from state or URL), verify it exists
       let candidate = attemptId || queryAttemptId || null;
       if (candidate) {
         const r = await fetch(`${API}/attempts/${candidate}`);
@@ -147,16 +133,14 @@ export default function TestPlayer() {
           if (att?.answers && typeof att.answers === "object") setAnswers(att.answers);
           setAttemptId(candidate);
           setAttemptReady(true);
+          writeProgress(assignmentId, { status: "in_progress", attemptId: candidate, testId: tid || extractTestIdFromAssignment(assignment) || null });
           return candidate;
         } else {
-          // stale id in URL/state — clear it
           candidate = null;
           setAttemptId(null);
           stripAttemptIdFromUrl();
         }
       }
-
-      // 2) Start a new attempt
       const s = await fetch(`${API}/assignments/${assignmentId}/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,138 +152,60 @@ export default function TestPlayer() {
         if (j?.answers && typeof j.answers === "object") setAnswers(j.answers);
         setAttemptId(newAttemptId);
         setAttemptReady(true);
-        // also strip any stale attemptId param from the URL
         stripAttemptIdFromUrl();
+        writeProgress(assignmentId, { status: "in_progress", attemptId: newAttemptId, testId: tid || extractTestIdFromAssignment(assignment) || null });
         return newAttemptId;
       }
-
-      // failed to start
       setAttemptReady(false);
       return null;
-    } catch (e) {
-      console.error("ensureAttempt error", e);
+    } catch {
       setAttemptReady(false);
       return null;
     }
   };
 
-  // Robust resolver for question prompt (plain text or HTML)
   const getQuestionText = (q) => {
     if (!q) return { isHtml: false, text: "" };
-    const htmlCandidate =
-      q.html || q.richText || q.contentHtml || q.questionHtml || q.stemHtml;
+    const htmlCandidate = q.html || q.richText || q.contentHtml || q.questionHtml || q.stemHtml;
     if (typeof htmlCandidate === "string" && htmlCandidate.trim()) {
       return { isHtml: true, html: htmlCandidate };
     }
-    const candidates = [
-      q.text,
-      q.question,
-      q.title,
-      q.name,
-      q.prompt,
-      q.statement,
-      q.qtext,
-      q.label,
-      q.questionText,
-      q.desc,
-      q.description,
-    ];
+    const candidates = [q.text, q.question, q.title, q.name, q.prompt, q.statement, q.qtext, q.label, q.questionText, q.desc, q.description];
     const pick = candidates.find((x) => typeof x === "string" && x.trim() !== "");
     return { isHtml: false, text: pick || "Untitled question" };
   };
+  const getOptionText = (opt, i) => (opt == null ? `Option ${i + 1}` : typeof opt === "object" ? (opt.text || opt.label || opt.value || `Option ${i + 1}`) : String(opt));
 
-  // Guess duration in seconds. Defaults to 30 minutes if none present.
   const guessDurationSec = (p, a) => {
     const mins =
-      a?.durationMin ??
-      a?.durationMinutes ??
-      a?.timeLimitMin ??
-      p?.durationMin ??
-      p?.durationMinutes ??
-      p?.timeLimitMin ??
-      p?.duration ??
-      a?.duration ??
-      null;
+      a?.durationMin ?? a?.durationMinutes ?? a?.timeLimitMin ??
+      p?.durationMin ?? p?.durationMinutes ?? p?.timeLimitMin ??
+      p?.duration ?? a?.duration ?? null;
     if (typeof mins === "number" && mins > 0) return Math.round(mins * 60);
     return 30 * 60;
   };
 
-  // Local scoring fallback (MCQ + simple text)
-  const scoreLocally = (paperObj, given) => {
-    const questions = paperObj?.questions || [];
-    let earned = 0;
-    const details = [];
-
-    questions.forEach((q, idx) => {
-      const qid = q._id || q.id || String(idx);
-      const userVal = given[qid];
-      const max = Number(q.marks || q.points || 1) || 1;
-      const type = (q.type || "mcq").toLowerCase();
-      let correct = false;
-
-      if (type === "mcq") {
-        let correctKey = null;
-        if (q.correctOption != null) correctKey = String(q.correctOption);
-        else if (q.answerKey != null) correctKey = String(q.answerKey);
-        else if (Array.isArray(q.options)) {
-          const idxTrue = q.options.findIndex((o) => o?.isCorrect === true);
-          if (idxTrue >= 0)
-            correctKey = String(q.options[idxTrue]?._id || q.options[idxTrue]?.id || idxTrue);
-        }
-        if (userVal != null && correctKey != null) {
-          correct = String(userVal) === String(correctKey);
-        }
-      } else {
-        const ref =
-          q.correctAnswer ??
-          q.answer ??
-          (Array.isArray(q.correctAnswers) ? q.correctAnswers : null);
-        if (typeof ref === "string" && typeof userVal === "string") {
-          correct = ref.trim().toLowerCase() === userVal.trim().toLowerCase();
-        } else if (Array.isArray(ref) && typeof userVal === "string") {
-          correct = ref.some(
-            (ans) => String(ans).trim().toLowerCase() === userVal.trim().toLowerCase()
-          );
-        }
-      }
-
-      earned += correct ? max : 0;
-      details.push({ qid, correct, earned: correct ? max : 0, max });
-    });
-
-    return { score: earned, total: details.reduce((s, d) => s + d.max, 0), details };
-  };
-
-  // ---------- Load assignment + paper + attempt ----------
+  // load
   useEffect(() => {
     (async () => {
       setLoading(true);
       setErrorMsg("");
-      setResult(null);
+      setPreviewMode(false);
       try {
         const a = await fetchAssignment(assignmentId);
         setAssignment(a);
-
         let effectiveTestId = queryTestId || extractTestIdFromAssignment(a) || null;
-
-        // If assignment already embeds questions
         if (!effectiveTestId && Array.isArray(a?.questions) && a.questions.length) {
-          setPaper(
-            normalizePaper({ data: { title: a.title || "Test", questions: a.questions } })
-          );
+          setPaper(normalizePaper({ data: { title: a.title || "Test", questions: a.questions } }));
           await ensureAttempt(null);
           setLoading(false);
           return;
         }
-
         if (!effectiveTestId) throw new Error("No test id available for this assignment.");
-
         const p = await fetchPaperByTestId(effectiveTestId);
         setPaper(p);
-
         await ensureAttempt(effectiveTestId);
       } catch (e) {
-        console.error(e);
         setErrorMsg(e?.message || "Could not load this test.");
       } finally {
         setLoading(false);
@@ -308,7 +214,6 @@ export default function TestPlayer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assignmentId, queryTestId]);
 
-  // ---------- Derived data ----------
   const qs = useMemo(() => paper?.questions || [], [paper]);
   const totalQ = qs.length;
   const q = totalQ ? qs[currentIdx] : null;
@@ -318,20 +223,15 @@ export default function TestPlayer() {
     [qs, answers]
   );
 
-  // Reset nav state when questions change
-  useEffect(() => {
-    setCurrentIdx(0);
-    setVisited(new Set([0]));
-  }, [totalQ]);
+  useEffect(() => { setCurrentIdx(0); setVisited(new Set([0])); }, [totalQ]);
 
-  // Init timer when paper/assignment available
+  // timer
   useEffect(() => {
     if (!paper) return;
     const dur = guessDurationSec(paper, assignment);
     setSecondsLeft(dur);
   }, [paper, assignment]);
 
-  // Countdown effect
   useEffect(() => {
     if (secondsLeft == null) return;
     clearInterval(tickRef.current);
@@ -339,8 +239,8 @@ export default function TestPlayer() {
       setSecondsLeft((s) => {
         if (s <= 1) {
           clearInterval(tickRef.current);
-          flushAutosaveSync(); // best-effort flush before auto-submit
-          submitAttempt(true); // auto-submit on timeout
+          flushAutosaveSync();
+          submitAttempt(true); // auto submit -> redirect
           return 0;
         }
         return s - 1;
@@ -350,7 +250,7 @@ export default function TestPlayer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft]);
 
-  // Flush pending on tab close/refresh
+  // autosave wiring
   useEffect(() => {
     const onBeforeUnload = () => { flushAutosaveSync(); };
     window.addEventListener("beforeunload", onBeforeUnload);
@@ -358,38 +258,23 @@ export default function TestPlayer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attemptId]);
 
-  // If attempt becomes ready and there were pending edits, push them once
   useEffect(() => {
     if (attemptReady && Object.keys(pendingRef.current || {}).length) {
-      // small delay to avoid racing with state set
       setTimeout(() => flushAutosave(), 50);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attemptReady]);
 
-  // ---------- Save helpers (with route fallbacks + retry on 404) ----------
   async function trySaveOnServer({ answersPayload, merge }) {
     const headers = { "Content-Type": "application/json" };
     const body = JSON.stringify({ answers: answersPayload, merge });
-
-    // Ordered fallbacks:
-    const attempts = [
-      { url: `${API}/attempts/${attemptId}/save`, method: "POST", body }, // preferred
-    ];
-
-    for (const a of attempts) {
-      try {
-        const res = await fetch(a.url, { method: a.method, headers, body: a.body });
-        if (res.ok) return res;
-        if (res.status === 404 || res.status === 405) continue;
-      } catch {
-        // try next
-      }
-    }
+    try {
+      const res = await fetch(`${API}/attempts/${attemptId}/save`, { method: "POST", headers, body });
+      if (res.ok) return res;
+    } catch {}
     return null;
   }
 
-  // ---------- Autosave (debounced) ----------
   const queueAutosave = (deltaObj) => {
     Object.assign(pendingRef.current, deltaObj);
     if (debRef.current) clearTimeout(debRef.current);
@@ -400,14 +285,10 @@ export default function TestPlayer() {
     if (!attemptReady || !attemptId || autosaveDisabled) return;
     const delta = pendingRef.current;
     if (!delta || !Object.keys(delta).length || inflightRef.current) return;
-
     inflightRef.current = true;
     setAutoSaving(true);
     try {
-      // First attempt
       let res = await trySaveOnServer({ answersPayload: delta, merge: true });
-
-      // If no route or 404-like failure, re-ensure a fresh attempt and retry once.
       if (!res) {
         const testId = queryTestId || extractTestIdFromAssignment(assignment) || null;
         const newId = await ensureAttempt(testId);
@@ -415,19 +296,10 @@ export default function TestPlayer() {
           res = await trySaveOnServer({ answersPayload: delta, merge: true });
         }
       }
-
-      if (!res) {
-        // No route matched — disable autosave to keep UI responsive.
-        setAutosaveDisabled(true);
-        // keep pending so user can click Save
-        return;
-      }
-
+      if (!res) { setAutosaveDisabled(true); return; }
       setAutoSavedAt(new Date());
       pendingRef.current = {};
-    } catch (e) {
-      console.error("autosave error", e);
-      // leave pending; user can hit Save manually
+      writeProgress(assignmentId, { status: "in_progress", attemptId, testId: queryTestId || extractTestIdFromAssignment(assignment) || null });
     } finally {
       setAutoSaving(false);
       inflightRef.current = false;
@@ -439,9 +311,7 @@ export default function TestPlayer() {
       if (!attemptReady || !attemptId) return;
       const delta = pendingRef.current;
       if (!delta || !Object.keys(delta).length) return;
-      const blob = new Blob([JSON.stringify({ answers: delta, merge: true })], {
-        type: "application/json",
-      });
+      const blob = new Blob([JSON.stringify({ answers: delta, merge: true })], { type: "application/json" });
       navigator.sendBeacon?.(`${API}/attempts/${attemptId}/save`, blob);
       pendingRef.current = {};
     } catch {}
@@ -455,47 +325,88 @@ export default function TestPlayer() {
     return `${Math.floor(secs / 60)}m ago`;
   };
 
-  // ---------- Actions ----------
   const updateAnswer = (qid, value) => {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
-    // Queue autosave only when attempt is actually ready
     if (attemptReady && !autosaveDisabled) queueAutosave({ [qid]: value });
   };
 
   const saveProgress = async () => {
-    if (!attemptReady || !attemptId) return alert("Attempt not initialized yet. Try again in a moment.");
+    if (!attemptReady || !attemptId) return alert("Attempt not initialized yet.");
     try {
       setSaving(true);
       const full = { ...answers, ...pendingRef.current };
       pendingRef.current = {};
-      let res = await trySaveOnServer({ answersPayload: full, merge: false });
-      if (!res) {
-        const testId = queryTestId || extractTestIdFromAssignment(assignment) || null;
-        const newId = await ensureAttempt(testId);
-        if (newId) res = await trySaveOnServer({ answersPayload: full, merge: false });
-      }
-      if (!res) throw new Error("No save route available (404/405).");
+      let res = await fetch(`${API}/attempts/${attemptId}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: full, merge: false }),
+      });
+      if (!res.ok) throw new Error();
       setAutoSavedAt(new Date());
-    } catch (e) {
-      console.error(e);
+      writeProgress(assignmentId, { status: "in_progress", attemptId, testId: queryTestId || extractTestIdFromAssignment(assignment) || null });
+    } catch {
       alert("Save failed. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
+  };
+
+  // REDIRECT to results page after submit
+  const redirectToResults = (finalResult) => {
+    writeProgress(assignmentId, {
+      status: "completed",
+      attemptId,
+      testId: queryTestId || extractTestIdFromAssignment(assignment) || null,
+    });
+    const summary = {
+      assignmentId,
+      attemptId,
+      testId: queryTestId || extractTestIdFromAssignment(assignment) || null,
+      paper: { title: paper?.title, subjects: paper?.subjects || [], totalQuestions: (paper?.questions || []).length },
+      result: finalResult,
+      submittedAt: new Date().toISOString(),
+    };
+    navigate(`/test-result/${attemptId}`, { state: summary, replace: true });
+  };
+
+  const scoreLocally = (paperObj, given) => {
+    const questions = paperObj?.questions || [];
+    let earned = 0;
+    const details = [];
+    questions.forEach((q, idx) => {
+      const qid = q._id || q.id || String(idx);
+      const userVal = given[qid];
+      const max = Number(q.marks || q.points || 1) || 1;
+      const type = (q.type || "mcq").toLowerCase();
+      let correct = false;
+      if (type === "mcq") {
+        let correctKey = null;
+        if (q.correctOption != null) correctKey = String(q.correctOption);
+        else if (q.answerKey != null) correctKey = String(q.answerKey);
+        else if (Array.isArray(q.options)) {
+          const i = q.options.findIndex((o) => o && (o.isCorrect === true || o.correct === true));
+          if (i >= 0) correctKey = String(i);
+        }
+        if (userVal != null && correctKey != null) correct = String(userVal) === String(correctKey);
+      } else {
+        const ref = q.correctAnswer ?? q.answer ?? (Array.isArray(q.correctAnswers) ? q.correctAnswers : null);
+        if (typeof ref === "string" && typeof userVal === "string") {
+          correct = ref.trim().toLowerCase() === userVal.trim().toLowerCase();
+        } else if (Array.isArray(ref) && typeof userVal === "string") {
+          correct = ref.some((ans) => String(ans).trim().toLowerCase() === userVal.trim().toLowerCase());
+        }
+      }
+      earned += correct ? max : 0;
+      details.push({ qid, correct, earned: correct ? max : 0, max, given: userVal });
+    });
+    return { score: earned, total: details.reduce((s, d) => s + d.max, 0), details };
   };
 
   const submitAttempt = async (auto = false) => {
-    if (!attemptReady || !attemptId) return alert("Attempt not initialized yet. Try again in a moment.");
+    if (!attemptReady || !attemptId) return alert("Attempt not initialized yet.");
     if (!auto) {
-      const ok = window.confirm(
-        "Submit your answers? You won't be able to edit after submission."
-      );
+      const ok = window.confirm("Submit your answers? You won't be able to edit after submission.");
       if (!ok) return;
     }
-
-    // persist any pending changes first
     await flushAutosave();
-
     try {
       setSubmitting(true);
       const res = await fetch(`${API}/attempts/${attemptId}/submit`, {
@@ -506,299 +417,246 @@ export default function TestPlayer() {
 
       if (res.ok) {
         const j = await res.json();
-        if (j?.score != null && j?.total != null) {
-          setResult({ score: j.score, total: j.total, details: j.details || [] });
-        } else {
-          setResult(scoreLocally(paper, answers));
-        }
-        if (!auto) alert("Submitted! 🎉");
+        const final = (j?.score != null && j?.total != null)
+          ? { score: j.score, total: j.total, details: j.details || [] }
+          : scoreLocally(paper, answers);
+        redirectToResults(final);
       } else {
-        setResult(scoreLocally(paper, answers));
-        if (!auto) alert("Server error during submit — showing local score.");
+        // server didn't grade; compute locally and still redirect
+        redirectToResults(scoreLocally(paper, answers));
       }
-    } catch (e) {
-      console.error(e);
-      setResult(scoreLocally(paper, answers));
-      if (!auto) alert("Network error during submit — showing local score.");
+      setPreviewMode(false);
+    } catch {
+      // network error — still compute locally and redirect
+      redirectToResults(scoreLocally(paper, answers));
     } finally {
       setSubmitting(false);
     }
   };
 
-  const goTo = (i) => {
-    setCurrentIdx(i);
-    setVisited((prev) => new Set(prev).add(i));
-  };
+  const goTo = (i) => { setCurrentIdx(i); setVisited((prev) => new Set(prev).add(i)); setPreviewMode(false); };
   const next = () => goTo(Math.min(currentIdx + 1, totalQ - 1));
   const prev = () => goTo(Math.max(currentIdx - 1, 0));
 
   const statusFor = (i) => {
     const qid = qs[i]?._id || qs[i]?.id || String(i);
-    if (i === currentIdx) return "current";
+    if (i === currentIdx && !previewMode) return "current";
     if ((answers[qid] ?? "") !== "") return "answered";
     if (visited.has(i)) return "seen";
     return "not-visited";
   };
 
-  const fmtTime = (s) => {
-    const m = Math.floor(s / 60)
-      .toString()
-      .padStart(2, "0");
-    const ss = (s % 60).toString().padStart(2, "0");
-    return `${m} mins : ${ss} secs`;
+  const fmtTime = (s) => { const m = Math.floor(s / 60).toString().padStart(2, "0"); const ss = (s % 60).toString().padStart(2, "0"); return `${m} mins : ${ss} secs`; };
+
+  const getDisplayAnswer = (q, ansVal, idx) => {
+    const type = (q.type || "mcq").toLowerCase();
+    if (ansVal == null || ansVal === "") return { text: <span className="text-muted">Unanswered</span>, empty: true };
+    if (type === "mcq") {
+      const options = Array.isArray(q.options) ? q.options : [];
+      const matchIndex = options.findIndex((opt, i) => String(opt?._id || opt?.id || i) === String(ansVal));
+      if (matchIndex >= 0) {
+        const text = getOptionText(options[matchIndex], matchIndex);
+        return { text: `${String.fromCharCode(65 + matchIndex)}) ${text}`, empty: false };
+      }
+      return { text: `Selected: ${ansVal}`, empty: false };
+    }
+    return { text: String(ansVal), empty: false };
   };
 
-  // ---------- UI ----------
   if (loading) {
-    return (
-      <Container className="py-5 text-center">
-        <Spinner animation="border" />
-      </Container>
-    );
+    return (<Container className="py-5 text-center"><Spinner animation="border" /></Container>);
   }
 
   return (
     <Container fluid className="py-3 test-player">
-      {/* Sticky header */}
       <div className="tp-sticky pt-2 pb-2" style={{ borderBottom: "1px solid #eef1f5" }}>
         <Row className="align-items-center g-2">
           <Col md="auto">
             <h4 className="mb-0">{paper?.title || "Test"}</h4>
-            {paper?.subjects?.length ? (
-              <small className="text-muted d-block">
-                Subjects: {paper.subjects.join(", ")}
-              </small>
-            ) : null}
+            {paper?.subjects?.length ? <small className="text-muted d-block">Subjects: {paper.subjects.join(", ")}</small> : null}
+            {previewMode && <Badge bg="warning" className="ms-0 mt-1">Preview Mode</Badge>}
           </Col>
           <Col className="d-none d-md-block" />
           <Col md="auto" className="text-md-end">
             <div className="d-flex align-items-center gap-2">
-              {attemptId && (
-                <Badge bg="secondary">Attempt: {String(attemptId).slice(0, 6)}…</Badge>
-              )}
-              <Badge bg="light" text="dark">
-                {answeredCount}/{qs.length} answered
-              </Badge>
-              {secondsLeft != null && (
-                <Badge bg="danger" className="ms-1">
-                  Time left: {fmtTime(secondsLeft)}
-                </Badge>
-              )}
+              {attemptId && <Badge bg="secondary">Attempt: {String(attemptId).slice(0, 6)}…</Badge>}
+              <Badge bg="light" text="dark">{answeredCount}/{qs.length} answered</Badge>
+              {secondsLeft != null && <Badge bg="danger" className="ms-1">Time left: {fmtTime(secondsLeft)}</Badge>}
               <small className="text-muted">
-                {!attemptReady
-                  ? "Preparing…"
-                  : autosaveDisabled
-                  ? "Autosave off"
-                  : autoSaving
-                  ? "Saving…"
-                  : autoSavedAt
-                  ? `Saved ${timeAgo(autoSavedAt)}`
-                  : ""}
+                {!attemptReady ? "Preparing…" : autosaveDisabled ? "Autosave off" : autoSaving ? "Saving…" : autoSavedAt ? `Saved ${timeAgo(autoSavedAt)}` : ""}
               </small>
-              <Button
-                variant="outline-secondary"
-                onClick={saveProgress}
-                disabled={!attemptReady || !attemptId || saving}
-              >
-                {saving ? "Saving…" : "Save"}
-              </Button>
-              <Button
-                variant="success"
-                onClick={() => submitAttempt(false)}
-                disabled={!attemptReady || !attemptId || submitting}
-              >
-                {submitting ? "Submitting…" : "Submit"}
-              </Button>
+              {!previewMode ? (
+                <>
+                  <Button variant="outline-secondary" onClick={saveProgress} disabled={!attemptReady || !attemptId || saving}>
+                    {saving ? "Saving…" : "Save"}
+                  </Button>
+                  <Button variant="success" onClick={() => setPreviewMode(true)} disabled={!attemptReady || !attemptId}>
+                    Preview & Submit
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline-secondary" onClick={() => setPreviewMode(false)}>
+                    Back to Questions
+                  </Button>
+                  <Button variant="success" onClick={() => submitAttempt(false)} disabled={!attemptReady || !attemptId || submitting}>
+                    {submitting ? "Submitting…" : "Submit Paper"}
+                  </Button>
+                </>
+              )}
             </div>
           </Col>
         </Row>
-
-        <ProgressBar
-          className="mt-2"
-          now={qs.length ? (answeredCount / qs.length) * 100 : 0}
-          style={{ height: 6 }}
-        />
+        <ProgressBar className="mt-2" now={qs.length ? (answeredCount / qs.length) * 100 : 0} style={{ height: 6 }} />
       </div>
 
       {errorMsg && <Alert variant="warning" className="mt-3">{errorMsg}</Alert>}
-      {result && (
-        <Alert variant="success" className="mt-3">
-          <strong>Score:</strong> {result.score} / {result.total}
-        </Alert>
-      )}
 
       <Row className="mt-3 with-left-rail">
-        {/* LEFT: Single question view */}
         <Col lg={9} className="questions-col">
-          {!q ? (
-            <Card body className="border">
-              <div className="text-muted">No questions in this paper.</div>
-            </Card>
-          ) : (
-            <Card
-              className="mb-3 shadow-sm question-card"
-              ref={(el) => {
-                const qid = q._id || q.id || String(currentIdx);
-                questionRefs.current[qid] = { el };
-              }}
-            >
-              <Card.Body className="p-3 p-md-4">
-                {/* Question number + text */}
-                {(() => {
-                  const { isHtml, html, text } = getQuestionText(q);
-                  return (
-                    <div className="question-header">
-                      <div className="qno">Q{currentIdx + 1}.</div>
-                      {isHtml ? (
-                        <div
-                          className="question-title"
-                          // eslint-disable-next-line react/no-danger
-                          dangerouslySetInnerHTML={{ __html: html }}
-                        />
-                      ) : (
-                        <div className="question-title">{text}</div>
-                      )}
-                      {(q.marks || q.points) && (
-                        <Badge bg="light" text="dark" className="ms-2">
-                          {q.marks || q.points} mark(s)
-                        </Badge>
-                      )}
-                      {result?.details && (() => {
-                        const feedback = result.details.find(
-                          (d) =>
-                            String(d.qid) ===
-                            String(q._id || q.id || String(currentIdx))
-                        );
-                        return feedback ? (
-                          <Badge
-                            bg={feedback.correct ? "success" : "danger"}
-                            className="ms-2"
-                          >
-                            {feedback.correct ? "Correct" : "Incorrect"}
-                          </Badge>
-                        ) : null;
-                      })()}
-                    </div>
-                  );
-                })()}
-
-                {/* Answer input */}
-                {(() => {
-                  const qType = (q.type || "mcq").toLowerCase();
-                  const qid = q._id || q.id || String(currentIdx);
-                  const options = Array.isArray(q.options) ? q.options : [];
-                  const value = answers[qid] ?? "";
-
-                  if (qType === "mcq") {
+          {!previewMode ? (
+            !q ? (
+              <Card body className="border"><div className="text-muted">No questions in this paper.</div></Card>
+            ) : (
+              <Card className="mb-3 shadow-sm question-card">
+                <Card.Body className="p-3 p-md-4">
+                  {(() => {
+                    const { isHtml, html, text } = getQuestionText(q);
                     return (
-                      <div className="d-grid">
-                        {options.map((opt, i) => {
-                          const optKey = String(opt?._id || opt?.id || opt?.key || i);
-                          const optText =
-                            (typeof opt === "object"
-                              ? opt.text || opt.label || opt.value
-                              : String(opt)) ?? String(i);
-                          const letter = i < 26 ? String.fromCharCode(65 + i) : String(i + 1);
-                          const selected = String(value) === optKey;
-
-                          return (
-                            <div
-                              className={`option-row ${selected ? "is-selected" : ""}`}
-                              key={`${qid}-${optKey}`}
-                            >
-                              <Form.Check
-                                type="radio"
-                                id={`q-${qid}-${optKey}`}
-                                name={`q-${qid}`}
-                                checked={selected}
-                                onChange={() => updateAnswer(qid, optKey)}
-                                label={
-                                  <span className="option-label">
-                                    <span className="opt-letter">{letter})</span>
-                                    <span className="opt-text">{optText}</span>
-                                  </span>
-                                }
-                              />
-                            </div>
-                          );
-                        })}
+                      <div className="question-header">
+                        <div className="qno">Q{currentIdx + 1}.</div>
+                        {isHtml ? (
+                          <div className="question-title" dangerouslySetInnerHTML={{ __html: html }} />
+                        ) : (
+                          <div className="question-title">{text}</div>
+                        )}
+                        {(q.marks || q.points) && <Badge bg="light" text="dark" className="ms-2">{q.marks || q.points} mark(s)</Badge>}
                       </div>
                     );
-                  }
+                  })()}
+                  {(() => {
+                    const qType = (q.type || "mcq").toLowerCase();
+                    const qid = q._id || q.id || String(currentIdx);
+                    const options = Array.isArray(q.options) ? q.options : [];
+                    const value = answers[qid] ?? "";
 
-                  if (qType === "short" || qType === "text") {
+                    if (qType === "mcq") {
+                      return (
+                        <div className="d-grid">
+                          {options.map((opt, i) => {
+                            const optKey = String(opt?._id || opt?.id || opt?.key || i);
+                            const optText = getOptionText(opt, i);
+                            const letter = i < 26 ? String.fromCharCode(65 + i) : String(i + 1);
+                            const selected = String(value) === optKey;
+                            return (
+                              <div className={`option-row ${selected ? "is-selected" : ""}`} key={`${qid}-${optKey}`}>
+                                <Form.Check
+                                  type="radio"
+                                  id={`q-${qid}-${optKey}`}
+                                  name={`q-${qid}`}
+                                  checked={selected}
+                                  onChange={() => updateAnswer(qid, optKey)}
+                                  label={<span className="option-label"><span className="opt-letter">{letter})</span><span className="opt-text">{optText}</span></span>}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    if (qType === "short" || qType === "text") {
+                      return (
+                        <Form.Control as="textarea" rows={3} placeholder="Type your answer…" value={value} onChange={(e) => updateAnswer(qid, e.target.value)} />
+                      );
+                    }
                     return (
-                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        placeholder="Type your answer…"
-                        value={value}
-                        onChange={(e) => updateAnswer(qid, e.target.value)}
-                      />
+                      <Form.Control type="text" placeholder="Your answer" value={value} onChange={(e) => updateAnswer(qid, e.target.value)} />
                     );
-                  }
+                  })()}
+                </Card.Body>
 
-                  return (
-                    <Form.Control
-                      type="text"
-                      placeholder="Your answer"
-                      value={value}
-                      onChange={(e) => updateAnswer(qid, e.target.value)}
-                    />
-                  );
-                })()}
+                <Card.Footer className="d-flex justify-content-between">
+                  <Button variant="outline-secondary" onClick={prev} disabled={currentIdx === 0}>← Prev</Button>
+                  {currentIdx === totalQ - 1 ? (
+                    <Button variant="success" onClick={() => setPreviewMode(true)}>Preview →</Button>
+                  ) : (
+                    <Button variant="primary" onClick={next} disabled={currentIdx === totalQ - 1}>Next →</Button>
+                  )}
+                </Card.Footer>
+              </Card>
+            )
+          ) : (
+            // PREVIEW PAGE
+            <Card className="mb-3 shadow-sm">
+              <Card.Header className="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>Preview Answers</strong>
+                  <div className="text-muted small">Review your answers. Click <em>Edit</em> to change any answer. Then press <strong>Submit Paper</strong>.</div>
+                </div>
+                <div className="d-flex gap-2">
+                  <Button variant="outline-secondary" onClick={() => setPreviewMode(false)}>Back to Questions</Button>
+                  <Button variant="success" onClick={() => submitAttempt(false)} disabled={!attemptReady || !attemptId || submitting}>
+                    {submitting ? "Submitting…" : "Submit Paper"}
+                  </Button>
+                </div>
+              </Card.Header>
+              <Card.Body className="p-0">
+                <div className="table-responsive">
+                  <Table hover className="mb-0 align-middle">
+                    <thead><tr><th style={{ width: 70 }}>#</th><th>Question</th><th style={{ width: "40%" }}>Your Answer</th><th style={{ width: 100 }} /></tr></thead>
+                    <tbody>
+                      {qs.map((qq, i) => {
+                        const qid = qq._id || qq.id || String(i);
+                        const val = answers[qid];
+                        const { isHtml, html, text } = getQuestionText(qq);
+                        const disp = getDisplayAnswer(qq, val, i);
+                        return (
+                          <tr key={`prev-${qid}`}>
+                            <td><Badge bg="secondary">{i + 1}</Badge></td>
+                            <td>{isHtml ? <div className="small text-wrap" dangerouslySetInnerHTML={{ __html: html }} /> : <div className="small text-wrap">{text}</div>}</td>
+                            <td>{disp.empty ? <span className="badge bg-light text-dark">Unanswered</span> : <span>{disp.text}</span>}</td>
+                            <td className="text-end"><Button size="sm" variant="outline-primary" onClick={() => goTo(i)}>Edit</Button></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                </div>
               </Card.Body>
-
               <Card.Footer className="d-flex justify-content-between">
-                <Button variant="outline-secondary" onClick={prev} disabled={currentIdx === 0}>
-                  ← Prev
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={next}
-                  disabled={currentIdx === totalQ - 1}
-                >
-                  Next →
-                </Button>
+                <div className="text-muted small">Answered: <strong>{answeredCount}/{qs.length}</strong></div>
+                <div className="d-flex gap-2">
+                  <Button variant="outline-secondary" onClick={() => setPreviewMode(false)}>Back to Questions</Button>
+                  <Button variant="success" onClick={() => submitAttempt(false)} disabled={!attemptReady || !attemptId || submitting}>
+                    {submitting ? "Submitting…" : "Submit Paper"}
+                  </Button>
+                </div>
               </Card.Footer>
             </Card>
           )}
 
-          <div className="d-flex justify-content-between my-4">
-            <Link className="btn btn-outline-secondary" to="/bootstrapreact/medixo/my-assignments">
-              Back
-            </Link>
-            <div className="d-flex gap-2">
-              <Button variant="outline-secondary" onClick={saveProgress} disabled={!attemptReady || !attemptId || saving}>
-                {saving ? "Saving…" : "Save"}
-              </Button>
-              <Button variant="success" onClick={() => submitAttempt(false)} disabled={!attemptReady || !attemptId || submitting}>
-                {submitting ? "Submitting…" : "Submit"}
-              </Button>
+          {!previewMode && (
+            <div className="d-flex justify-content-between my-4">
+              <Link className="btn btn-outline-secondary" to={withBase("/my-assignments")}>Back</Link>
+              <div className="d-flex gap-2">
+                <Button variant="outline-secondary" onClick={saveProgress} disabled={!attemptReady || !attemptId || saving}>{saving ? "Saving…" : "Save"}</Button>
+                <Button variant="success" onClick={() => setPreviewMode(true)} disabled={!attemptReady || !attemptId}>Preview & Submit</Button>
+              </div>
             </div>
-          </div>
+          )}
         </Col>
 
-        {/* RIGHT: Palette */}
+        {/* Palette */}
         <Col lg={3} className="mb-4">
           <Card className="shadow-sm sticky-card">
-            <Card.Header>
-              <strong>Question Palette</strong>
-            </Card.Header>
+            <Card.Header><strong>Question Palette</strong></Card.Header>
             <Card.Body>
               <div className="palette mb-2">
                 {qs.map((_, i) => (
-                  <button
-                    key={`pal-${i}`}
-                    type="button"
-                    className={`qbtn ${statusFor(i)}`}
-                    onClick={() => goTo(i)}
-                  >
-                    {i + 1}
-                  </button>
+                  <button key={`pal-${i}`} type="button" className={`qbtn ${statusFor(i)}`} onClick={() => goTo(i)}>{i + 1}</button>
                 ))}
               </div>
-
               <div className="legend small">
                 <span className="leg answered">Answered</span>
                 <span className="leg current">Current</span>
@@ -807,25 +665,6 @@ export default function TestPlayer() {
               </div>
             </Card.Body>
           </Card>
-
-          <div className="text-end mt-3">
-            <Button size="sm" variant="outline-secondary" onClick={() => setDebugOpen((s) => !s)}>
-              {debugOpen ? "Hide Debug" : "Show Debug"}
-            </Button>
-          </div>
-
-          {debugOpen && (
-            <Card className="mt-2">
-              <Card.Body style={{ maxHeight: 220, overflow: "auto", background: "#fafafa" }}>
-                <pre style={{ fontSize: 12, marginBottom: 8 }}>
-Assignment: {JSON.stringify(assignment, null, 2)}
-                </pre>
-                <pre style={{ fontSize: 12 }}>
-Paper: {JSON.stringify(paper, null, 2)}
-                </pre>
-              </Card.Body>
-            </Card>
-          )}
         </Col>
       </Row>
     </Container>

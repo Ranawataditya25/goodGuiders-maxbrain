@@ -3032,7 +3032,7 @@ useEffect(() => {
 
                 {isAdmin && <li><Link to="/all-patients">All Student</Link></li>}
                 {isMentor && <li><Link to="/all-patients">Profile</Link></li>}
-                {isStudent && <li><Link to="/all-patients">Profile</Link></li> }
+                {isStudent && <li><Link to="/my-assignments">Tests</Link></li> }
             
         {isStudent &&  <li><Link to="/edit-patient">Edit Profile</Link></li>}
             {isMentor &&  <li><Link to="/edit-doctor">Edit Profile</Link></li>}
