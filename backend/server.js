@@ -16,6 +16,7 @@ import questionRoutes from "./routes/question.route.js";
 import assignmentRoutes from "./routes/assignment.route.js";
 import attemptsRoutes from "./routes/attempts.route.js";
 // import testsRouter from "./routes/tests.route.js";
+import mentorRoutes from "./routes/mentorStatus.route.js"; 
 
 dotenv.config();
 
@@ -70,6 +71,7 @@ app.use("/api/uploads", uploadsRouter);
 app.use("/api/classes", classesRouter);
 
 app.use("/api/auth", authRoutes);
+app.use("/api/mentor", mentorRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/questions", questionRoutes);
 

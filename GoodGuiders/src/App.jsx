@@ -34,6 +34,7 @@ import Event_management from "./pages/Event_management";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import MentorRegistrationProfile from "./pages/MentorRegistrationProfile.jsx";
 import DoctorProfile from "./pages/DoctorProfile";
 import Status from "./pages/Status";
 
@@ -168,6 +169,7 @@ function AppContent() {
 
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />
+        <Route exact path="/mentor-registration" element={<MentorRegistrationProfile />} />
         <Route exact path="/doctor-profile" element={<DoctorProfile />} />
         <Route exact path="/status" element={<Status />} />
         <Route exact path="/forgot-password" element={<Forgot_password />} />

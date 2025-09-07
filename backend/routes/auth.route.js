@@ -76,7 +76,17 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ msg: "Invalid email or password" });
     }
 
-    // Get full profile (except password)
+    // 🚨 Check mentor approval before allowing login
+    if (user.role === "mentor" && user.mentorStatus !== "approved") {
+      return res.status(403).json({
+        msg:
+          user.mentorStatus === "pending"
+            ? "Your mentor profile is still pending admin approval."
+            : "Your mentor application was rejected by admin.",
+      });
+    }
+
+    // ✅ Get full profile (except password)
     const fullUser = await User.findOne({ email }).select("-password");
 
     res.json({
@@ -84,7 +94,7 @@ router.post("/login", async (req, res) => {
       user: fullUser,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Login error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 });
