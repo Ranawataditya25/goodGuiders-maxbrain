@@ -57,6 +57,13 @@ const userSchema = new mongoose.Schema(
     mentorAbilities: [String],
     bio: String,
     experience: String,
+
+     // Mentor approval status
+    mentorStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected", ""],
+      default: "",
+    },
   },
   {
     timestamps: true,
