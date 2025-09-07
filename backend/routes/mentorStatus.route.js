@@ -97,13 +97,13 @@ router.post("/profile-setup", async (req, res) => {
 
 /**
  * Admin Approval
- * PATCH /api/admin/mentor-status/:id
+ * PATCH /api/mentor/mentor-status/:id
  */
-router.patch("/admin/mentor-status/:id", async (req, res) => {
+router.patch("/mentor-status/:id", async (req, res) => {
   try {
-    const { status } = req.body; // "approved" or "rejected"
+    const { mentorStatus  } = req.body; // "approved" or "rejected"
 
-    if (!["approved", "rejected"].includes(status)) {
+    if (!["approved", "rejected"].includes( mentorStatus )) {
       return res.status(400).json({ error: "Invalid status" });
     }
 
@@ -115,10 +115,10 @@ router.patch("/admin/mentor-status/:id", async (req, res) => {
         .json({ error: "Only mentors can be approved/rejected" });
     }
 
-    user.mentorStatus = status;
+    user.mentorStatus = mentorStatus ;
     await user.save();
 
-    res.json({ message: `Mentor ${status}`, user });
+    res.json({ message: `Mentor ${mentorStatus }`, user });
   } catch (err) {
     console.error("Admin approval error:", err);
     res.status(500).json({ error: "Server error" });
