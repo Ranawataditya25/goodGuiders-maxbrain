@@ -19,6 +19,7 @@ import attemptsRoutes from "./routes/attempts.route.js";
 // import testsRouter from "./routes/tests.route.js";
 import mentorRoutes from "./routes/mentorStatus.route.js"; 
 import forgotPasswordRoutes from "./routes/forgotPass.route.js";
+import statsRoutes from "./routes/stats.route.js"
 
 
 const app = express();
@@ -71,6 +72,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/classes", classesRouter);
 
+app.use("/api/stats", statsRoutes);
 app.use("/api/auth", forgotPasswordRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/mentor", mentorRoutes);
