@@ -1,11 +1,12 @@
 // backendd/server.js
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+dotenv.config();
 
 // Routers
 import classesRouter from "./routes/classes.route.js";
@@ -17,8 +18,8 @@ import assignmentRoutes from "./routes/assignment.route.js";
 import attemptsRoutes from "./routes/attempts.route.js";
 // import testsRouter from "./routes/tests.route.js";
 import mentorRoutes from "./routes/mentorStatus.route.js"; 
+import forgotPasswordRoutes from "./routes/forgotPass.route.js";
 
-dotenv.config();
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/classes", classesRouter);
 
+app.use("/api/auth", forgotPasswordRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/mentor", mentorRoutes);
 app.use("/api/profile", profileRoutes);
