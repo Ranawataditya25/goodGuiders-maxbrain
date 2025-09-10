@@ -1,27 +1,4 @@
-// import mongoose from 'mongoose';
-
-// const questionSchema = new mongoose.Schema({
-//   class: String,
-//   subject: String,
-//   type: {
-//     type: String,
-//     enum: ['mcq', 'subjective'],
-//     required: true
-//   },
-//   difficulty: {
-//     type: String,
-//     enum: ['beginner', 'intermediate', 'advanced']
-//   },
-//   question: String,
-//   options: [String], // Only for MCQ
-//   correctAnswer: String, // Only for MCQ
-// });
-
-
-// export default mongoose.model('Question', questionSchema);
-
-
-
+// models/Question.model.js
 import mongoose from "mongoose";
 
 const QuestionSchema = new mongoose.Schema(
@@ -67,6 +44,14 @@ const TestSchema = new mongoose.Schema(
 
     // optional (if you later add it to UI)
     mixOrder: { type: String, enum: ["grouped", "alternate"], default: "grouped" },
+
+    // ✅ REQUIRED: who created this test (mentor)
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
 
     questions: { type: [QuestionSchema], default: [] },
   },
