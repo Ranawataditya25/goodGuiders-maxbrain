@@ -414,4 +414,30 @@ router.post("/assignments/:id/start", async (req, res) => {
   }
 });
 
+// GET /api/student/email/:email
+router.get("/student/email/:email", async (req, res) => {
+  try {
+    // Find the student by email
+    const student = await User.findOne({ email: req.params.email, role: "student" });
+    if (!student) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    // Find all assignments that contain this student's ObjectId
+    const assignments = await TestAssignment.find({
+      studentIds: student._id
+    })
+      .populate("testId")
+      .populate("studentIds", "email"); // only include email field
+
+      if (!assignments || assignments.length === 0) {
+      return res.status(404).json({ message: "No Assigned Test Records Found" });
+    }
+
+    res.json({ ok: true, data: assignments });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

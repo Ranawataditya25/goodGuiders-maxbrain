@@ -10,10 +10,10 @@ const router = express.Router();
 
 // ------------------ Rate Limiter ------------------
 const forgotPasswordLimiter = rateLimit({
-  windowMs: 30 * 60 * 1000, // 15 minutes
+  windowMs: 30 * 60 * 1000, // 30 minutes
   max: 5, // max 5 requests per IP per window
   message: {
-    error: "Too many password reset attempts, try again later.",
+    error: "Too many password reset attempts, try again in 30 minutes.",
   },
 });
 
