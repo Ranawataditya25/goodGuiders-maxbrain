@@ -20,6 +20,7 @@ import attemptsRoutes from "./routes/attempts.route.js";
 import mentorRoutes from "./routes/mentorStatus.route.js"; 
 import forgotPasswordRoutes from "./routes/forgotPass.route.js";
 import statsRoutes from "./routes/stats.route.js"
+import answerRoutes from "./routes/submission.route.js";
 
 
 const app = express();
@@ -83,6 +84,7 @@ app.use("/api/questions", questionRoutes);
 // using "/api" here is fine if those define subpaths internally
 app.use("/api", assignmentRoutes);
 app.use("/api", attemptsRoutes);
+app.use("/api", answerRoutes);
 
 // app.use("/api/tests", testsRouter);
 
