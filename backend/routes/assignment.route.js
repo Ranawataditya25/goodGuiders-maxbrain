@@ -1,3 +1,4 @@
+// routes/assignment.route.js
 import { Router } from "express";
 import mongoose from "mongoose";
 import Questions from "../models/Question.model.js";
@@ -10,12 +11,52 @@ const router = Router();
 const isValidObjectId = (v) => mongoose.isValidObjectId(v);
 const toObjectId = (v) => (isValidObjectId(v) ? new mongoose.Types.ObjectId(v) : v);
 
+// Helper: resolve a user id (for dev environments w/o auth middleware)
+const resolveUserId = (req) => {
+  if (req.user?._id) return req.user._id;
+  const headerId = req.header("x-user-id");
+  if (headerId && isValidObjectId(headerId)) return new mongoose.Types.ObjectId(headerId);
+  const bodyId = req.body?.assignedBy || req.body?.createdBy;
+  if (bodyId && isValidObjectId(bodyId)) return new mongoose.Types.ObjectId(bodyId);
+  return undefined;
+};
+
+// ---- helper to read timer minutes from many possible keys (minutes > 0) ----
+const pickLimitMinutes = (body = {}) => {
+  const toInt = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  };
+  const s = body.settings || {};
+  return (
+    toInt(body.durationMinutes) ??
+    toInt(body.durationMin) ??
+    toInt(body.timeLimitMin) ??
+    toInt(s.durationMinutes) ??
+    null
+  );
+};
+
 /* ---------------------------------------------
  * Simple lists
  * --------------------------------------------- */
-router.get("/tests", async (_req, res) => {
+router.get("/tests", async (req, res) => {
   try {
-    const docs = await Questions.find({}, { questions: 0 }).sort({ createdAt: -1 }).lean();
+    const { createdBy, mine } = req.query;
+    const filter = {};
+
+    // ?mine=1 -> use req.user or x-user-id header
+    if (String(mine) === "1") {
+      const uid = resolveUserId(req);
+      if (uid) filter.createdBy = uid;
+    }
+
+    // ?createdBy=<ObjectId>
+    if (createdBy && isValidObjectId(createdBy)) {
+      filter.createdBy = new mongoose.Types.ObjectId(createdBy);
+    }
+
+    const docs = await Questions.find(filter, { questions: 0 }).sort({ createdAt: -1 }).lean();
     res.json({ ok: true, data: docs });
   } catch (e) {
     console.error("[GET /tests] error:", e);
@@ -203,7 +244,7 @@ router.get("/assignments", async (req, res) => {
         },
       },
 
-      // keep payload lean for the FE
+      // keep payload lean for the FE (➡️ add timer fields)
       {
         $project: {
           studentIds: 1,
@@ -212,6 +253,12 @@ router.get("/assignments", async (req, res) => {
           dueAt: 1,
           status: 1,
           note: 1,
+
+          // ⬇️ timer fields included in list API
+          durationMinutes: 1,
+          durationMin: 1,
+          timeLimitMin: 1,
+          settings: 1,
 
           testId: "$resolvedTestId",
           "test.class": "$test.class",
@@ -319,7 +366,13 @@ router.get("/assignments/:id/attempt/latest", async (req, res) => {
 /* ---------------------------------------------
  * Create assignment (assign a test to students)
  * POST /api/tests/:testId/assign
- * Body: { studentIds: [ObjectId|string], dueAt?, note? }
+ * Body: {
+ *   studentIds: [ObjectId|string],
+ *   dueAt?: ISO,
+ *   note?: string,
+ *   // Timer (minutes) — any one of these:
+ *   durationMinutes? | durationMin? | timeLimitMin? | settings: { durationMinutes? }
+ * }
  * --------------------------------------------- */
 router.post("/tests/:testId/assign", async (req, res) => {
   try {
@@ -336,13 +389,25 @@ router.post("/tests/:testId/assign", async (req, res) => {
     const test = await Questions.findById(testId).lean();
     if (!test) return res.status(404).json({ ok: false, message: "Test not found" });
 
+    const assignedBy = resolveUserId(req);
+
+    // ⬇️ NEW: capture time-limit minutes (or null)
+    const limitMin = pickLimitMinutes(req.body || {});
+    const settings = req.body?.settings || {};
+
     const doc = await TestAssignment.create({
       testId: toObjectId(testId),
       studentIds: studentIds.map(toObjectId),
       dueAt: dueAt ? new Date(dueAt) : undefined,
       note: note || "",
       status: "assigned",
-      assignedBy: req.user?._id || undefined,
+      assignedBy: assignedBy || undefined,
+
+      // ⬇️ Persist timer under common keys so FE can read any
+      durationMinutes: limitMin ?? undefined,
+      durationMin: limitMin ?? undefined,
+      timeLimitMin: limitMin ?? undefined,
+      settings: limitMin ? { ...(settings || {}), durationMinutes: limitMin } : settings,
     });
 
     res.status(201).json({ ok: true, id: doc._id });
