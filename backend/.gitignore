@@ -20,3 +20,4 @@ yarn-error.log*
 # Ignore uploaded images
 /profilePhotoUploads
 /utils
+/backend/utils/email.js
