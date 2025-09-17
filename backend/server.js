@@ -17,25 +17,29 @@ import questionRoutes from "./routes/question.route.js";
 import assignmentRoutes from "./routes/assignment.route.js";
 import attemptsRoutes from "./routes/attempts.route.js";
 // import testsRouter from "./routes/tests.route.js";
-import mentorRoutes from "./routes/mentorStatus.route.js"; 
+import mentorRoutes from "./routes/mentorStatus.route.js";
 import forgotPasswordRoutes from "./routes/forgotPass.route.js";
-import statsRoutes from "./routes/stats.route.js"
+import statsRoutes from "./routes/stats.route.js";
 import answerRoutes from "./routes/submission.route.js";
 import storageRoutes from "./routes/storage.route.js";
-
 
 const app = express();
 
 /* ----------------------- CORS ----------------------- */
 const corsOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
-  .map(s => s.trim())
+  .map((s) => s.trim())
   .filter(Boolean);
 
 const corsOptions = {
   origin: corsOrigins.length
     ? corsOrigins
-    : ["http://127.0.0.1:5173", "http://localhost:5173"],
+    : [
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+        "http://localhost:5174", // Add this
+        "https://landing-page-gg.onrender.com",
+      ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -50,8 +54,7 @@ app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 /* -------------------- Mongo Connect ------------------ */
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://127.0.0.1:27017/yourdb";
+const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/yourdb";
 
 mongoose
   .connect(MONGO_URI)
@@ -92,7 +95,9 @@ app.use("/api/storage", storageRoutes);
 
 /* ------------------- 404 Fallback -------------------- */
 // Pathless fallback avoids path-to-regexp pitfalls
-app.use((req, res) => res.status(404).json({ ok: false, message: "Not found" }));
+app.use((req, res) =>
+  res.status(404).json({ ok: false, message: "Not found" })
+);
 
 /* --------------------- Start ------------------------- */
 const PORT = process.env.PORT || 5000;
