@@ -19,3 +19,4 @@ yarn-error.log*
 
 # Ignore uploaded images
 /profilePhotoUploads
+/utils

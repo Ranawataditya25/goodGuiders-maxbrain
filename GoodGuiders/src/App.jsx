@@ -1,7 +1,7 @@
 import "animate.css";
-import { Routes, Route, BrowserRouter, useLocation, Navigate } from "react-router-dom";
+import { Routes, Route, BrowserRouter, useLocation, Navigate, useNavigate } from "react-router-dom";
 
-import Index from "./pages/Index";
+// import Index from "./pages/Index";
 import Dashboard2 from "./pages/Dashboard2";
 import Dashboard3 from "./pages/Dashboard3";
 
@@ -12,6 +12,11 @@ import Edit_doctor from "./pages/Edit_doctor";
 import AssignTest from "./pages/AssignTest";
 import AssignedTestsPage from "./pages/AssignedTestsPage";
 import TestPlayer from "./pages/TestPlayer";
+
+import TestResult from "./pages/TestResult";
+import MyAssignments from "./pages/MyAssignments";
+
+import ExamInstructions from "./pages/ExamInstructions";
 
 import All_patient from "./pages/All_patient";
 import Add_patient from "./pages/Add_patient";
@@ -29,11 +34,14 @@ import Event_management from "./pages/Event_management";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import MentorRegistrationProfile from "./pages/MentorRegistrationProfile.jsx";
 import DoctorProfile from "./pages/DoctorProfile";
 import Status from "./pages/Status";
-import { TestPage } from './pages/TestPage';
+
+import TestPage from "./pages/TestPage.jsx";
 import { TestStart } from './pages/TestStart';
 import TestEnd from './pages/TestEnd';
+
 import Forgot_password from "./pages/Forgot_password";
 import New_password from "./pages/New_password";
 import Verify_email from "./pages/Verify_email";
@@ -89,8 +97,10 @@ import Customizer from "./componets/Customizer";
 import ClassesList from "./pages/classes/List";
 import NewClass from "./pages/classes/New";
 import EditClass from "./pages/classes/Edit";
+import { useEffect } from "react";
 
 const routesWithoutExtras = [
+  "/",
   "/login",
   "/register",
   "/forgot-password",
@@ -101,13 +111,36 @@ const routesWithoutExtras = [
   "/error-page"
 ];
 
+
+
 function AppContent() {
   const location = useLocation();
+   const navigate = useNavigate();
   const isSpecialRoute = routesWithoutExtras.includes(location.pathname);
 
   const customizerEnabled = true;
   const headerEnabled = true;
   const sidebarEnabled = true;
+
+  useEffect(() => {
+  const handler = (event) => {
+    // ✅ Security check — only accept messages from your landing page domain
+    // Replace "https://your-landing-domain.com" with your actual deployed domain
+    if (
+      event.origin !== "http://localhost:5173" &&
+      !event.origin.includes("https://landing-page-gg.onrender.com")
+    ) {
+      return;
+    }
+
+    if (event.data && event.data.action === "navigate") {
+      navigate(event.data.path);
+    }
+  };
+
+  window.addEventListener("message", handler);
+  return () => window.removeEventListener("message", handler);
+}, [navigate]);
 
   return (
     <>
@@ -117,7 +150,17 @@ function AppContent() {
       {!isSpecialRoute && location.pathname !== "/error-page" && sidebarEnabled && <Sidebar />}
 
       <Routes>
-        <Route exact path="/" element={<Index />} />
+        {/* <Route exact path="/" element={<Index />} /> */}
+          <Route
+    exact
+    path="/"
+    element={
+      <iframe
+        src="https://landing-page-gg.onrender.com"   // 👈 put your live landing URL here
+        style={{ width: "100%", height: "100vh", border: "none" }}
+      />
+    }
+  />
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
 
@@ -133,7 +176,14 @@ function AppContent() {
         {/* Mentor assigning test */}
         <Route exact path="/assign-test" element={<AssignTest />} />
         <Route exact path="/assigned-tests" element={<AssignedTestsPage />} />
+
+        <Route path="/test-instructions/:assignmentId" element={<ExamInstructions />} />
+        
         <Route exact path="/test-player/:assignmentId" element={<TestPlayer />} />
+
+        <Route exact path="/test-result/:attemptId" element={<TestResult />} />
+
+        <Route exact path="/my-assignments" element={<MyAssignments />} />
 
         <Route exact path="/all-patients" element={<All_patient />} />
         <Route exact path="/add-patient" element={<Add_patient />} />
@@ -154,6 +204,7 @@ function AppContent() {
 
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />
+        <Route exact path="/mentor-registration" element={<MentorRegistrationProfile />} />
         <Route exact path="/doctor-profile" element={<DoctorProfile />} />
         <Route exact path="/status" element={<Status />} />
         <Route exact path="/forgot-password" element={<Forgot_password />} />
@@ -219,11 +270,16 @@ export default function App() {
       {/* Loader */}
       <Loader />
 
-      <BrowserRouter basename="/bootstrapreact/medixo/">
+      <BrowserRouter basename="/bootstrapreact/medixo">
         <SidebarProvider>
           <AppContent />
         </SidebarProvider>
       </BrowserRouter>
+      {/* <BrowserRouter>
+        <SidebarProvider>
+          <AppContent />
+        </SidebarProvider>
+      </BrowserRouter> */}
     </>
   );
 }

@@ -1,11 +1,12 @@
-// backendd/server.js
+// server.js
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+dotenv.config();
 
 // Routers
 import classesRouter from "./routes/classes.route.js";
@@ -13,12 +14,19 @@ import uploadsRouter from "./routes/uploads.route.js";
 import authRoutes from "./routes/auth.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import questionRoutes from "./routes/question.route.js";
-import questionPaperRoutes from "./routes/questionPaper.route.js";
-
-// assignment/test APIs (already present)
 import assignmentRoutes from "./routes/assignment.route.js";
 import attemptsRoutes from "./routes/attempts.route.js";
 // import testsRouter from "./routes/tests.route.js";
+import mentorRoutes from "./routes/mentorStatus.route.js";
+import forgotPasswordRoutes from "./routes/forgotPass.route.js";
+import statsRoutes from "./routes/stats.route.js";
+import answerRoutes from "./routes/submission.route.js";
+import storageRoutes from "./routes/storage.route.js";
+
+// Models used by server-level helpers
+import User from "./models/User.model.js";
+import TestAssignment from "./models/TestAssignment.model.js";
+
 
 dotenv.config();
 
@@ -27,33 +35,85 @@ const app = express();
 /* ----------------------- CORS ----------------------- */
 const corsOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
-  .map(s => s.trim())
+  .map((s) => s.trim())
   .filter(Boolean);
 
 const corsOptions = {
   origin: corsOrigins.length
     ? corsOrigins
-    : ["http://127.0.0.1:5173", "http://localhost:5173"],
+    : [
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+        "http://localhost:5174", // Add this
+        "https://landing-page-gg.onrender.com",
+      ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-  allowedHeaders: ["Content-Type", "Authorization"],
+  // ✅ Allow dev headers for header-based auth shimming
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "x-user-id",
+    "x-user-email",
+  ],
   credentials: true,
 };
 app.use(cors(corsOptions));
 // ⚠️ DO NOT add app.options("*") or app.options("(.*)") on Express 5.
-// The cors() middleware above is enough, and you already handle OPTIONS
-// specifically inside uploads.route.js for /pdf when needed.
 
 /* -------------------- Body Parsers ------------------- */
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+/* -------------------- Dev Auth Shim ------------------ */
+/**
+ * Populates req.user based on headers:
+ *   x-user-id:    Mongo ObjectId of the user
+ *   x-user-email: email (lowercased)
+ * Safe to keep in dev/staging; remove or guard with NODE_ENV in prod.
+ */
+app.use(async (req, _res, next) => {
+  try {
+    const id = req.header("x-user-id");
+    const email = req.header("x-user-email");
+    let user = null;
+
+    if (id && mongoose.isValidObjectId(id)) {
+      user = await User.findById(id, { password: 0 }).lean();
+    } else if (email) {
+      user = await User.findOne(
+        { email: String(email).trim().toLowerCase() },
+        { password: 0 }
+      ).lean();
+    }
+
+    if (user) {
+      req.user = {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+      };
+    }
+  } catch (e) {
+    console.error("[devAuth] error:", e);
+  }
+  next();
+});
+
 /* -------------------- Mongo Connect ------------------ */
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://127.0.0.1:27017/yourdb";
+const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/yourdb";
 
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
+  .then(async () => {
+    console.log("✅ MongoDB connected");
+    // Optional: normalize any legacy string ids in assignments on boot
+    try {
+      await TestAssignment.normalizeIds();
+    } catch (e) {
+      console.warn("[startup] normalizeIds skipped/failed:", e?.message || e);
+    }
+  })
   .catch((err) => console.error("Mongo error:", err));
 
 /* ------------------ Static: /uploads ----------------- */
@@ -72,22 +132,26 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/classes", classesRouter);
 
+app.use("/api/stats", statsRoutes);
+app.use("/api/auth", forgotPasswordRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/mentor", mentorRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/questions", questionRoutes);
-app.use("/api/question-papers", questionPaperRoutes);
 
-
-// some of your routers are already scoped inside the files;
-// using "/api" here is fine if those define subpaths internally
+// some routers are internally scoped; "/api" here is fine
 app.use("/api", assignmentRoutes);
 app.use("/api", attemptsRoutes);
+app.use("/api", answerRoutes);
+app.use("/api/storage", storageRoutes);
 
 // app.use("/api/tests", testsRouter);
 
 /* ------------------- 404 Fallback -------------------- */
 // Pathless fallback avoids path-to-regexp pitfalls
-app.use((req, res) => res.status(404).json({ ok: false, message: "Not found" }));
+app.use((req, res) =>
+  res.status(404).json({ ok: false, message: "Not found" })
+);
 
 /* --------------------- Start ------------------------- */
 const PORT = process.env.PORT || 5000;

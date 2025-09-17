@@ -160,35 +160,36 @@ export default function Register() {
   //   // Submit the form data to your backend or API here
   // };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // if (!formData.IAgree) {
-    //   alert("Please agree to the Terms & Conditions.");
-    //   return;
-    // }
-  
-    try {
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    if (formData.role === "student") {
+      // Hit API only for students
       const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(formData)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
-  
+
       const data = await res.json();
-  
+
       if (res.ok) {
         alert(`✅ Registered successfully! Your referral code: ${data.referralCode}`);
         navigate("/login");
       } else {
         alert(`❌ Error: ${data.msg}`);
       }
-    } catch (err) {
-      console.error(err);
-      alert("Server error. Please try again.");
+    } else if (formData.role === "mentor") {
+      // Save mentor data in localStorage only, no DB hit
+      localStorage.setItem("mentorPendingData", JSON.stringify(formData));
+      navigate("/mentor-registration");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Server error. Please try again.");
+  }
+};
   
 
   return (

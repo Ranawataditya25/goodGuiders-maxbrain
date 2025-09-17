@@ -14,6 +14,7 @@ import {
 import FeatherIcon from "feather-icons-react";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
+import AssignedTestsSummary from "../componets/AssignedTestsSummary";
 
 const API = "http://localhost:5000/api";
 
@@ -105,6 +106,33 @@ const extractId = (x) => {
   if (typeof x === "object") return x._id || x.id || null;
   return null;
 };
+
+// ---- NEW: prefer server truth (derivedStatus), with robust fallbacks
+function deriveStatus(a) {
+  if (a?.derivedStatus) return String(a.derivedStatus).toLowerCase();
+
+  const la = a?.latestAttempt;
+  if (la?.status === "submitted" || la?.submittedAt) return "completed";
+
+  // consider in progress if attempt exists, has status or any work saved
+  const answersCount =
+    typeof la?.answersCount === "number"
+      ? la.answersCount
+      : la?.answers
+      ? Object.keys(la.answers).length
+      : 0;
+
+  if (
+    la?.status === "in_progress" ||
+    la?.startedAt ||
+    answersCount > 0
+  ) {
+    return "in_progress";
+  }
+
+  // final fallback: whatever assignment.status says, else "assigned"
+  return (a?.status || "assigned").toLowerCase();
+}
 
 export default function Dashboard3() {
   // ----- profile -----
@@ -267,7 +295,7 @@ export default function Dashboard3() {
     if (user?.email || user?._id) fetchAssignments();
   }, [user, fetchAssignments]);
 
-  /** -------- Start Attempt + Navigate to Paper -------- */
+  /** -------- Start/Continue Attempt + Navigate to Paper -------- */
 
   // Try many common locations for a test id on the row payload
   const getPaperIdFromRow = (a) => {
@@ -306,70 +334,115 @@ export default function Dashboard3() {
     }
   };
 
+  // const handleStartAssignment = async (a) => {
+  //   try {
+  //     setStartingId(a._id);
+
+  //     // 1) Resolve testId as aggressively as possible
+  //     let paperId = getPaperIdFromRow(a);
+  //     if (!paperId) {
+  //       paperId = await fetchPaperIdFromDetail(a._id);
+  //     }
+
+  //     // 2) Create/reuse attempt (server reuses in_progress attempt)
+  //     let attemptId = null;
+  //     try {
+  //       const res = await fetch(`${API}/assignments/${a._id}/start`, {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({
+  //           studentId: user?._id,
+  //           studentEmail: user?.email,
+  //           testId: paperId || undefined,
+  //         }),
+  //       });
+  //       if (res.ok) {
+  //         const data = await res.json();
+  //         attemptId =
+  //           data?.attemptId || data?.data?._id || data?.attempt?._id || null;
+  //         // use testId from server if it comes back (last-resort)
+  //         paperId =
+  //           paperId ||
+  //           extractId(
+  //             data?.test ||
+  //               data?.testId ||
+  //               data?.exam ||
+  //               data?.paper ||
+  //               data?.data?.test ||
+  //               data?.data?.testId
+  //           );
+  //       }
+  //     } catch (e) {
+  //       console.warn("Start endpoint failed; proceeding with navigation anyway.", e);
+  //     }
+
+  //     // 3) Build query params for the player
+  //     const query = new URLSearchParams(
+  //       Object.fromEntries(
+  //         Object.entries({
+  //           testId: paperId || undefined,
+  //           attemptId: attemptId || undefined,
+  //         }).filter(([, v]) => !!v)
+  //       )
+  //     ).toString();
+
+  //     if (!paperId) {
+  //       alert(
+  //         "This assignment does not have a test linked yet. Please ask your mentor to attach a paper."
+  //       );
+  //     }
+
+  //     // 4) Navigate (even if paperId missing, the player will show a helpful message)
+  //     navigate(`/test-player/${a._id}${query ? `?${query}` : ""}`);
+  //   } catch (err) {
+  //     console.error("Failed to start assignment:", err);
+  //     // Fallback: still open player with whatever we have
+  //     navigate(`/test-player/${a._id}`);
+  //   } finally {
+  //     setStartingId(null);
+  //   }
+  // };
+
   const handleStartAssignment = async (a) => {
     try {
       setStartingId(a._id);
 
-      // 1) Resolve testId as aggressively as possible
-      let paperId = getPaperIdFromRow(a);
-      if (!paperId) {
-        paperId = await fetchPaperIdFromDetail(a._id);
+      // status from your existing helper
+      const stat = deriveStatus(a);
+
+      // resolve test id just like before
+      let paperId = getPaperIdFromRow(a) || (await fetchPaperIdFromDetail(a._id));
+
+      if (stat === "assigned") {
+        // route to instructions gate (no alerts)
+        const qs = new URLSearchParams(
+          Object.fromEntries(Object.entries({ testId: paperId || undefined }).filter(([, v]) => !!v))
+        ).toString();
+        navigate(`/test-instructions/${a._id}${qs ? `?${qs}` : ""}`);
+        return;
       }
 
-      // 2) Create/start attempt (if your backend supports it)
+      // for in-progress/completed keep your existing direct open flow
       let attemptId = null;
       try {
         const res = await fetch(`${API}/assignments/${a._id}/start`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            studentId: user?._id,
-            studentEmail: user?.email,
-            testId: paperId || undefined,
-          }),
+          body: JSON.stringify({ testId: paperId || undefined }),
         });
         if (res.ok) {
           const data = await res.json();
-          attemptId =
-            data?.attemptId || data?.data?._id || data?.attempt?._id || null;
-          // use testId from server if it comes back (last-resort)
+          attemptId = data?.attemptId || data?.data?._id || data?.attempt?._id || null;
           paperId =
             paperId ||
-            extractId(
-              data?.test ||
-                data?.testId ||
-                data?.exam ||
-                data?.paper ||
-                data?.data?.test ||
-                data?.data?.testId
-            );
+            (data?.test || data?.testId || data?.exam || data?.paper || data?.data?.test || data?.data?.testId);
         }
-      } catch (e) {
-        console.warn("Start endpoint failed; proceeding with navigation anyway.", e);
-      }
+      } catch {}
 
-      // 3) Build query params for the player
-      const query = new URLSearchParams(
-        Object.fromEntries(
-          Object.entries({
-            testId: paperId || undefined,
-            attemptId: attemptId || undefined,
-          }).filter(([, v]) => !!v)
-        )
+      const qs = new URLSearchParams(
+        Object.fromEntries(Object.entries({ testId: extractId(paperId), attemptId }).filter(([, v]) => !!v))
       ).toString();
-
-      if (!paperId) {
-        alert(
-          "This assignment does not have a test linked yet. Please ask your mentor to attach a paper."
-        );
-      }
-
-      // 4) Navigate (even if paperId missing, the player will show a helpful message)
-      navigate(`/test-player/${a._id}${query ? `?${query}` : ""}`);
-    } catch (err) {
-      console.error("Failed to start assignment:", err);
-      // Fallback: still open player with whatever we have
-      navigate(`/test-player/${a._id}`);
+      navigate(`/test-player/${a._id}${qs ? `?${qs}` : ""}`);
     } finally {
       setStartingId(null);
     }
@@ -639,6 +712,13 @@ export default function Dashboard3() {
             </Col>
           </Row>
 
+          {/* ===== Summary counters (deep-link to filtered list) ===== */}
+          <Row className="mb-4">
+            <Col xl={12}>
+              <AssignedTestsSummary />
+            </Col>
+          </Row>
+
           {/* ========================== ASSIGNED TESTS ========================== */}
           <Card className="mb-4">
             <Card.Header className="d-flex justify-content-between align-items-center">
@@ -706,7 +786,7 @@ export default function Dashboard3() {
                         {assignments.slice(0, 3).map((a) => {
                           const t = pickTestObj(a) || {};
                           const due = asLocale(a?.dueAt);
-                          const stat = a?.status || "assigned";
+                          const stat = deriveStatus(a); // <-- now using server truth
                           const statusVariant =
                             stat === "completed"
                               ? "success"
@@ -725,16 +805,42 @@ export default function Dashboard3() {
                               </td>
                               <td>{due}</td>
                               <td>
-                                <Badge bg={statusVariant}>{stat}</Badge>
+                                <Badge bg={statusVariant}>
+                                  {stat === "in_progress"
+                                    ? "In Progress"
+                                    : stat === "completed"
+                                    ? "Completed"
+                                    : "Assigned"}
+                                </Badge>
                               </td>
                               <td className="text-end">
-                                {String(stat).toLowerCase() === "completed" ? (
+                                {stat === "completed" ? (
                                   <Link
                                     className="btn btn-sm btn-outline-secondary"
                                     to={`/test-player/${a._id}`}
                                   >
                                     Review
                                   </Link>
+                                ) : stat === "in_progress" ? (
+                                  <Button
+                                    size="sm"
+                                    variant="info"
+                                    onClick={() => handleStartAssignment(a)}
+                                    disabled={startingId === a._id}
+                                  >
+                                    {startingId === a._id ? (
+                                      <>
+                                        <Spinner
+                                          animation="border"
+                                          size="sm"
+                                          className="me-2"
+                                        />
+                                        Opening…
+                                      </>
+                                    ) : (
+                                      "Continue"
+                                    )}
+                                  </Button>
                                 ) : (
                                   <Button
                                     size="sm"
@@ -744,7 +850,11 @@ export default function Dashboard3() {
                                   >
                                     {startingId === a._id ? (
                                       <>
-                                        <Spinner animation="border" size="sm" className="me-2" />
+                                        <Spinner
+                                          animation="border"
+                                          size="sm"
+                                          className="me-2"
+                                        />
                                         Starting…
                                       </>
                                     ) : (
@@ -789,11 +899,33 @@ export default function Dashboard3() {
 {JSON.stringify(rawSample, null, 2)}
                     </pre>
                     <div className="mt-2 text-muted" style={{ fontSize: 12 }}>
-                      <div>Detected test path: <code>assignment.test || assignment.testId || assignment.exam</code></div>
-                      <div>Detected subjects path (fallbacks too): <code>test.subjects | test.subjectNames | test.tags | assignment.subjects | assignment.subjectNames | assignment.subject | assignment.tags</code></div>
-                      <div>Detected class path (fallbacks too): <code>test.class | className | klass | grade | standard (and same on assignment)</code></div>
-                      <div>Detected type path (fallbacks too): <code>test.testType | type | mode | format (and same on assignment)</code></div>
-                      <div>On Start: tries to resolve <code>testId</code> from row → if missing fetches detail → POST <code>/assignments/:id/start</code> → navigate to <code>/test-player/:assignmentId?testId=&amp;attemptId=</code></div>
+                      <div>
+                        Detected test path:{" "}
+                        <code>assignment.test || assignment.testId || assignment.exam</code>
+                      </div>
+                      <div>
+                        Detected subjects path (fallbacks too):{" "}
+                        <code>
+                          test.subjects | test.subjectNames | test.tags | assignment.subjects | assignment.subjectNames | assignment.subject | assignment.tags
+                        </code>
+                      </div>
+                      <div>
+                        Detected class path (fallbacks too):{" "}
+                        <code>
+                          test.class | className | klass | grade | standard (and same on assignment)
+                        </code>
+                      </div>
+                      <div>
+                        Detected type path (fallbacks too):{" "}
+                        <code>
+                          test.testType | type | mode | format (and same on assignment)
+                        </code>
+                      </div>
+                      <div>
+                        On Start/Continue: resolve <code>testId</code> → POST{" "}
+                        <code>/assignments/:id/start</code> → navigate to{" "}
+                        <code>/test-player/:assignmentId?testId=&amp;attemptId=</code>
+                      </div>
                     </div>
                   </Card>
                 </div>

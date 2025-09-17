@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form } from "react-bootstrap";
+import {
+  Container, Row, Col, Card, Table, Button, Badge, Modal, Form, InputGroup,
+} from "react-bootstrap";
 import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -17,12 +19,18 @@ export default function AssignTest() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  // --- NEW: time-limit controls ---
+  const [limitEnabled, setLimitEnabled] = useState(true);
+  const [limitPreset, setLimitPreset] = useState("60"); // minutes as string; "custom" for custom
+  const [customHours, setCustomHours] = useState("");
+  const [customMinutes, setCustomMinutes] = useState("");
+
   useEffect(() => {
     (async () => {
       try {
         const [t, s] = await Promise.all([
-          axios.get(`${API}/tests`),      // from assignment.route GET /api/tests
-          axios.get(`${API}/students`),   // GET /api/students
+          axios.get(`${API}/tests`),
+          axios.get(`${API}/students`),
         ]);
         setTests(t.data?.data || []);
         setStudents(s.data?.data || []);
@@ -40,8 +48,41 @@ export default function AssignTest() {
     setSelectedStudentIds([]);
     setDueAt("");
     setNote("");
+
+    // reset time-limit UI each open
+    setLimitEnabled(true);
+    setLimitPreset("60");
+    setCustomHours("");
+    setCustomMinutes("");
+
     setShow(true);
+    setError("");
   };
+
+  const studentsById = useMemo(() => {
+    const map = new Map();
+    students.forEach((s) => map.set(String(s._id), s));
+    return map;
+  }, [students]);
+
+  const effectiveMinutes = useMemo(() => {
+    if (!limitEnabled) return null; // no limit
+    if (limitPreset !== "custom") return Math.max(0, parseInt(limitPreset || "0", 10));
+    const h = Math.max(0, parseInt(customHours || "0", 10));
+    const m = Math.max(0, parseInt(customMinutes || "0", 10));
+    return h * 60 + m;
+  }, [limitEnabled, limitPreset, customHours, customMinutes]);
+
+  const humanLimit = useMemo(() => {
+    if (!limitEnabled) return "No time limit";
+    const mins = effectiveMinutes ?? 0;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (mins <= 0) return "0 minutes";
+    if (h && m) return `${h}h ${m}m`;
+    if (h) return `${h}h`;
+    return `${m}m`;
+  }, [limitEnabled, effectiveMinutes]);
 
   const submitAssign = async () => {
     if (!selectedTest) return;
@@ -49,14 +90,28 @@ export default function AssignTest() {
       setError("Select at least one student");
       return;
     }
+    if (limitEnabled && (!effectiveMinutes || effectiveMinutes <= 0)) {
+      setError("Please set a valid time limit or disable it.");
+      return;
+    }
+
     setSaving(true);
     setError("");
     try {
-      await axios.post(`${API}/tests/${selectedTest._id}/assign`, {
+      const payload = {
         studentIds: selectedStudentIds,
         dueAt: dueAt || undefined,
         note,
-      });
+      };
+
+      // include multiple field names for maximum backend compatibility
+      if (limitEnabled && effectiveMinutes > 0) {
+        payload.durationMinutes = effectiveMinutes;
+        payload.timeLimitMin = effectiveMinutes;
+        payload.durationMin = effectiveMinutes;
+      }
+
+      await axios.post(`${API}/tests/${selectedTest._id}/assign`, payload);
       setShow(false);
       alert("✅ Assigned!");
     } catch (e) {
@@ -66,14 +121,12 @@ export default function AssignTest() {
     }
   };
 
-  const studentsById = useMemo(() => {
-    const map = new Map();
-    students.forEach(s => map.set(String(s._id), s));
-    return map;
-  }, [students]);
-
   if (loading) {
-    return <Container style={{ marginTop: 120 }}><div>Loading…</div></Container>;
+    return (
+      <Container style={{ marginTop: 120 }}>
+        <div>Loading…</div>
+      </Container>
+    );
   }
 
   return (
@@ -82,7 +135,7 @@ export default function AssignTest() {
         <Row className="mb-3">
           <Col>
             <h3 className="mb-0">Assign Tests</h3>
-            <div className="text-muted">Pick a test and assign it to students with a due date.</div>
+            <div className="text-muted">Pick a test and assign it to students with a due date and a time limit.</div>
           </Col>
         </Row>
 
@@ -98,16 +151,24 @@ export default function AssignTest() {
                   <th>Type</th>
                   <th>Difficulty</th>
                   <th>Created</th>
-                  <th></th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
                 {tests.map((t) => (
                   <tr key={t._id}>
-                    <td><Badge bg="secondary">{t.class}</Badge></td>
+                    <td>
+                      <Badge bg="secondary">{t.class}</Badge>
+                    </td>
                     <td>{(t.subjects || []).join(", ")}</td>
-                    <td><Badge bg="dark">{t.testType}</Badge></td>
-                    <td><Badge bg="info" text="dark">{t.difficulty}</Badge></td>
+                    <td>
+                      <Badge bg="dark">{t.testType}</Badge>
+                    </td>
+                    <td>
+                      <Badge bg="info" text="dark">
+                        {t.difficulty}
+                      </Badge>
+                    </td>
                     <td>{new Date(t.createdAt).toLocaleString()}</td>
                     <td className="text-end">
                       <Button size="sm" variant="primary" onClick={() => openAssign(t)}>
@@ -117,7 +178,11 @@ export default function AssignTest() {
                   </tr>
                 ))}
                 {tests.length === 0 && (
-                  <tr><td colSpan={6} className="text-center text-muted">No tests found.</td></tr>
+                  <tr>
+                    <td colSpan={6} className="text-center text-muted">
+                      No tests found.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </Table>
@@ -129,16 +194,18 @@ export default function AssignTest() {
           <Modal.Header closeButton>
             <Modal.Title>Assign: {selectedTest?.subjects?.join(", ") || "(Test)"}</Modal.Title>
           </Modal.Header>
+
           <Modal.Body>
             {error && <div className="alert alert-danger">{error}</div>}
 
+            {/* Students multi-select */}
             <Form.Group className="mb-3">
               <Form.Label>Students</Form.Label>
               <Form.Select
                 multiple
                 value={selectedStudentIds}
                 onChange={(e) => {
-                  const opts = Array.from(e.target.selectedOptions).map(o => o.value);
+                  const opts = Array.from(e.target.selectedOptions).map((o) => o.value);
                   setSelectedStudentIds(opts);
                 }}
               >
@@ -150,14 +217,19 @@ export default function AssignTest() {
               </Form.Select>
               <div className="small text-muted mt-1">Hold Ctrl/Cmd to select multiple.</div>
               <div className="mt-2 d-flex flex-wrap gap-2">
-                {selectedStudentIds.map(id => {
+                {selectedStudentIds.map((id) => {
                   const st = studentsById.get(id);
-                  return <Badge bg="light" text="dark" key={id}>{st?.name || st?.email}</Badge>;
+                  return (
+                    <Badge bg="light" text="dark" key={id}>
+                      {st?.name || st?.email}
+                    </Badge>
+                  );
                 })}
               </div>
             </Form.Group>
 
             <Row className="g-3">
+              {/* Due date */}
               <Col md={6}>
                 <Form.Group>
                   <Form.Label>Due Date & Time (optional)</Form.Label>
@@ -168,6 +240,8 @@ export default function AssignTest() {
                   />
                 </Form.Group>
               </Col>
+
+              {/* Note */}
               <Col md={6}>
                 <Form.Group>
                   <Form.Label>Note (optional)</Form.Label>
@@ -179,10 +253,93 @@ export default function AssignTest() {
                 </Form.Group>
               </Col>
             </Row>
+
+            {/* --- NEW: Time Limit section --- */}
+            <Card className="mt-3">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <Form.Check
+                    type="switch"
+                    id="limit-switch"
+                    label={<strong>Time Limit</strong>}
+                    checked={limitEnabled}
+                    onChange={(e) => setLimitEnabled(e.target.checked)}
+                  />
+                  <Badge bg="light" text="dark">{humanLimit}</Badge>
+                </div>
+
+                <Row className="g-2">
+                  <Col md={7}>
+                    <div className="d-flex flex-wrap gap-2">
+                      {[
+                        { label: "30m", value: "30" },
+                        { label: "45m", value: "45" },
+                        { label: "1h", value: "60" },
+                        { label: "1.5h", value: "90" },
+                        { label: "2h", value: "120" },
+                      ].map((p) => (
+                        <Button
+                          key={p.value}
+                          variant={limitPreset === p.value && limitEnabled ? "primary" : "outline-primary"}
+                          size="sm"
+                          disabled={!limitEnabled}
+                          onClick={() => setLimitPreset(p.value)}
+                        >
+                          {p.label}
+                        </Button>
+                      ))}
+
+                      <Button
+                        variant={limitPreset === "custom" && limitEnabled ? "primary" : "outline-primary"}
+                        size="sm"
+                        disabled={!limitEnabled}
+                        onClick={() => setLimitPreset("custom")}
+                      >
+                        Custom
+                      </Button>
+                    </div>
+                  </Col>
+
+                  <Col md={5}>
+                    <InputGroup>
+                      <InputGroup.Text>HH</InputGroup.Text>
+                      <Form.Control
+                        type="number"
+                        min={0}
+                        step={1}
+                        disabled={!limitEnabled || limitPreset !== "custom"}
+                        value={customHours}
+                        onChange={(e) => setCustomHours(e.target.value)}
+                      />
+                      <InputGroup.Text>MM</InputGroup.Text>
+                      <Form.Control
+                        type="number"
+                        min={0}
+                        max={59}
+                        step={1}
+                        disabled={!limitEnabled || limitPreset !== "custom"}
+                        value={customMinutes}
+                        onChange={(e) => setCustomMinutes(e.target.value)}
+                      />
+                    </InputGroup>
+                    <div className="small text-muted mt-1">
+                      This will be the countdown clock when the student starts the test.
+                    </div>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
           </Modal.Body>
+
           <Modal.Footer>
-            <Button variant="outline-secondary" onClick={() => setShow(false)}>Cancel</Button>
-            <Button variant="success" onClick={submitAssign} disabled={saving || selectedStudentIds.length === 0}>
+            <Button variant="outline-secondary" onClick={() => setShow(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="success"
+              onClick={submitAssign}
+              disabled={saving || selectedStudentIds.length === 0}
+            >
               {saving ? "Assigning…" : "Assign"}
             </Button>
           </Modal.Footer>

@@ -1,3 +1,4 @@
+// routes/assignment.route.js
 import { Router } from "express";
 import mongoose from "mongoose";
 import Questions from "../models/Question.model.js";
@@ -10,25 +11,71 @@ const router = Router();
 const isValidObjectId = (v) => mongoose.isValidObjectId(v);
 const toObjectId = (v) => (isValidObjectId(v) ? new mongoose.Types.ObjectId(v) : v);
 
+// Helper: resolve a user id (for dev environments w/o auth middleware)
+const resolveUserId = (req) => {
+  if (req.user?._id) return req.user._id;
+  const headerId = req.header("x-user-id");
+  if (headerId && isValidObjectId(headerId)) return new mongoose.Types.ObjectId(headerId);
+  const bodyId = req.body?.assignedBy || req.body?.createdBy;
+  if (bodyId && isValidObjectId(bodyId)) return new mongoose.Types.ObjectId(bodyId);
+  return undefined;
+};
+
+// ---- helper to read timer minutes from many possible keys (minutes > 0) ----
+const pickLimitMinutes = (body = {}) => {
+  const toInt = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  };
+  const s = body.settings || {};
+  return (
+    toInt(body.durationMinutes) ??
+    toInt(body.durationMin) ??
+    toInt(body.timeLimitMin) ??
+    toInt(s.durationMinutes) ??
+    null
+  );
+};
+
 /* ---------------------------------------------
- * Simple lists (you already had these)
+ * Simple lists
  * --------------------------------------------- */
-router.get("/tests", async (_req, res) => {
-  const docs = await Questions.find({}, { questions: 0 })
-    .sort({ createdAt: -1 })
-    .lean();
-  res.json({ ok: true, data: docs });
+router.get("/tests", async (req, res) => {
+  try {
+    const { createdBy, mine } = req.query;
+    const filter = {};
+
+    // ?mine=1 -> use req.user or x-user-id header
+    if (String(mine) === "1") {
+      const uid = resolveUserId(req);
+      if (uid) filter.createdBy = uid;
+    }
+
+    // ?createdBy=<ObjectId>
+    if (createdBy && isValidObjectId(createdBy)) {
+      filter.createdBy = new mongoose.Types.ObjectId(createdBy);
+    }
+
+    const docs = await Questions.find(filter, { questions: 0 }).sort({ createdAt: -1 }).lean();
+    res.json({ ok: true, data: docs });
+  } catch (e) {
+    console.error("[GET /tests] error:", e);
+    res.status(500).json({ ok: false, message: "Failed to fetch tests" });
+  }
 });
 
 router.get("/students", async (_req, res) => {
-  const students = await User.find({ role: "student" }, { password: 0 })
-    .sort({ name: 1 })
-    .lean();
-  res.json({ ok: true, data: students });
+  try {
+    const students = await User.find({ role: "student" }, { password: 0 }).sort({ name: 1 }).lean();
+    res.json({ ok: true, data: students });
+  } catch (e) {
+    console.error("[GET /students] error:", e);
+    res.status(500).json({ ok: false, message: "Failed to fetch students" });
+  }
 });
 
 /* ---------------------------------------------
- * NEW: single test by id (used by TestPlayer)
+ * Single test by id (used by TestPlayer)
  * --------------------------------------------- */
 router.get("/tests/:id", async (req, res) => {
   try {
@@ -36,9 +83,9 @@ router.get("/tests/:id", async (req, res) => {
     if (!isValidObjectId(id)) {
       return res.status(400).json({ ok: false, message: "Invalid test id" });
     }
-    const test = await Questions.findById(id).lean();
-    if (!test) return res.status(404).json({ ok: false, message: "Test not found" });
-    return res.json({ ok: true, data: test });
+    const doc = await Questions.findById(id).lean();
+    if (!doc) return res.status(404).json({ ok: false, message: "Not found" });
+    res.json({ ok: true, data: doc });
   } catch (e) {
     console.error("[GET /tests/:id] error:", e);
     res.status(500).json({ ok: false, message: "Failed to fetch test" });
@@ -46,43 +93,20 @@ router.get("/tests/:id", async (req, res) => {
 });
 
 /* ---------------------------------------------
- * Create assignment (unchanged)
- * --------------------------------------------- */
-router.post("/tests/:testId/assign", async (req, res) => {
-  try {
-    const { testId } = req.params;
-    const { studentIds = [], dueAt, note } = req.body;
-
-    if (!studentIds.length) {
-      return res.status(400).json({ ok: false, message: "Select at least one student" });
-    }
-
-    const test = await Questions.findById(testId).lean();
-    if (!test) return res.status(404).json({ ok: false, message: "Test not found" });
-
-    const doc = await TestAssignment.create({
-      testId: toObjectId(testId),
-      studentIds: studentIds.map(toObjectId),
-      dueAt: dueAt ? new Date(dueAt) : undefined,
-      note: note || "",
-      status: "assigned",
-      assignedBy: req.user?._id || undefined,
-    });
-
-    res.status(201).json({ ok: true, id: doc._id });
-  } catch (e) {
-    console.error("[assign] create error:", e);
-    res.status(500).json({ ok: false, message: "Failed to create assignment" });
-  }
-});
-
-/* ---------------------------------------------
- * Fetch assignments list (unchanged)
+ * GET /api/assignments
+ * Returns assignments targeted to a student, each with:
+ * - derivedStatus: assigned | in_progress | completed
+ * - latestAttempt: the student's latest Attempt for that assignment
+ *
+ * Query:
+ *   ?studentId=<ObjectId> | ?studentEmail=<email>
+ *   [optional] ?testId=<ObjectId|string> (filters by paper)
  * --------------------------------------------- */
 router.get("/assignments", async (req, res) => {
   try {
     const { studentId: rawStudentId, studentEmail, testId: rawTestId, id } = req.query;
 
+    // Single assignment by id (kept for detail screens)
     if (id && isValidObjectId(id)) {
       const a = await TestAssignment.findById(id)
         .populate("test", "_id title subjects class testType questions")
@@ -91,6 +115,7 @@ router.get("/assignments", async (req, res) => {
       return res.json({ ok: true, data: a });
     }
 
+    // Resolve studentId if only email was passed
     let studentIdStr = (rawStudentId || "").trim();
     if (!studentIdStr && studentEmail) {
       const u = await User.findOne({ email: String(studentEmail).trim() }, { _id: 1 }).lean();
@@ -117,6 +142,7 @@ router.get("/assignments", async (req, res) => {
     if (testMatchOr.length) andConds.push({ $or: testMatchOr });
 
     const pipeline = [
+      // normalize ids for flexible matching (string/ObjectId)
       {
         $addFields: {
           studentIdsStr: {
@@ -142,6 +168,8 @@ router.get("/assignments", async (req, res) => {
         },
       },
       ...(andConds.length ? [{ $match: { $and: andConds } }] : []),
+
+      // join paper details (class/subjects/type)
       {
         $lookup: {
           from: "questions",
@@ -151,173 +179,278 @@ router.get("/assignments", async (req, res) => {
         },
       },
       { $unwind: { path: "$test", preserveNullAndEmptyArrays: true } },
+
+      // bring in the student's latest attempt for this assignment
+      {
+        $lookup: {
+          from: Attempt.collection.name,
+          let: { aid: "$_id", sids: "$studentIds" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$assignmentId", "$$aid"] },
+                    { $in: ["$userId", "$$sids"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { submittedAt: -1, updatedAt: -1, startedAt: -1, _id: -1 } },
+            { $limit: 1 },
+          ],
+          as: "latestAttempt",
+        },
+      },
+      { $unwind: { path: "$latestAttempt", preserveNullAndEmptyArrays: true } },
+
+      // derive server-truth status
+      {
+        $addFields: {
+          derivedStatus: {
+            $switch: {
+              branches: [
+                {
+                  // Attempt.status === "submitted" or has submittedAt => completed
+                  case: {
+                    $or: [
+                      { $eq: ["$latestAttempt.status", "submitted"] },
+                      { $gt: ["$latestAttempt.submittedAt", null] },
+                    ],
+                  },
+                  then: "completed",
+                },
+                {
+                  // "in_progress" if attempt exists with startedAt / answers
+                  case: {
+                    $or: [
+                      { $eq: ["$latestAttempt.status", "in_progress"] },
+                      { $gt: ["$latestAttempt.startedAt", null] },
+                      {
+                        $gt: [
+                          { $size: { $ifNull: [{ $objectToArray: "$latestAttempt.answers" }, []] } },
+                          0,
+                        ],
+                      },
+                    ],
+                  },
+                  then: "in_progress",
+                },
+              ],
+              default: "assigned",
+            },
+          },
+          resolvedTestId: { $ifNull: ["$test._id", "$testId"] },
+        },
+      },
+
+      // keep payload lean for the FE (➡️ add timer fields)
       {
         $project: {
           studentIds: 1,
+          createdAt: 1,
+          updatedAt: 1,
           dueAt: 1,
           status: 1,
           note: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          testId: { $ifNull: ["$test._id", "$testId"] },
+
+          // ⬇️ timer fields included in list API
+          durationMinutes: 1,
+          durationMin: 1,
+          timeLimitMin: 1,
+          settings: 1,
+
+          testId: "$resolvedTestId",
           "test.class": "$test.class",
           "test.subjects": "$test.subjects",
           "test.testType": "$test.testType",
           "test.difficulty": "$test.difficulty",
           "test.createdAt": "$test.createdAt",
-        },
-      },
-      { $sort: { createdAt: -1 } },
-    ];
 
-    const rows = await TestAssignment.aggregate(pipeline);
-    res.json({ ok: true, data: rows });
-  } catch (e) {
-    console.error("[assignments] aggregation error:", e);
-    res.status(500).json({ ok: false, message: "Server error while fetching assignments" });
-  }
-});
-
-/* ---------------------------------------------
- * Student-specific list (unchanged)
- * --------------------------------------------- */
-router.get("/students/:studentId/assignments", async (req, res) => {
-  try {
-    const studentIdStr = String(req.params.studentId || "").trim();
-
-    const orConds = [];
-    if (studentIdStr) {
-      orConds.push({ studentIdsStr: studentIdStr });
-      if (isValidObjectId(studentIdStr)) {
-        orConds.push({ studentIds: new mongoose.Types.ObjectId(studentIdStr) });
-      }
-    }
-
-    const pipeline = [
-      {
-        $addFields: {
-          studentIdsStr: {
-            $map: {
-              input: "$studentIds",
-              as: "sid",
-              in: {
-                $cond: [
-                  { $eq: [{ $type: "$$sid" }, "string"] },
-                  { $toObjectId: "$$sid" },
-                  "$$sid",
-                ],
-              },
+          derivedStatus: 1,
+          latestAttempt: {
+            _id: "$latestAttempt._id",
+            status: "$latestAttempt.status",
+            startedAt: "$latestAttempt.startedAt",
+            submittedAt: "$latestAttempt.submittedAt",
+            testId: "$latestAttempt.testId",
+            answersCount: {
+              $size: { $ifNull: [{ $objectToArray: "$latestAttempt.answers" }, []] },
             },
           },
         },
       },
-      ...(orConds.length ? [{ $match: { $or: orConds } }] : []),
-      {
-        $lookup: {
-          from: "questions",
-          localField: "testId",
-          foreignField: "_id",
-          as: "test",
-        },
-      },
-      { $unwind: { path: "$test", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          studentIds: 1,
-          dueAt: 1,
-          status: 1,
-          createdAt: 1,
-          testId: { $ifNull: ["$test._id", "$testId"] },
-          "test.class": "$test.class",
-          "test.subjects": "$test.subjects",
-          "test.testType": "$test.testType",
-          "test.difficulty": "$test.difficulty",
-        },
-      },
       { $sort: { createdAt: -1 } },
     ];
 
     const rows = await TestAssignment.aggregate(pipeline);
     res.json({ ok: true, data: rows });
   } catch (e) {
-    console.error("[students/:id/assignments] aggregation error:", e);
+    console.error("[GET /assignments] aggregation error:", e);
     res.status(500).json({ ok: false, message: "Server error while fetching assignments" });
   }
 });
 
 /* ---------------------------------------------
- * Single assignment & paper (unchanged)
+ * GET /api/assignments/:id
+ * (detail with populated test)
  * --------------------------------------------- */
 router.get("/assignments/:id", async (req, res) => {
   try {
-    const a = await TestAssignment.findById(req.params.id).lean();
-    if (!a) return res.status(404).json({ ok: false, message: "Not found" });
-
-    let test = null;
-    if (a.testId) {
-      test = await Questions.findById(a.testId).lean();
-      if (!test && typeof a.testId === "string" && isValidObjectId(a.testId)) {
-        test = await Questions.findById(toObjectId(a.testId)).lean();
-      }
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ ok: false, message: "Invalid assignment id" });
     }
-
-    res.json({ ok: true, data: { ...a, test: test || null } });
+    const a = await TestAssignment.findById(id)
+      .populate("test", "_id title subjects class testType questions")
+      .lean();
+    if (!a) return res.status(404).json({ ok: false, message: "Not found" });
+    res.json({ ok: true, data: a });
   } catch (e) {
-    console.error("[GET /assignments/:id]", e);
+    console.error("[GET /assignments/:id] error:", e);
     res.status(500).json({ ok: false, message: "Failed to fetch assignment" });
   }
 });
 
+/* ---------------------------------------------
+ * GET /api/assignments/:id/paper
+ * (paper only; used by player as a fallback)
+ * --------------------------------------------- */
 router.get("/assignments/:id/paper", async (req, res) => {
   try {
     const a = await TestAssignment.findById(req.params.id).lean();
-    if (!a) return res.status(404).json({ ok: false, message: "Not found" });
+    if (!a) return res.status(404).json({ ok: false, message: "Assignment not found" });
 
-    let test = null;
-    if (a.testId) {
-      test = await Questions.findById(a.testId).lean();
-      if (!test && typeof a.testId === "string" && isValidObjectId(a.testId)) {
-        test = await Questions.findById(toObjectId(a.testId)).lean();
-      }
-    }
+    const test = await Questions.findById(a.testId).lean();
+    if (!test) return res.status(404).json({ ok: false, message: "Test not found" });
 
-    if (!test) return res.status(404).json({ ok: false, message: "No test linked" });
     res.json({ ok: true, data: test });
   } catch (e) {
-    console.error("[GET /assignments/:id/paper]", e);
+    console.error("[GET /assignments/:id/paper] error:", e);
     res.status(500).json({ ok: false, message: "Failed to fetch paper" });
   }
 });
 
 /* ---------------------------------------------
- * ✅ FIXED: Start attempt — create or reuse a real Attempt
+ * GET /api/assignments/:id/attempt/latest
+ * (latest attempt for one assignment + student)
+ * --------------------------------------------- */
+router.get("/assignments/:id/attempt/latest", async (req, res) => {
+  try {
+    const assignment = await TestAssignment.findById(req.params.id).lean();
+    if (!assignment) return res.status(404).json({ ok: false, message: "Not found" });
+
+    // Prefer explicit studentId; else fall back to the first assignment target
+    let userId = null;
+    if (req.query.studentId && isValidObjectId(req.query.studentId)) {
+      userId = new mongoose.Types.ObjectId(req.query.studentId);
+    } else if (Array.isArray(assignment.studentIds) && assignment.studentIds.length) {
+      userId = assignment.studentIds[0];
+    }
+
+    const q = { assignmentId: assignment._id };
+    if (userId) q.userId = userId;
+
+    const [latest] = await Attempt.find(q)
+      .sort({ submittedAt: -1, updatedAt: -1, startedAt: -1, _id: -1 })
+      .limit(1)
+      .lean();
+
+    res.json({ ok: true, data: latest || null });
+  } catch (e) {
+    console.error("[GET /assignments/:id/attempt/latest] error:", e);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+/* ---------------------------------------------
+ * Create assignment (assign a test to students)
+ * POST /api/tests/:testId/assign
+ * Body: {
+ *   studentIds: [ObjectId|string],
+ *   dueAt?: ISO,
+ *   note?: string,
+ *   // Timer (minutes) — any one of these:
+ *   durationMinutes? | durationMin? | timeLimitMin? | settings: { durationMinutes? }
+ * }
+ * --------------------------------------------- */
+router.post("/tests/:testId/assign", async (req, res) => {
+  try {
+    const { testId } = req.params;
+    const { studentIds = [], dueAt, note } = req.body;
+
+    if (!studentIds.length) {
+      return res.status(400).json({ ok: false, message: "studentIds is required" });
+    }
+    if (!isValidObjectId(testId)) {
+      return res.status(400).json({ ok: false, message: "Invalid test id" });
+    }
+
+    const test = await Questions.findById(testId).lean();
+    if (!test) return res.status(404).json({ ok: false, message: "Test not found" });
+
+    const assignedBy = resolveUserId(req);
+
+    // ⬇️ NEW: capture time-limit minutes (or null)
+    const limitMin = pickLimitMinutes(req.body || {});
+    const settings = req.body?.settings || {};
+
+    const doc = await TestAssignment.create({
+      testId: toObjectId(testId),
+      studentIds: studentIds.map(toObjectId),
+      dueAt: dueAt ? new Date(dueAt) : undefined,
+      note: note || "",
+      status: "assigned",
+      assignedBy: assignedBy || undefined,
+
+      // ⬇️ Persist timer under common keys so FE can read any
+      durationMinutes: limitMin ?? undefined,
+      durationMin: limitMin ?? undefined,
+      timeLimitMin: limitMin ?? undefined,
+      settings: limitMin ? { ...(settings || {}), durationMinutes: limitMin } : settings,
+    });
+
+    res.status(201).json({ ok: true, id: doc._id });
+  } catch (e) {
+    console.error("[POST /tests/:testId/assign] error:", e);
+    res.status(500).json({ ok: false, message: "Failed to create assignment" });
+  }
+});
+
+/* ---------------------------------------------
+ * Start attempt — create or reuse an Attempt
  * POST /api/assignments/:id/start
  * Body (optional): { testId, studentId, studentEmail }
  * --------------------------------------------- */
 router.post("/assignments/:id/start", async (req, res) => {
   try {
-    const { userId: bodyUserId, studentEmail, testId } = req.body || {};
+    const { studentId: bodyStudentId, studentEmail, testId } = req.body || {};
 
-    // 1) Load assignment and linked test
+    // 1) Load assignment
     const a = await TestAssignment.findById(req.params.id).lean();
     if (!a) return res.status(404).json({ ok: false, message: "Assignment not found" });
 
-    const effectiveTestId = testId || a.testId;
-    if (!effectiveTestId) {
-      return res.status(400).json({ ok: false, message: "This assignment has no linked test." });
-    }
+    // 2) Resolve userId
+    let userId =
+      (bodyStudentId && toObjectId(bodyStudentId)) ||
+      req.user?._id ||
+      (Array.isArray(a.studentIds) && a.studentIds[0]);
 
-    // 2) Resolve userId (prefer body/req.user, else first student on the assignment)
-    let userId = bodyUserId || req.user?._id || (Array.isArray(a.studentIds) && a.studentIds[0]);
     if (!userId && studentEmail) {
       const u = await User.findOne({ email: String(studentEmail).trim() }, { _id: 1 }).lean();
       if (u?._id) userId = u._id;
     }
     if (!userId) {
-      return res.status(400).json({ ok: false, message: "No userId / student context to start attempt." });
+      return res.status(400).json({ ok: false, message: "studentId is required" });
     }
 
-    // 3) Find in-progress attempt or create a new one
+    // 3) Determine testId
+    const effectiveTestId = testId || a.testId;
+    if (!effectiveTestId) {
+      return res.status(400).json({ ok: false, message: "This assignment has no linked test." });
+    }
+
+    // 4) Reuse in-progress attempt or create new
     let attempt = await Attempt.findOne({
       userId,
       assignmentId: a._id,
@@ -328,9 +461,9 @@ router.post("/assignments/:id/start", async (req, res) => {
       attempt = await Attempt.create({
         userId,
         assignmentId: a._id,
-        testId: effectiveTestId,
-        answers: {},
+        testId: toObjectId(effectiveTestId),
         status: "in_progress",
+        answers: {},
         startedAt: new Date(),
       });
     }
@@ -371,6 +504,5 @@ router.get("/student/email/:email", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 export default router;

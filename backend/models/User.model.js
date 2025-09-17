@@ -45,6 +45,7 @@ const userSchema = new mongoose.Schema(
     state: String,
     country: String,
     postalCode: String,
+    location: String,
     address: String,
     profileImage: {
       type: String, // Store the relative path like "/uploads/abc.jpg"
@@ -56,6 +57,15 @@ const userSchema = new mongoose.Schema(
     mentorAbilities: [String],
     bio: String,
     experience: String,
+
+     // Mentor approval status
+    mentorStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected", ""],
+      default: "",
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
   {
     timestamps: true,
