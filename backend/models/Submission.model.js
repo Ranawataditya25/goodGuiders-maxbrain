@@ -1,11 +1,14 @@
 import mongoose from "mongoose";
 
-const answerSchema = new mongoose.Schema({
-  questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
-  type: String,
-  selectedAnswer: String,
-  writtenAnswer: String,
-});
+const answerSchema = new mongoose.Schema(
+  {
+    questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
+    type: String,
+    selectedAnswer: String,
+    writtenAnswer: String,
+  },
+  { _id: false } // 👈 disables auto _id for this subdocument
+);
 
 const submissionSchema = new mongoose.Schema({
   userEmail: { type: String, required: true },
@@ -16,6 +19,4 @@ const submissionSchema = new mongoose.Schema({
   submittedAt: { type: Date, default: Date.now },
 });
 
-
-export default  mongoose.model("Submission", submissionSchema);
-
+export default mongoose.model("Submission", submissionSchema);

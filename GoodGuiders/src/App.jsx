@@ -1,7 +1,7 @@
 import "animate.css";
-import { Routes, Route, BrowserRouter, useLocation, Navigate } from "react-router-dom";
+import { Routes, Route, BrowserRouter, useLocation, Navigate, useNavigate } from "react-router-dom";
 
-import Index from "./pages/Index";
+// import Index from "./pages/Index";
 import Dashboard2 from "./pages/Dashboard2";
 import Dashboard3 from "./pages/Dashboard3";
 
@@ -97,8 +97,10 @@ import Customizer from "./componets/Customizer";
 import ClassesList from "./pages/classes/List";
 import NewClass from "./pages/classes/New";
 import EditClass from "./pages/classes/Edit";
+import { useEffect } from "react";
 
 const routesWithoutExtras = [
+  "/",
   "/login",
   "/register",
   "/forgot-password",
@@ -109,13 +111,36 @@ const routesWithoutExtras = [
   "/error-page"
 ];
 
+
+
 function AppContent() {
   const location = useLocation();
+   const navigate = useNavigate();
   const isSpecialRoute = routesWithoutExtras.includes(location.pathname);
 
   const customizerEnabled = true;
   const headerEnabled = true;
   const sidebarEnabled = true;
+
+  useEffect(() => {
+  const handler = (event) => {
+    // ✅ Security check — only accept messages from your landing page domain
+    // Replace "https://your-landing-domain.com" with your actual deployed domain
+    if (
+      event.origin !== "http://localhost:5173" &&
+      !event.origin.includes("https://landing-page-gg.onrender.com")
+    ) {
+      return;
+    }
+
+    if (event.data && event.data.action === "navigate") {
+      navigate(event.data.path);
+    }
+  };
+
+  window.addEventListener("message", handler);
+  return () => window.removeEventListener("message", handler);
+}, [navigate]);
 
   return (
     <>
@@ -125,7 +150,17 @@ function AppContent() {
       {!isSpecialRoute && location.pathname !== "/error-page" && sidebarEnabled && <Sidebar />}
 
       <Routes>
-        <Route exact path="/" element={<Index />} />
+        {/* <Route exact path="/" element={<Index />} /> */}
+          <Route
+    exact
+    path="/"
+    element={
+      <iframe
+        src="https://landing-page-gg.onrender.com"   // 👈 put your live landing URL here
+        style={{ width: "100%", height: "100vh", border: "none" }}
+      />
+    }
+  />
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
 
@@ -235,11 +270,16 @@ export default function App() {
       {/* Loader */}
       <Loader />
 
-      <BrowserRouter basename="/bootstrapreact/medixo/">
+      <BrowserRouter basename="/bootstrapreact/medixo">
         <SidebarProvider>
           <AppContent />
         </SidebarProvider>
       </BrowserRouter>
+      {/* <BrowserRouter>
+        <SidebarProvider>
+          <AppContent />
+        </SidebarProvider>
+      </BrowserRouter> */}
     </>
   );
 }

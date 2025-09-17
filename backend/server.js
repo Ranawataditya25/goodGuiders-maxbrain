@@ -21,6 +21,7 @@ import mentorRoutes from "./routes/mentorStatus.route.js";
 import forgotPasswordRoutes from "./routes/forgotPass.route.js";
 import statsRoutes from "./routes/stats.route.js"
 import answerRoutes from "./routes/submission.route.js";
+import storageRoutes from "./routes/storage.route.js";
 
 
 const app = express();
@@ -85,6 +86,7 @@ app.use("/api/questions", questionRoutes);
 app.use("/api", assignmentRoutes);
 app.use("/api", attemptsRoutes);
 app.use("/api", answerRoutes);
+app.use("/api/storage", storageRoutes);
 
 // app.use("/api/tests", testsRouter);
 
