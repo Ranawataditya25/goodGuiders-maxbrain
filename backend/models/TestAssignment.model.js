@@ -1,22 +1,17 @@
-// backendd/models/TestAssignment.model.js
+// backend/models/TestAssignment.model.js
 import mongoose from "mongoose";
 
 const { Schema, Types } = mongoose;
 
 /** Coerce strings -> ObjectId */
-const toObjectId = (v) =>
-  v == null ? v : (Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : v);
+const toObjectId = (v) => (v == null ? v : (Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : v));
 
 const TestAssignmentSchema = new Schema(
   {
-    /**
-     * THE LINK TO THE PAPER
-     * You already store it as testId referencing the Questions collection.
-     * Keep this as-is so existing data/routes continue to work.
-     */
+    /** Link to the paper/test */
     testId: {
       type: Schema.Types.ObjectId,
-      ref: "Questions",        // <- your paper/test model name
+      ref: "Questions",
       required: true,
       index: true,
       set: toObjectId,
@@ -24,16 +19,23 @@ const TestAssignmentSchema = new Schema(
 
     /** Always store as ObjectId[] */
     studentIds: {
-      type: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-          index: true,
-        },
-      ],
-      // Extra safety: coerce any incoming strings to ObjectId on set
+      type: [{ type: Schema.Types.ObjectId, ref: "User", index: true }],
       set: (arr) => (Array.isArray(arr) ? arr.map(toObjectId) : arr),
       default: [],
+    },
+
+    /** OPTIONAL TIMER — minutes */
+    // Primary canonical field used by the app
+    durationMinutes: { type: Number, min: 1, default: null },
+
+    // Back-compat aliases (some FE code checks these)
+    durationMin: { type: Number, min: 1, default: null },
+    timeLimitMin: { type: Number, min: 1, default: null },
+
+    // Optional “settings” bag for future growth; FE also checks settings.durationMinutes
+    settings: {
+      type: Schema.Types.Mixed,
+      default: {},
     },
 
     dueAt: { type: Date, index: true },
@@ -55,38 +57,40 @@ const TestAssignmentSchema = new Schema(
   }
 );
 
-/**
- * VIRTUAL: `test`
- * Lets you call .populate('test') even though the stored field is `testId`.
- * This matches the frontend which tries a?.test || a?.testId.
- */
+/** Virtual: allow .populate('test') while we store testId */
 TestAssignmentSchema.virtual("test", {
-  ref: "Questions",          // same collection as `testId` ref
+  ref: "Questions",
   localField: "testId",
   foreignField: "_id",
   justOne: true,
 });
 
-/** Coerce on save too (e.g., if array items changed after instantiation) */
+/** Normalize before save */
 TestAssignmentSchema.pre("save", function (next) {
-  if (Array.isArray(this.studentIds)) {
-    this.studentIds = this.studentIds.map(toObjectId);
-  }
-  if (this.testId) {
-    this.testId = toObjectId(this.testId);
+  if (Array.isArray(this.studentIds)) this.studentIds = this.studentIds.map(toObjectId);
+  if (this.testId) this.testId = toObjectId(this.testId);
+
+  // Mirror timer across known keys so any FE check works
+  const mins =
+    this.durationMinutes ??
+    this.durationMin ??
+    this.timeLimitMin ??
+    (this.settings && this.settings.durationMinutes);
+
+  if (mins && mins > 0) {
+    this.durationMinutes = mins;
+    this.durationMin = mins;
+    this.timeLimitMin = mins;
+    this.settings = this.settings || {};
+    if (!this.settings.durationMinutes) this.settings.durationMinutes = mins;
   }
   next();
 });
 
-/**
- * Static helper you can call once on startup to normalize
- * any legacy docs that still have string ids in studentIds or testId.
- * Uses an aggregation pipeline update so it runs fully in MongoDB.
- */
+/** Static helpers (as you had) … */
 TestAssignmentSchema.statics.normalizeIds = async function () {
   try {
-    // studentIds: string[] -> ObjectId[]
-    const res1 = await this.updateMany(
+    await this.updateMany(
       { studentIds: { $type: "array" }, $expr: { $gt: [{ $size: "$studentIds" }, 0] } },
       [
         {
@@ -109,41 +113,27 @@ TestAssignmentSchema.statics.normalizeIds = async function () {
       ]
     );
 
-    // testId: string -> ObjectId
-    const res2 = await this.updateMany(
+    await this.updateMany(
       { testId: { $type: "string" } },
       [{ $set: { testId: { $toObjectId: "$testId" } } }]
     );
-
-    const msg = [
-      res1?.modifiedCount ? `studentIds normalized: ${res1.modifiedCount}` : null,
-      res2?.modifiedCount ? `testId normalized: ${res2.modifiedCount}` : null,
-    ]
-      .filter(Boolean)
-      .join(" | ");
-
-    console.log(msg || "[TestAssignment] no legacy id normalization needed.");
   } catch (err) {
     console.error("[TestAssignment] normalization failed:", err);
   }
 };
 
-/** Convenience finder: all assignments for a student */
-TestAssignmentSchema.statics.findForStudent = function ({ studentId, email }) {
+TestAssignmentSchema.statics.findForStudent = function ({ studentId }) {
   const q = {};
   if (studentId) q.studentIds = toObjectId(studentId);
-  // If you also store studentEmail on this model, add it here.
   return this.find(q).sort({ createdAt: -1 }).populate("test", "_id title subjects class testType");
 };
 
-/** Instance helper: link/replace the test for an existing assignment */
 TestAssignmentSchema.methods.linkTest = async function (newTestId) {
   this.testId = toObjectId(newTestId);
   await this.save();
   return this.populate("test", "_id title subjects class testType");
 };
 
-/** Helpful indexes */
 TestAssignmentSchema.index({ studentIds: 1, dueAt: -1 });
 TestAssignmentSchema.index({ status: 1, dueAt: -1 });
 
