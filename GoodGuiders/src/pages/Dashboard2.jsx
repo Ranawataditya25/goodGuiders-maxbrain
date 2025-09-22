@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import { Row, Col, Card, Table, Container, Spinner } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
@@ -17,6 +17,7 @@ export default function Dashboard2() {
   const [activeTab, setActiveTab] = useState("avail"); // Default tab
 const [referEmail, setReferEmail] = useState(""); // For referral input
 const [referMobile, setReferMobile] = useState(""); 
+const navigate = useNavigate();
 
   useEffect(() => {
     const doctorData = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -91,13 +92,23 @@ const [referMobile, setReferMobile] = useState("");
           <Row>
             <Col xl={12} className="mb-4">
               <Card>
-                 <Card.Header>
-                  <h4>Your Profile & Referral</h4>
-                           <p>
-                    <strong>Credits:</strong> {doctor?.credits}
-                  </p>
-                         
-                </Card.Header>
+                 <Card.Header className="d-flex justify-content-between align-items-center">
+  <div>
+    <h4>Your Profile & Referral</h4>
+    <p>
+      <strong>Credits:</strong> {doctor?.credits}
+    </p>
+  </div>
+  <div>
+    <button
+      className="btn btn-primary"
+      onClick={() => navigate("/all-chats")}
+    >
+      Chats
+    </button>
+  </div>
+</Card.Header>
+
               <Card.Body>
                   {loading ? (
                     <div className="text-center">
@@ -455,7 +466,7 @@ const [referMobile, setReferMobile] = useState("");
                       >
                         Edit Profile
                       </Link>
-                      <Link
+                      <Link to="/chat"
                         className="btn btn-secondary"
                         href="javascript:void(0);"
                       >

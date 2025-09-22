@@ -489,33 +489,44 @@ export default function Dashboard3() {
             <Col xl={12}>
               <Card>
                 <Card.Header className="d-flex align-items-center justify-content-between">
-                  <div>
-                    <h4 className="mb-0">Your Profile & Referral</h4>
-                    <small className="text-muted">
-                      <strong>Credits:</strong> {user?.credits ?? "—"}
-                    </small>
-                  </div>
-                  <div className="d-flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline-primary"
-                      as={Link}
-                      to="/bootstrapreact/medixo/my-assignments"
-                    >
-                      <FeatherIcon icon="list" className="me-2" />
-                      My Assignments
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline-success"
-                      as={Link}
-                      to="/bootstrapreact/medixo/assign-test"
-                    >
-                      <FeatherIcon icon="send" className="me-2" />
-                      Assignments Hub
-                    </Button>
-                  </div>
-                </Card.Header>
+  <div>
+    <h4 className="mb-0">Your Profile & Referral</h4>
+    <small className="text-muted">
+      <strong>Credits:</strong> {user?.credits ?? "—"}
+    </small>
+  </div>
+  <div className="d-flex gap-2">
+    <Button
+      size="sm"
+      variant="outline-primary"
+      as={Link}
+      to="/my-assignments"
+    >
+      <FeatherIcon icon="list" className="me-2" />
+      My Assignments
+    </Button>
+    <Button
+      size="sm"
+      variant="outline-success"
+      as={Link}
+      to="/assign-test"
+    >
+      <FeatherIcon icon="send" className="me-2" />
+      Assignments Hub
+    </Button>
+    {/* New Chat Button for Student */}
+    <Button
+      size="sm"
+      variant="outline-info"
+      as={Link}
+      to="/all-chats"
+    >
+      <FeatherIcon icon="message-square" className="me-2" />
+      Chat
+    </Button>
+  </div>
+</Card.Header>
+
 
                 <Card.Body>
                   {loadingUser ? (

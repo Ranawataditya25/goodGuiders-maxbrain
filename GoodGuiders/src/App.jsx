@@ -83,6 +83,7 @@ import Element_Tooltips from "./pages/Element_Tooltips";
 import Element_Cards from "./pages/Element_Cards";
 import Element_Progressbar from "./pages/Element_Progressbar";
 import Element_Paginations from "./pages/Element_Paginations";
+// import Chat from "./pages/Chat.jsx";
 
 import Landing from "./pages/Landing";
 import Errorpage from "./pages/Errorpage";
@@ -98,6 +99,8 @@ import ClassesList from "./pages/classes/List";
 import NewClass from "./pages/classes/New";
 import EditClass from "./pages/classes/Edit";
 import { useEffect } from "react";
+import ChatPage from "./pages/ChatPage.jsx";
+import AllChatsPage from "./pages/AllChatsPage.jsx";
 
 const routesWithoutExtras = [
   "/",
@@ -160,7 +163,12 @@ function AppContent() {
         style={{ width: "100%", height: "100vh", border: "none" }}
       />
     }
-  />
+  />    
+        {/* <Route exact path="/chat" element={<Chat />} /> */}
+        <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
+        <Route exact path="/chat/:mentorEmail" element={<ChatPage />} />
+        <Route exact path="/all-chats" element={<AllChatsPage />} />
+
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
 
