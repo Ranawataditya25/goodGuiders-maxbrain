@@ -896,7 +896,7 @@ export default function Login() {
 
         // Navigate based on role
         if (data.user.role === "admin") {
-          navigate("/");
+          navigate("/admin-dashboard");
         } else if (data.user.role === "student") {
           navigate("/patient-dashboard");
         } else if (data.user.role === "mentor") {

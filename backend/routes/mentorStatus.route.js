@@ -95,6 +95,25 @@ router.post("/profile-setup", async (req, res) => {
   }
 });
 
+// GET /api/mentor/pending
+router.get("/pending", async (req, res) => {
+  try {
+    const mentors = await User.find({ 
+      role: "mentor", 
+      $or: [
+        { mentorStatus: "pending" }, 
+        { mentorStatus: "" }, 
+        { mentorStatus: { $exists: false } } // in case field missing
+      ] 
+    });
+    res.json(mentors);
+  } catch (err) {
+    console.error("Error fetching pending mentors:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 /**
  * Admin Approval
  * PATCH /api/mentor/mentor-status/:id

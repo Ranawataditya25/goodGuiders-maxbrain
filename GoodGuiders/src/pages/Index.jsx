@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import FeatherIcon from 'feather-icons-react';
 import { Row, Col, Card, Form, Table, Container, Dropdown } from 'react-bootstrap';
@@ -13,6 +13,19 @@ import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 export default function Index() {
   // Live Chat Data 
   const [inputValue, setInputValue] = useState('');
+  const [totalMentors, setTotalMentors] = useState(0);
+const [totalStudents, setTotalStudents] = useState(0);
+
+useEffect(() => {
+  fetch("http://127.0.0.1:5000/api/stats/total-users")  // replace with full URL if needed
+    .then(res => res.json())
+    .then(data => {
+      setTotalMentors(data.totalMentors);
+      setTotalStudents(data.totalStudents);
+    })
+    .catch(err => console.error("Error fetching totals:", err));
+}, []);
+
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
   };
@@ -65,7 +78,7 @@ export default function Index() {
                           <i className="fa fa-user"></i>
                         </div>
                         <div className="count-detail">
-                          <h3><span className="counter mr-5">178</span>Mentor</h3>
+                          <h3><span className="counter mr-5">{totalMentors}</span>Mentor</h3>
                           <p>Available Mentor</p>
                         </div>
                       </div>
@@ -95,7 +108,7 @@ export default function Index() {
                           <i className="fa fa-life-ring"></i>
                         </div>
                         <div className="count-detail">
-                          <h3><span className="counter mr-5">200</span>Student</h3>
+                          <h3><span className="counter mr-5">{totalStudents}</span>Student</h3>
                           <p>All Student</p>
                         </div>
                       </div>

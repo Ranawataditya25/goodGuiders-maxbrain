@@ -1,7 +1,7 @@
 import "animate.css";
 import { Routes, Route, BrowserRouter, useLocation, Navigate, useNavigate } from "react-router-dom";
 
-// import Index from "./pages/Index";
+import Index from "./pages/Index";
 import Dashboard2 from "./pages/Dashboard2";
 import Dashboard3 from "./pages/Dashboard3";
 
@@ -83,7 +83,6 @@ import Element_Tooltips from "./pages/Element_Tooltips";
 import Element_Cards from "./pages/Element_Cards";
 import Element_Progressbar from "./pages/Element_Progressbar";
 import Element_Paginations from "./pages/Element_Paginations";
-// import Chat from "./pages/Chat.jsx";
 
 import Landing from "./pages/Landing";
 import Errorpage from "./pages/Errorpage";
@@ -101,6 +100,8 @@ import EditClass from "./pages/classes/Edit";
 import { useEffect } from "react";
 import ChatPage from "./pages/ChatPage.jsx";
 import AllChatsPage from "./pages/AllChatsPage.jsx";
+import AdminMentorRequests from "./pages/AdminMentorRequests.jsx";
+import PurchaseTemp from "./pages/PurchaseTemp.jsx";
 
 const routesWithoutExtras = [
   "/",
@@ -153,21 +154,23 @@ function AppContent() {
       {!isSpecialRoute && location.pathname !== "/error-page" && sidebarEnabled && <Sidebar />}
 
       <Routes>
-        {/* <Route exact path="/" element={<Index />} /> */}
           <Route
     exact
     path="/"
     element={
       <iframe
-        src="https://landing-page-gg.onrender.com"   // 👈 put your live landing URL here
-        style={{ width: "100%", height: "100vh", border: "none" }}
+      src="https://landing-page-gg.onrender.com"   // 👈 put your live landing URL here
+      style={{ width: "100%", height: "100vh", border: "none" }}
       />
     }
-  />    
-        {/* <Route exact path="/chat" element={<Chat />} /> */}
+    />    
+
+        <Route exact path="/admin-dashboard" element={<Index />} />
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/chat/:mentorEmail" element={<ChatPage />} />
         <Route exact path="/all-chats" element={<AllChatsPage />} />
+        <Route exact path="/admin-mentor-requests" element={<AdminMentorRequests />} />
+        <Route exact path="/purchase-temp" element={<PurchaseTemp />} />
 
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
