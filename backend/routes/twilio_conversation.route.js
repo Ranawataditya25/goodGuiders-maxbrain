@@ -155,28 +155,37 @@ router.post("/conversation/:uniqueName/messages", async (req, res) => {
     const uniqueName = String(req.params.uniqueName || "").trim();
     const { author, body } = req.body;
 
-    if (!uniqueName)
-      return res.status(400).json({ error: "uniqueName required in path" });
-    if (!author || !body)
-      return res.status(400).json({ error: "author and body required" });
+    if (!uniqueName || !author || !body)
+      return res.status(400).json({ error: "uniqueName, author, and body required" });
 
-    // Check author exists
     const user = await User.findOne({ email: author });
     if (!user) return res.status(403).json({ error: "Author not found" });
 
-    // Find conversation
     const conv = await Conversation.findOne({ uniqueName });
     if (!conv) return res.status(404).json({ error: "Conversation not found" });
 
-    // Validate author is a participant
     const participantFound = conv.participants.some(
       (p) => String(p).toLowerCase() === String(author).toLowerCase()
     );
     if (!participantFound) {
-      return res
-        .status(403)
-        .json({ error: "Author is not a participant of this conversation" });
+      return res.status(403).json({ error: "Author is not a participant of this conversation" });
     }
+
+    // ----------------- 5-minute free chat check -----------------
+    const now = new Date();
+    if (!conv.firstMessageTime) {
+      conv.firstMessageTime = now; // mark first message time
+    } else if (!conv.subscribed) {
+      const expiryTime = 5 * 60 * 1000;
+      if (now - conv.firstMessageTime > expiryTime) {
+        return res.status(403).json({
+          error: "Free chat expired. Please subscribe to continue messaging.",
+        });
+      }
+    }
+
+    // Save firstMessageTime if it was just set
+    await conv.save();
 
     // Create message in Twilio
     const msg = await twilioClient.conversations.v1
