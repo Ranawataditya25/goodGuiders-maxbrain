@@ -25,23 +25,34 @@ export default function AssignTest() {
   const [customHours, setCustomHours] = useState("");
   const [customMinutes, setCustomMinutes] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [t, s] = await Promise.all([
-          axios.get(`${API}/tests`),
-          axios.get(`${API}/students`),
-        ]);
-        setTests(t.data?.data || []);
-        setStudents(s.data?.data || []);
-      } catch (e) {
-        console.error(e);
-        setError("Failed to load tests or students");
-      } finally {
+useEffect(() => {
+  (async () => {
+    try {
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+      const email = loggedInUser.email;
+
+      if (!email) {
+        setError("User email not found. Please log in again.");
         setLoading(false);
+        return;
       }
-    })();
-  }, []);
+
+      const [t, s] = await Promise.all([
+        axios.get(`${API}/tests`, { params: { email } }),
+        axios.get(`${API}/students`),
+      ]);
+
+      setTests(t.data?.data || []);
+      setStudents(s.data?.data || []);
+    } catch (e) {
+      console.error(e);
+      setError("Failed to load tests or students");
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, []);
+
 
   const openAssign = (test) => {
     setSelectedTest(test);

@@ -42,27 +42,43 @@ const pickLimitMinutes = (body = {}) => {
  * --------------------------------------------- */
 router.get("/tests", async (req, res) => {
   try {
-    const { createdBy, mine } = req.query;
-    const filter = {};
+    const { email } = req.query;
 
-    // ?mine=1 -> use req.user or x-user-id header
-    if (String(mine) === "1") {
-      const uid = resolveUserId(req);
-      if (uid) filter.createdBy = uid;
+    if (!email) {
+      return res.status(400).json({ ok: false, message: "Email is required" });
     }
 
-    // ?createdBy=<ObjectId>
-    if (createdBy && isValidObjectId(createdBy)) {
-      filter.createdBy = new mongoose.Types.ObjectId(createdBy);
+    // Find user by email (mentor or admin)
+    const user = await User.findOne(
+      { email: email.trim(), role: { $in: ["mentor", "admin"] } },
+      { _id: 1, role: 1 }
+    ).lean();
+
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "User not found or not a mentor/admin" });
     }
 
-    const docs = await Questions.find(filter, { questions: 0 }).sort({ createdAt: -1 }).lean();
+    let filter = {};
+
+    if (user.role === "mentor") {
+      // Mentor → fetch only their own tests
+      filter = { createdBy: user._id };
+    } else if (user.role === "admin") {
+      // Admin → fetch all tests
+      filter = {}; // no filter, get everything
+    }
+
+    const docs = await Questions.find(filter, { questions: 0 })
+      .sort({ createdAt: -1 })
+      .lean();
+
     res.json({ ok: true, data: docs });
   } catch (e) {
     console.error("[GET /tests] error:", e);
     res.status(500).json({ ok: false, message: "Failed to fetch tests" });
   }
 });
+
 
 router.get("/students", async (_req, res) => {
   try {
