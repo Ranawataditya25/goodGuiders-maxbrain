@@ -226,7 +226,6 @@
 //   )
 // }
 
-
 // import React, { useState } from 'react';
 // import { FilterMatchMode, FilterOperator } from 'primereact/api';
 // import { DataTable } from 'primereact/datatable';
@@ -524,7 +523,6 @@
 //     </>
 //   )
 // }
-
 
 // import { useState } from "react";
 // import { FilterMatchMode, FilterOperator } from "primereact/api";
@@ -917,7 +915,6 @@
 //   );
 // }
 
-
 import { useState, useEffect } from "react";
 import { FilterMatchMode, FilterOperator } from "primereact/api";
 import { DataTable } from "primereact/datatable";
@@ -948,6 +945,8 @@ export default function All_Mentor() {
 
   const handleTestClick = () => navigate("/test-page");
   const assignTestClick = () => navigate("/assign-test");
+  const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+  const role = loggedInUser.role; // "admin" | "mentor" | "student"
 
   const [formData, setFormData] = useState({
     name: "",
@@ -1055,12 +1054,6 @@ export default function All_Mentor() {
 
   const actionBodyTemplate = (rowData) => (
     <div className="cart-action d-flex gap-2">
-      <Link className="edit" to={`/edit-Mentor/${rowData.Email}`}>
-        <FeatherIcon icon="edit" className="w-18" />
-      </Link>
-      <Link className="delete text-danger" to="#">
-        <FeatherIcon icon="trash-2" className="w-18" />
-      </Link>
       <Button
         size="sm"
         variant="primary"
@@ -1071,10 +1064,8 @@ export default function All_Mentor() {
     </div>
   );
 
-  const userEmail = localStorage.getItem("loggedInEmail");
-  // const isMentor = userEmail === "mentor@gmail.com";
-  // const isStudent = userEmail === "student@gmail.com";
-  const isAdmin = userEmail === "admin@gmail.com";
+  // const userEmail = localStorage.getItem("loggedInEmail");
+  // const isAdmin = userEmail === "admin@gmail.com";
 
   return (
     <>
@@ -1087,82 +1078,119 @@ export default function All_Mentor() {
                 <Card>
                   <Card.Body>
                     <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
-                      <Button
-                        variant="primary"
-                        size="lg"
-                        className="px-4 rounded-pill shadow-sm"
-                        onClick={handleTestClick}
-                      >
-                        <FeatherIcon icon="plus-circle" className="me-2" />
-                        Create Mock Test
-                      </Button>
+                      {role === "mentor" && (
+                        <>
+                          <Button
+                            variant="primary"
+                            size="lg"
+                            className="px-4 rounded-pill shadow-sm"
+                            onClick={handleTestClick}
+                          >
+                            <FeatherIcon icon="plus-circle" className="me-2" />
+                            Create Mock Test
+                          </Button>
 
-                      <Button
-                        variant="success"
-                        size="lg"
-                        className="px-4 rounded-pill shadow-sm"
-                        onClick={assignTestClick}
-                      >
-                        <FeatherIcon icon="send" className="me-2" />
-                        Assign Test
-                      </Button>
+                          <Button
+                            variant="success"
+                            size="lg"
+                            className="px-4 rounded-pill shadow-sm"
+                            onClick={assignTestClick}
+                          >
+                            <FeatherIcon icon="send" className="me-2" />
+                            Assign Test
+                          </Button>
+                        </>
+                      )}
+
+                      {role === "admin" && (
+                        <>
+                          <Button
+                            variant="primary"
+                            size="lg"
+                            className="px-4 rounded-pill shadow-sm"
+                            onClick={handleTestClick}
+                          >
+                            <FeatherIcon icon="plus-circle" className="me-2" />
+                            Create Mock Test
+                          </Button>
+
+                          <Button
+                            variant="success"
+                            size="lg"
+                            className="px-4 rounded-pill shadow-sm"
+                            onClick={assignTestClick}
+                          >
+                            <FeatherIcon icon="send" className="me-2" />
+                            Assign Test
+                          </Button>
+
+                          <Link
+                            className="btn btn-primary float-end mb-15"
+                            onClick={emailcreat}
+                          >
+                            <i className="fa fa-plus me-2"></i> Add Mentor
+                          </Link>
+                        </>
+                      )}
                     </div>
 
-                    {isAdmin && (
-                      <Col md={12}>
-                        <Link
-                          className="btn btn-primary float-end mb-15"
-                          onClick={emailcreat}
-                        >
-                          <i className="fa fa-plus me-2"></i> Add Mentor
-                        </Link>
-                      </Col>
-                    )}
+                    {role !== "mentor" && (
+                      <DataTable
+                        value={mentors}
+                        rows={10}
+                        header={header1}
+                        filters={filters1}
+                        paginator
+                        rowsPerPageOptions={[5, 10, 50]}
+                        className="p-datatable-customers"
+                        loading={loading}
+                      >
+                        <Column
+                          header="Name"
+                          sortable
+                          body={imageBodyTemplate}
+                        ></Column>
+                        <Column
+                          field="Department"
+                          header="Department"
+                          sortable
+                        ></Column>
+                        <Column
+                          field="Specialization"
+                          header="Specialization"
+                          sortable
+                        ></Column>
+                        <Column
+                          field="Degree"
+                          header="Degree"
+                          sortable
+                        ></Column>
 
-                    <DataTable
-                      value={mentors}
-                      rows={10}
-                      header={header1}
-                      filters={filters1}
-                      onFilter={() => setFilters1(filters1)} // remove unused 'e'
-                      stateStorage="session"
-                      paginator
-                      rowsPerPageOptions={[5, 10, 50]}
-                      paginatorTemplate="CurrentPageReport FirstPageLink PageLinks LastPageLink RowsPerPageDropdown"
-                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                      className="p-datatable-customers"
-                      loading={loading}
-                    >
-                      <Column
-                        header="Name"
-                        sortable
-                        body={imageBodyTemplate}
-                      ></Column>
-                      <Column
-                        field="Department"
-                        header="Department"
-                        sortable
-                      ></Column>
-                      <Column
-                        field="Specialization"
-                        header="Specialization"
-                        sortable
-                      ></Column>
-                      <Column field="Degree" header="Degree" sortable></Column>
-                      <Column field="Mobile" header="Mobile" sortable></Column>
-                      <Column field="Email" header="Email" sortable></Column>
-                      <Column
-                        field="Joining Date"
-                        header="Joining Date"
-                        sortable
-                      ></Column>
-                      <Column
-                        header="Action"
-                        body={actionBodyTemplate}
-                        exportable={false}
-                        style={{ minWidth: "8rem" }}
-                      ></Column>
-                    </DataTable>
+                        {role !== "student" && (
+                          <Column
+                            field="Mobile"
+                            header="Mobile"
+                            sortable
+                          ></Column>
+                        )}
+
+                        <Column field="Email" header="Email" sortable></Column>
+                        <Column
+                          field="Joining Date"
+                          header="Joining Date"
+                          sortable
+                        ></Column>
+
+                        {role !== "admin" && (
+                          <Column
+                            header="Action"
+                            body={actionBodyTemplate}
+                            exportable={false}
+                            style={{ minWidth: "8rem" }}
+                          ></Column>
+                        )}
+                      </DataTable>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
@@ -1171,58 +1199,60 @@ export default function All_Mentor() {
         </div>
       </div>
 
-      <Modal show={show} onHide={Close_btn}>
-        <Modal.Header>
-          <Modal.Title>
-            <h5 className="modal-title">Add New Mentor</h5>
-          </Modal.Title>
-          <span className="close-modal" onClick={Close_btn}>
-            <FeatherIcon icon="x" />
-          </span>
-        </Modal.Header>
-        <Modal.Body className="modal-body">
-          <Form>
-            <Row>
-              {[
-                "name",
-                "department",
-                "specialization",
-                "degree",
-                "mobile",
-                "email",
-                "joiningDate",
-              ].map((field) => (
-                <Col md={6} key={field}>
-                  <Form.Group className="mb-20">
-                    <Form.Label>
-                      {field.charAt(0).toUpperCase() +
-                        field.slice(1).replace(/([A-Z])/g, " $1")}
-                    </Form.Label>
-                    <Form.Control
-                      type={field === "email" ? "email" : "text"}
-                      name={field}
-                      required
-                      placeholder={
-                        field === "joiningDate"
-                          ? "DD/MM/YYYY"
-                          : `Enter ${field}`
-                      }
-                      value={formData[field]}
-                      onChange={handleInputChange}
-                    />
-                  </Form.Group>
-                </Col>
-              ))}
-            </Row>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer className="modal-footer">
-          <Button className="btn btn-primary">Save</Button>
-          <Button className="btn btn-danger" onClick={Close_btn}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {role === "admin" && (
+        <Modal show={show} onHide={Close_btn}>
+          <Modal.Header>
+            <Modal.Title>
+              <h5 className="modal-title">Add New Mentor</h5>
+            </Modal.Title>
+            <span className="close-modal" onClick={Close_btn}>
+              <FeatherIcon icon="x" />
+            </span>
+          </Modal.Header>
+          <Modal.Body className="modal-body">
+            <Form>
+              <Row>
+                {[
+                  "name",
+                  "department",
+                  "specialization",
+                  "degree",
+                  "mobile",
+                  "email",
+                  "joiningDate",
+                ].map((field) => (
+                  <Col md={6} key={field}>
+                    <Form.Group className="mb-20">
+                      <Form.Label>
+                        {field.charAt(0).toUpperCase() +
+                          field.slice(1).replace(/([A-Z])/g, " $1")}
+                      </Form.Label>
+                      <Form.Control
+                        type={field === "email" ? "email" : "text"}
+                        name={field}
+                        required
+                        placeholder={
+                          field === "joiningDate"
+                            ? "DD/MM/YYYY"
+                            : `Enter ${field}`
+                        }
+                        value={formData[field]}
+                        onChange={handleInputChange}
+                      />
+                    </Form.Group>
+                  </Col>
+                ))}
+              </Row>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer className="modal-footer">
+            <Button className="btn btn-primary">Save</Button>
+            <Button className="btn btn-danger" onClick={Close_btn}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
     </>
   );
 }
