@@ -936,6 +936,31 @@ import {
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 
+// ✅ Degree priority map
+const DEGREE_PRIORITY = {
+  PhD: 3,
+  "Post Graduation": 2,
+  Graduation: 1,
+};
+
+// ✅ Helper function to pick latest degree
+function getLatestDegree(education = []) {
+  if (!Array.isArray(education)) return "-";
+
+  const higherStudies = education.filter(
+    (e) =>
+      ["Graduation", "Post Graduation", "PhD"].includes(e.className) && e.degree
+  );
+
+  if (higherStudies.length === 0) return "-";
+
+  higherStudies.sort(
+    (a, b) => DEGREE_PRIORITY[b.className] - DEGREE_PRIORITY[a.className]
+  );
+
+  return higherStudies[0].degree || "-";
+}
+
 export default function All_Mentor() {
   const [show, setShow] = useState(false);
   const Close_btn = () => setShow(false);
@@ -950,12 +975,11 @@ export default function All_Mentor() {
 
   const [formData, setFormData] = useState({
     name: "",
-    department: "",
+    experience: "",
     specialization: "",
     degree: "",
     mobile: "",
     email: "",
-    joiningDate: "",
   });
 
   const handleInputChange = (e) => {
@@ -978,12 +1002,11 @@ export default function All_Mentor() {
             id: idx + 1,
             image: `avtar/${(idx % 10) + 1}.jpg`, // placeholder images
             title: m.name,
-            Department: m.specializedIn || "-", // assuming "specializedIn" is Department
+            experience: m.experience || "-",
             Specialization: m.specializedIn || "-",
-            Degree: "P.H.D", // static placeholder
+            Degree: getLatestDegree(m.education), // ✅ dynamically get latest degree
             Mobile: m.mobileNo,
             Email: m.email,
-            "Joining Date": "-", // placeholder
           }));
           setMentors(mappedMentors);
         } else {
@@ -1151,8 +1174,8 @@ export default function All_Mentor() {
                           body={imageBodyTemplate}
                         ></Column>
                         <Column
-                          field="Department"
-                          header="Department"
+                          field="experience"
+                          header="Experience"
                           sortable
                         ></Column>
                         <Column
@@ -1175,11 +1198,6 @@ export default function All_Mentor() {
                         )}
 
                         <Column field="Email" header="Email" sortable></Column>
-                        <Column
-                          field="Joining Date"
-                          header="Joining Date"
-                          sortable
-                        ></Column>
 
                         {role !== "admin" && (
                           <Column
@@ -1214,12 +1232,11 @@ export default function All_Mentor() {
               <Row>
                 {[
                   "name",
-                  "department",
+                  "experience",
                   "specialization",
                   "degree",
                   "mobile",
                   "email",
-                  "joiningDate",
                 ].map((field) => (
                   <Col md={6} key={field}>
                     <Form.Group className="mb-20">
@@ -1231,11 +1248,7 @@ export default function All_Mentor() {
                         type={field === "email" ? "email" : "text"}
                         name={field}
                         required
-                        placeholder={
-                          field === "joiningDate"
-                            ? "DD/MM/YYYY"
-                            : `Enter ${field}`
-                        }
+                        placeholder={`Enter ${field}`}
                         value={formData[field]}
                         onChange={handleInputChange}
                       />
