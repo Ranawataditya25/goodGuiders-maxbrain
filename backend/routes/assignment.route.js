@@ -220,6 +220,16 @@ router.get("/assignments", async (req, res) => {
       },
       { $unwind: { path: "$latestAttempt", preserveNullAndEmptyArrays: true } },
 
+     // bring in student details for all assigned students
+{
+  $lookup: {
+    from: "users",
+    localField: "studentIds",
+    foreignField: "_id",
+    as: "students",
+  },
+},
+
       // derive server-truth status
       {
         $addFields: {
@@ -269,6 +279,13 @@ router.get("/assignments", async (req, res) => {
           dueAt: 1,
           status: 1,
           note: 1,
+          students: {
+  $map: {
+    input: "$students",
+    as: "s",
+    in: { _id: "$$s._id", name: "$$s.name", email: "$$s.email" }
+  }
+},
 
           // ⬇️ timer fields included in list API
           durationMinutes: 1,
@@ -286,10 +303,12 @@ router.get("/assignments", async (req, res) => {
           derivedStatus: 1,
           latestAttempt: {
             _id: "$latestAttempt._id",
+            userEmail: "$latestAttempt.userEmail",
             status: "$latestAttempt.status",
             startedAt: "$latestAttempt.startedAt",
             submittedAt: "$latestAttempt.submittedAt",
             testId: "$latestAttempt.testId",
+            answers: "$latestAttempt.answers",
             answersCount: {
               $size: { $ifNull: [{ $objectToArray: "$latestAttempt.answers" }, []] },
             },

@@ -1,5 +1,14 @@
 import mongoose from "mongoose";
 
+const EducationSchema = new mongoose.Schema({
+  className: String,
+  degree: String,
+  passout: String,
+  board: String,
+  subject: String,
+  grade: String,
+}, { _id: false });
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -64,6 +73,10 @@ const userSchema = new mongoose.Schema(
       enum: ["pending", "approved", "rejected", ""],
       default: "",
     },
+
+    // NEW: education array
+    education: { type: [EducationSchema], default: [] },
+
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },

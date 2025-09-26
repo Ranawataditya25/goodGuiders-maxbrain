@@ -102,6 +102,7 @@ import ChatPage from "./pages/ChatPage.jsx";
 import AllChatsPage from "./pages/AllChatsPage.jsx";
 import AdminMentorRequests from "./pages/AdminMentorRequests.jsx";
 import PurchaseTemp from "./pages/PurchaseTemp.jsx";
+import MentorSubmissions from "./pages/MentorSubmissions.jsx";
 
 const routesWithoutExtras = [
   "/",
@@ -171,6 +172,7 @@ function AppContent() {
         <Route exact path="/all-chats" element={<AllChatsPage />} />
         <Route exact path="/admin-mentor-requests" element={<AdminMentorRequests />} />
         <Route exact path="/purchase-temp" element={<PurchaseTemp />} />
+        <Route exact path="/mentor-submissions" element={<MentorSubmissions />} />
 
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />

@@ -63,6 +63,7 @@ router.post("/tests/:assignmentId/submit", async (req, res) => {
     // 5️⃣ Save submission
     const submission = new Submission({
       userEmail,
+      assignmentId,
       class: test.class,
       subjects: test.subjects,
       type: test.testType,
@@ -83,5 +84,42 @@ router.post("/tests/:assignmentId/submit", async (req, res) => {
       .json({ ok: false, message: "Failed to submit test" });
   }
 });
+
+/**
+ * @route   GET /api/tests/:assignmentId/submissions
+ * @desc    fetch submited test for mentor
+ */
+
+// routes/submission.route.js
+router.get("/tests/:assignmentId/submissions", async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+
+    const submissions = await Submission.find({ assignmentId })
+      .populate("assignmentId", "testId") // get which test it belongs to
+      .lean();
+
+    // Optional: attach student name/email from Users
+    for (const s of submissions) {
+      const student = await User.findOne({ email: s.userEmail }, "name email").lean();
+      s.student = student || { email: s.userEmail };
+
+      // Ensure answers is always an array
+      if (!Array.isArray(s.answers)) {
+        if (s.answers && typeof s.answers === "object") {
+          s.answers = Object.values(s.answers);
+        } else {
+          s.answers = [];
+        }
+      }
+    }
+
+    return res.json({ ok: true, submissions });
+  } catch (err) {
+    console.error("[GET /tests/:assignmentId/submissions] error:", err);
+    return res.status(500).json({ ok: false, message: "Failed to fetch submissions" });
+  }
+});
+
 
 export default router;

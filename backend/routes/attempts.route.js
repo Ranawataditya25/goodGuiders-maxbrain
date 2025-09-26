@@ -132,7 +132,7 @@ router.put("/attempts/:id", upsert);
  */
 router.post("/attempts/:id/submit", async (req, res) => {
   try {
-    const { answers = null } = req.body || {};
+    const { answers = null, userEmail = null } = req.body || {};
     const attempt = await Attempt.findById(req.params.id);
     if (!attempt) return res.status(404).json({ ok: false, message: "Attempt not found" });
 
@@ -191,7 +191,7 @@ router.post("/attempts/:id/submit", async (req, res) => {
     // (Optional) also store a Submission document; non-blocking if it fails
     try {
       await Submission.create({
-        userEmail: req.user?.email || "unknown@local",
+        userEmail: attempt.userEmail || req.user?.email || userEmail || "unknown@local",
         class: test?.class,
         subjects: test?.subjects || [],
         type: test?.testType,

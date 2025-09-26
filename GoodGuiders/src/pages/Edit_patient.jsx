@@ -1,12 +1,20 @@
+// src/pages/Edit_patient.jsx
 import { useEffect, useState } from "react";
-// import { Link } from "react-router-dom";
 import { Row, Col, Card, Form, Container, Button } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import "./css/ProfilePage.css";
-// import '../pages/css/ProfilePage.css';
-export default function Edit_patient() {
 
+// ✅ Allowed classes (excluding 10 & 12)
+const SELECTABLE_CLASSES = ["6th", "7th", "8th", "9th", "11th"];
+
+// ✅ Default structure: 10th and 12th only
+const DEFAULT_EDUCATION = [
+  { className: "10th", passout: "", board: "", subject: "", grade: "" },
+  { className: "12th", passout: "", board: "", subject: "", grade: "" },
+];
+
+export default function Edit_patient() {
   const [formData, setFormData] = useState({
     name: "",
     dob: "",
@@ -18,59 +26,93 @@ export default function Edit_patient() {
     postalCode: "",
     address: "",
     profileImage: null,
+    education: DEFAULT_EDUCATION,
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedUser, setSavedUser] = useState(null);
 
   useEffect(() => {
-    const savedUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (savedUser) {
-      setSavedUser(savedUser);
-      setFormData({
-        name: savedUser.name || "",
-        dob: savedUser.dob || "",
-        gender: savedUser.gender || "",
-        mobileNo: savedUser.mobileNo || "",
-        city: savedUser.city || "",
-        state: savedUser.state || "",
-        country: savedUser.country || "",
-        postalCode: savedUser.postalCode || "",
-        address: savedUser.address || "",
-        profileImage: typeof savedUser.profileImage === "string" ? savedUser.profileImage : null,
-      });
+    const saved = localStorage.getItem("loggedInUser");
+    if (saved) {
+      try {
+        const u = JSON.parse(saved);
+        setSavedUser(u);
+
+        setFormData((prev) => ({
+          ...prev,
+          name: u.name || "",
+          dob: u.dob || "",
+          gender: u.gender || "",
+          mobileNo: u.mobileNo || "",
+          city: u.city || "",
+          state: u.state || "",
+          country: u.country || "",
+          postalCode: u.postalCode || "",
+          address: u.address || "",
+          profileImage:
+            typeof u.profileImage === "string" ? u.profileImage : null,
+          education:
+            Array.isArray(u.education) && u.education.length
+              ? u.education
+              : DEFAULT_EDUCATION,
+        }));
+      } catch (err) {
+        console.error("Failed to parse loggedInUser:", err);
+      }
     }
   }, []);
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-  
+
     if (!savedUser) {
+      setIsSubmitting(false);
       alert("No user data found.");
       return;
     }
-  
+
     try {
       const data = new FormData();
+
+      // Append fields correctly. Files as files, arrays/objects as JSON strings.
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null) {
+        if (value === null || value === undefined) return;
+        if (value instanceof File) {
           data.append(key, value);
+        } else if (Array.isArray(value) || typeof value === "object") {
+          data.append(key, JSON.stringify(value));
+        } else {
+          data.append(key, value.toString());
         }
       });
+
       data.append("email", savedUser.email);
-  
-      const res = await fetch("http://localhost:5000/api/profile", {
-        method: "PUT",
-        body: data, // FormData doesn't need content-type header
-      });
-  
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"}/profile`,
+        {
+          method: "PUT",
+          body: data,
+        }
+      );
+
       const result = await res.json();
       if (res.ok) {
         alert("Profile updated successfully!");
-        localStorage.setItem("loggedInUser", JSON.stringify(result.user));
+        // update localStorage with server response user object (without password)
+        if (result.user) {
+          localStorage.setItem("loggedInUser", JSON.stringify(result.user));
+          setSavedUser(result.user);
+          // reflect updated user in form (keep file object as null)
+          setFormData((prev) => ({
+            ...prev,
+            profileImage: result.user.profileImage || prev.profileImage,
+          }));
+        }
       } else {
-        alert("Error: " + result.msg);
+        alert("Error: " + (result.msg || result.error || "Update failed"));
       }
     } catch (err) {
       console.error("Update failed:", err);
@@ -79,21 +121,28 @@ export default function Edit_patient() {
       setIsSubmitting(false);
     }
   };
-  
 
-  // Handle input changes
+  const handleEducationChange = (index, field, value) => {
+    setFormData((prev) => {
+      const updated = prev.education.map((r, i) =>
+        i === index ? { ...r, [field]: value } : r
+      );
+      return { ...prev, education: updated };
+    });
+  };
+
   const handleInputChange = (e) => {
     const { name, type, files, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "file" ? files[0] : value,
     }));
-  };  
+  };
 
   const handleCancel = () => {
     if (!savedUser) return;
-
-    setFormData({
+    setFormData((prev) => ({
+      ...prev,
       name: savedUser.name || "",
       dob: savedUser.dob || "",
       gender: savedUser.gender || "",
@@ -103,16 +152,36 @@ export default function Edit_patient() {
       country: savedUser.country || "",
       postalCode: savedUser.postalCode || "",
       address: savedUser.address || "",
-      profileImage: typeof savedUser.profileImage === "string" ? savedUser.profileImage : null,
-    });
+      profileImage:
+        typeof savedUser.profileImage === "string"
+          ? savedUser.profileImage
+          : null,
+      education:
+        Array.isArray(savedUser.education) && savedUser.education.length
+          ? savedUser.education
+          : DEFAULT_EDUCATION,
+    }));
     setIsSubmitting(false);
   };
 
-
+  // const profileImageSrc = (() => {
+  //   const pi = formData.profileImage;
+  //   if (!pi) return `${import.meta.env.BASE_URL || "/"}default-avatar.png`;
+  //   if (typeof pi === "string" && pi.startsWith("/profilePhotoUploads")) {
+  //     return `${
+  //       import.meta.env.VITE_API_URL?.replace("/api", "") ||
+  //       "http://127.0.0.1:5000"
+  //     }${pi}`;
+  //   }
+  //   if (pi instanceof File) {
+  //     return URL.createObjectURL(pi);
+  //   }
+  //   if (typeof pi === "string") return pi;
+  //   return `${import.meta.env.BASE_URL || "/"}default-avatar.png`;
+  // })();
 
   return (
     <div className="themebody-wrap">
-
       <PageBreadcrumb pagename="Edit Student" />
 
       <SimpleBar className="theme-body common-dash">
@@ -125,10 +194,9 @@ export default function Edit_patient() {
                 </Card.Header>
                 <Card.Body>
                   <Form onSubmit={handleSubmit}>
-
-                    <Row>
-                      <Col md={4}>
-                        <Form.Group className="mb-20">
+                    <Row className="mb-24">
+                      <Col md={12} className="text-center">
+                        <Form.Group className="mb-3">
                           <Form.Label>Upload Profile Image</Form.Label>
                           <Form.Control
                             type="file"
@@ -137,25 +205,31 @@ export default function Edit_patient() {
                             onChange={handleInputChange}
                           />
                         </Form.Group>
-                      </Col>
 
-                      {formData.profileImage && (
-                        <div className="editprofile-pic">
-                          <img
-                            src={
-                              typeof formData.profileImage === "string" && formData.profileImage.startsWith("/profilePhotoUploads")
-                                ? `http://localhost:5000${formData.profileImage}`
-                                : formData.profileImage instanceof File
+                        {/* ✅ Profile Image Preview */}
+                        {formData.profileImage && (
+                          <div className="editprofile-pic">
+                            <img
+                              src={
+                                typeof formData.profileImage === "string" &&
+                                formData.profileImage.startsWith(
+                                  "/profilePhotoUploads"
+                                )
+                                  ? `http://localhost:5000${formData.profileImage}`
+                                  : formData.profileImage instanceof File
                                   ? URL.createObjectURL(formData.profileImage)
-                                  : `${import.meta.env.BASE_URL}default-avatar.png`
-                            }
-                            alt="Profile"
-                            className="profile-picedit"
-                          />
-                        </div>
-                      )}
-
-
+                                  : `${
+                                      import.meta.env.BASE_URL
+                                    }default-avatar.png`
+                              }
+                              alt="Profile"
+                              className="profile-picedit"
+                            />
+                          </div>
+                        )}
+                      </Col>
+                    </Row>
+                    <Row>
                       <Col md={4}>
                         <Form.Group className="mb-20">
                           <Form.Label>Name</Form.Label>
@@ -168,6 +242,7 @@ export default function Edit_patient() {
                           />
                         </Form.Group>
                       </Col>
+
                       <Col md={4}>
                         <Form.Group className="mb-20">
                           <Form.Label>Date of Birth</Form.Label>
@@ -176,13 +251,12 @@ export default function Edit_patient() {
                             type="date"
                             name="dob"
                             value={formData.dob}
-                            data-date-format="dd/mm/yyyy"
                             onChange={handleInputChange}
                           />
                         </Form.Group>
                       </Col>
 
-                      <Col md={4} className="p-0 m-0">
+                      <Col md={4}>
                         <Form.Group className="mt-0 mb-3">
                           <Form.Label>Gender</Form.Label>
                           <Form.Control
@@ -194,11 +268,10 @@ export default function Edit_patient() {
                             <option value="">Select Gender</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
-                            <option value="Other">Others</option> {/* Fixed duplicated value */}
+                            <option value="Other">Others</option>
                           </Form.Control>
                         </Form.Group>
                       </Col>
-
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
@@ -212,6 +285,7 @@ export default function Edit_patient() {
                           />
                         </Form.Group>
                       </Col>
+
                       <Col md={4}>
                         <Form.Group className="mb-20">
                           <Form.Label>City</Form.Label>
@@ -224,6 +298,7 @@ export default function Edit_patient() {
                           />
                         </Form.Group>
                       </Col>
+
                       <Col md={4}>
                         <Form.Group className="mb-20">
                           <Form.Label>State</Form.Label>
@@ -236,6 +311,7 @@ export default function Edit_patient() {
                           />
                         </Form.Group>
                       </Col>
+
                       <Col md={4}>
                         <Form.Group className="mb-20">
                           <Form.Label>Country</Form.Label>
@@ -248,6 +324,7 @@ export default function Edit_patient() {
                           />
                         </Form.Group>
                       </Col>
+
                       <Col md={4}>
                         <Form.Group className="mb-20">
                           <Form.Label>Postal/zip Code</Form.Label>
@@ -260,6 +337,7 @@ export default function Edit_patient() {
                           />
                         </Form.Group>
                       </Col>
+
                       <Col md={6}>
                         <Form.Group className="mb-20">
                           <Form.Label>Address</Form.Label>
@@ -273,10 +351,6 @@ export default function Edit_patient() {
                         </Form.Group>
                       </Col>
 
-                      {/* <div className="themebody-wrap">
-         
-            <div className="theme-body codex-chat"> */}
-                      {/* <Container fluid> */}
                       <Row>
                         <Col>
                           <Card>
@@ -287,114 +361,103 @@ export default function Edit_patient() {
                                     <thead>
                                       <tr>
                                         <th>Class</th>
-
-                                        <th>Paasout</th>
-                                        <th>University/Board </th>
+                                        <th>Passout</th>
+                                        <th>University/Board</th>
                                         <th>Subject</th>
-
-                                        <th>Per/CGPA </th>
+                                        <th>Per/CGPA</th>
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      <tr>
-                                        <td>10th class</td>
-                                        <td>2015</td>
-                                        <td>Ajmer Board</td>
-                                        <td>
-                                          Hindi ,English, Computer,Science
-                                        </td>
-                                        <td>6.6</td>
-                                      </tr>
-                                      <tr>
-                                        <td>12th</td>
-                                        <td>2017</td>
-                                        <td>Ajmer Board</td>
-                                        <td>Biology</td>
-                                        <td>7.9</td>
-                                      </tr>
-
-
-                                      <tr>
-                                        <td>
-                                          <select className="edittext_wid">
-                                            <option selected disabled>
-                                              Graduation
-                                            </option>
-                                            <option>B.Com</option>
-                                            <option>Enginering</option>
-                                            <option>BBA</option>
-                                            <option>BCA</option>
-                                            <option>BA</option>
-                                            <option>B.Sc</option>
-                                          </select>
-                                        </td>
-                                        <td>2020</td>
-                                        <td>Ajmer Board</td>
-                                        <td>Biology</td>
-                                        <td>5.5</td>
-                                      </tr>
-
-
-                                      {/* <tr>
-                                        <td>
-                                           <select className="edittext_wid">
-                                            <option selected disabled>
-                                             Post Graduation
-                                            </option>
-                                            <option>M.Com</option>
-                                            <option>MCA</option>
-                                            <option>MBA</option>
-                                             <option>M.tech</option>
-                                            <option>M.A</option>
-                                            <option>M.sc</option>
-                                           
-                                          </select>
-                                        </td>
-                                        <td>2012</td>
-                                        <td>Ajmer Board</td>
-                                        <td>Biology</td>
-                                        <td>6.6</td>
-                                      </tr>
-                                       <tr>
-                                        <td>
-                                       <select className="edittext_wid">
-                                            <option selected disabled>
-                                            P.H.D
-                                            </option>
-                                            <option>PHD</option>
-                                            <option>PHD</option>
-                                            <option>PHD</option>
-                                          </select>
-                                        </td>
-                                        <td>2012</td>
-                                        <td>Ajmer Board</td>
-                                        <td>Biology</td>
-                                        <td>6.5</td>
-                                      </tr> */}
-
-
-
-                                      {/* <tr>
-                                                            <td>06</td>
-                                                            <td>Biology </td>
-                                                            <td>$480</td>
-                                                            <td>$50</td>
-                                                            <td>$440</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>07</td>
-                                                            <td>Biology </td>
-                                                            <td>$700</td>
-                                                            <td>$250</td>
-                                                            <td>$450</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>08</td>
-                                                            <td>Biology </td>
-                                                            <td>$570</td>
-                                                            <td>$170</td>
-                                                            <td>$400</td>
-                                                        </tr> */}
+                                      {formData.education.map((edu, index) => (
+                                        <tr key={index}>
+                                          <td>
+                                            {edu.className === "10th" ||
+                                            edu.className === "12th" ? (
+                                              // Hardcoded 10th and 12th
+                                              edu.className
+                                            ) : (
+                                              // Other selectable classes (6–9, 11th)
+                                              <Form.Control
+                                                as="select"
+                                                value={edu.className}
+                                                onChange={(e) =>
+                                                  handleEducationChange(
+                                                    index,
+                                                    "className",
+                                                    e.target.value
+                                                  )
+                                                }
+                                              >
+                                                <option value="">
+                                                  Other Class
+                                                </option>
+                                                {SELECTABLE_CLASSES.map(
+                                                  (cls) => (
+                                                    <option
+                                                      key={cls}
+                                                      value={cls}
+                                                    >
+                                                      {cls}
+                                                    </option>
+                                                  )
+                                                )}
+                                              </Form.Control>
+                                            )}
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.passout}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "passout",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.board}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "board",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.subject}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "subject",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.grade}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "grade",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                        </tr>
+                                      ))}
                                     </tbody>
                                   </table>
                                 </div>
@@ -404,11 +467,6 @@ export default function Edit_patient() {
                         </Col>
                       </Row>
 
-                      {/* </div>
-         
-        </div>
-       */}
-
                       <Form.Group className="text-end mb-0">
                         <Button
                           type="submit"
@@ -417,7 +475,10 @@ export default function Edit_patient() {
                         >
                           {isSubmitting ? "Updating..." : "Submit"}
                         </Button>
-                        <Button className="btn btn-sm btn-danger ml-8" onClick={handleCancel}>
+                        <Button
+                          className="btn btn-sm btn-danger ms-2"
+                          onClick={handleCancel}
+                        >
                           Cancel
                         </Button>
                       </Form.Group>
@@ -429,8 +490,6 @@ export default function Edit_patient() {
           </Row>
         </Container>
       </SimpleBar>
-      {/* theme body end */}
     </div>
   );
 }
-

@@ -5,7 +5,36 @@ import PageBreadcrumb from "../componets/PageBreadcrumb";
 import "./css/ProfilePage.css";
 // import '../pages/css/ProfilePage.css';
 
-export default function Edit_patient() {
+const DEFAULT_EDUCATION = [
+  { className: "10th", passout: "", board: "", subject: "", grade: "" },
+  { className: "12th", passout: "", board: "", subject: "", grade: "" },
+  {
+    className: "Graduation",
+    degree: "",
+    passout: "",
+    board: "",
+    subject: "",
+    grade: "",
+  },
+  {
+    className: "Post Graduation",
+    degree: "",
+    passout: "",
+    board: "",
+    subject: "",
+    grade: "",
+  },
+  {
+    className: "PhD",
+    degree: "",
+    passout: "",
+    board: "",
+    subject: "",
+    grade: "",
+  },
+];
+
+export default function Edit_doctor() {
   const [formData, setFormData] = useState({
     name: "",
     dob: "",
@@ -21,6 +50,34 @@ export default function Edit_patient() {
     mentorAbilities: [],
     specializedIn: "",
     profileImage: null,
+    education: [
+      { className: "10th", passout: "", board: "", subject: "", grade: "" },
+      { className: "12th", passout: "", board: "", subject: "", grade: "" },
+      {
+        className: "Graduation",
+        degree: "",
+        passout: "",
+        board: "",
+        subject: "",
+        grade: "",
+      },
+      {
+        className: "Post Graduation",
+        degree: "",
+        passout: "",
+        board: "",
+        subject: "",
+        grade: "",
+      },
+      {
+        className: "PhD",
+        degree: "",
+        passout: "",
+        board: "",
+        subject: "",
+        grade: "",
+      },
+    ],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedUser, setSavedUser] = useState(null);
@@ -29,6 +86,16 @@ export default function Edit_patient() {
     const savedUser = JSON.parse(localStorage.getItem("loggedInUser"));
     if (savedUser) {
       setSavedUser(savedUser);
+      console.log(savedUser.education);
+      // Merge saved education with default structure
+      const education = DEFAULT_EDUCATION.map((edu) => {
+        if (!Array.isArray(savedUser.education)) return edu;
+        const savedEdu = savedUser.education.find(
+          (e) => e.className === edu.className
+        );
+        return savedEdu ? { ...edu, ...savedEdu } : edu;
+      });
+
       setFormData({
         name: savedUser.name || "",
         dob: savedUser.dob || "",
@@ -49,9 +116,18 @@ export default function Edit_patient() {
           typeof savedUser.profileImage === "string"
             ? savedUser.profileImage
             : null,
+        education,
       });
     }
   }, []);
+
+  const handleEducationChange = (index, field, value) => {
+    setFormData((prev) => {
+      const updated = [...prev.education];
+      updated[index][field] = value;
+      return { ...prev, education: updated };
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,28 +135,24 @@ export default function Edit_patient() {
 
     if (!savedUser) {
       alert("No user data found.");
+      setIsSubmitting(false);
       return;
     }
 
     try {
       const data = new FormData();
-
-      // Loop through formData keys
       Object.entries(formData).forEach(([key, value]) => {
-        if (key === "mentorAbilities") {
-          // Convert array to JSON string
+        if (value === null || value === undefined) return;
+        if (value instanceof File) data.append(key, value);
+        else if (Array.isArray(value) || typeof value === "object")
           data.append(key, JSON.stringify(value));
-        } else if (value !== null) {
-          data.append(key, value);
-        }
+        else data.append(key, value.toString());
       });
-
-      // Append email separately
       data.append("email", savedUser.email);
 
-      const res = await fetch("http://localhost:5000/api/profile", {
+      const res = await fetch("http://127.0.0.1:5000/api/profile", {
         method: "PUT",
-        body: data, // no headers needed for FormData
+        body: data,
       });
 
       const result = await res.json();
@@ -123,10 +195,23 @@ export default function Edit_patient() {
       address: savedUser.address || "",
       bio: savedUser.bio || "",
       experience: savedUser.experience || "",
-      mentorAbilities: savedUser.mentorAbilities || "",
+      mentorAbilities: Array.isArray(savedUser.mentorAbilities)
+        ? savedUser.mentorAbilities
+        : [],
       specializedIn: savedUser.specializedIn || "",
-      profileImage: typeof savedUser.profileImage === "string" ? savedUser.profileImage : null,
+      profileImage:
+        typeof savedUser.profileImage === "string"
+          ? savedUser.profileImage
+          : null,
+      education: DEFAULT_EDUCATION.map((edu) => {
+        if (!Array.isArray(savedUser.education)) return edu;
+        const savedEdu = savedUser.education.find(
+          (e) => e.className === edu.className
+        );
+        return savedEdu ? { ...edu, ...savedEdu } : edu;
+      }),
     });
+
     setIsSubmitting(false);
   };
 
@@ -160,23 +245,26 @@ export default function Edit_patient() {
                       {formData.profileImage &&
                         (typeof formData.profileImage === "string" ||
                           formData.profileImage instanceof File) && (
-                            <div className="editprofile-pic">
+                          <div className="editprofile-pic">
                             <img
                               src={
                                 formData.profileImage
                                   ? typeof formData.profileImage === "string" &&
-                                    formData.profileImage.startsWith("/profilePhotoUploads")
+                                    formData.profileImage.startsWith(
+                                      "/profilePhotoUploads"
+                                    )
                                     ? `http://localhost:5000${formData.profileImage}`
                                     : formData.profileImage instanceof File
-                                    ? URL.createObjectURL(formData.profileImage)
-                                    : `${import.meta.env.BASE_URL}default-avatar.png`
-                                  : `${import.meta.env.BASE_URL}default-avatar.png`
+                                      ? URL.createObjectURL(formData.profileImage)
+                                      : `${import.meta.env.BASE_URL
+                                      }default-avatar.png`
+                                  : `${import.meta.env.BASE_URL
+                                  }default-avatar.png`
                               }
                               alt="Profile"
                               className="profile-picedit"
                             />
                           </div>
-                          
                         )}
 
                       <Col md={4}>
@@ -252,9 +340,7 @@ export default function Edit_patient() {
                           <Form.Label>mentorAbilities</Form.Label>
                           <Form.Control
                             type="text"
-                            name="mentorAbilities"
                             value={formData.mentorAbilities.join(", ")}
-                            placeholder="Enter abilities (comma separated)"
                             onChange={(e) =>
                               setFormData({
                                 ...formData,
@@ -376,100 +462,119 @@ export default function Edit_patient() {
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      <tr>
-                                        <td>10th class</td>
-                                        <td>2015</td>
-                                        <td>Ajmer Board</td>
-                                        <td>
-                                          Hindi ,English, Computer,Science
-                                        </td>
-                                        <td>6.6</td>
-                                      </tr>
-                                      <tr>
-                                        <td>12th</td>
-                                        <td>2017</td>
-                                        <td>Ajmer Board</td>
-                                        <td>Biology</td>
-                                        <td>7.9</td>
-                                      </tr>
-
-                                      <tr>
-                                        <td>
-                                          <select className="edittext_wid">
-                                            <option selected disabled>
-                                              Graduation
-                                            </option>
-                                            <option>B.Com</option>
-                                            <option>Enginering</option>
-                                            <option>BBA</option>
-                                            <option>BCA</option>
-                                            <option>BA</option>
-                                            <option>B.Sc</option>
-                                          </select>
-                                        </td>
-                                        <td>2020</td>
-                                        <td>Ajmer Board</td>
-                                        <td>Biology</td>
-                                        <td>5.5</td>
-                                      </tr>
-
-                                      <tr>
-                                        <td>
-                                          <select className="edittext_wid">
-                                            <option selected disabled>
-                                              Post Graduation
-                                            </option>
-                                            <option>M.Com</option>
-                                            <option>MCA</option>
-                                            <option>MBA</option>
-                                            <option>M.tech</option>
-                                            <option>M.A</option>
-                                            <option>M.sc</option>
-                                          </select>
-                                        </td>
-                                        <td>2012</td>
-                                        <td>Ajmer Board</td>
-                                        <td>Biology</td>
-                                        <td>6.6</td>
-                                      </tr>
-                                      <tr>
-                                        <td>
-                                          <select className="edittext_wid">
-                                            <option selected disabled>
-                                              P.H.D
-                                            </option>
-                                            <option>PHD</option>
-                                            <option>PHD</option>
-                                            <option>PHD</option>
-                                          </select>
-                                        </td>
-                                        <td>2012</td>
-                                        <td>Ajmer Board</td>
-                                        <td>Biology</td>
-                                        <td>6.5</td>
-                                      </tr>
-
-                                      {/* <tr>
-                                                            <td>06</td>
-                                                            <td>Biology </td>
-                                                            <td>$480</td>
-                                                            <td>$50</td>
-                                                            <td>$440</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>07</td>
-                                                            <td>Biology </td>
-                                                            <td>$700</td>
-                                                            <td>$250</td>
-                                                            <td>$450</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>08</td>
-                                                            <td>Biology </td>
-                                                            <td>$570</td>
-                                                            <td>$170</td>
-                                                            <td>$400</td>
-                                                        </tr> */}
+                                      {formData.education?.map((edu, index) => (
+                                        <tr key={index}>
+                                          <td>
+                                            {["10th", "12th"].includes(
+                                              edu.className
+                                            ) ? (
+                                              edu.className
+                                            ) : (
+                                              <Form.Control
+                                                as="select"
+                                                value={edu.degree || ""}
+                                                onChange={(e) =>
+                                                  handleEducationChange(
+                                                    index,
+                                                    "degree",
+                                                    e.target.value
+                                                  )
+                                                }
+                                              >
+                                                <option value="" disabled>
+                                                  {edu.className}
+                                                </option>
+                                                {edu.className ===
+                                                  "Graduation" &&
+                                                  [
+                                                    "B.Com",
+                                                    "BBA",
+                                                    "BCA",
+                                                    "BA",
+                                                    "B.Sc",
+                                                    "Engineering",
+                                                  ].map((d) => (
+                                                    <option key={d} value={d}>
+                                                      {d}
+                                                    </option>
+                                                  ))}
+                                                {edu.className ===
+                                                  "Post Graduation" &&
+                                                  [
+                                                    "M.Com",
+                                                    "MBA",
+                                                    "MCA",
+                                                    "M.Sc",
+                                                    "M.A",
+                                                    "M.Tech",
+                                                  ].map((d) => (
+                                                    <option key={d} value={d}>
+                                                      {d}
+                                                    </option>
+                                                  ))}
+                                                {edu.className === "PhD" &&
+                                                  ["PHD"].map((d) => (
+                                                    <option key={d} value={d}>
+                                                      {d}
+                                                    </option>
+                                                  ))}
+                                              </Form.Control>
+                                            )}
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.passout || ""}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "passout",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.board || ""}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "board",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.subject || ""}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "subject",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.grade || ""}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "grade",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                        </tr>
+                                      ))}
                                     </tbody>
                                   </table>
                                 </div>

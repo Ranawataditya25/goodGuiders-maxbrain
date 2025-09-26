@@ -669,10 +669,14 @@ export default function TestPlayer() {
     await flushAutosave();
     try {
       setSubmitting(true);
+
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+    const userEmail = loggedInUser?.email || "";
+
       await fetch(`${API}/attempts/${attemptId}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, userEmail }),
       });
     } catch {
       // ignore; result page will reflect final state

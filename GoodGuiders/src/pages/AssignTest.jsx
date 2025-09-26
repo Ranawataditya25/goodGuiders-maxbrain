@@ -1,8 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Container, Row, Col, Card, Table, Button, Badge, Modal, Form, InputGroup,
+  Container,
+  Row,
+  Col,
+  Card,
+  Table,
+  Button,
+  Badge,
+  Modal,
+  Form,
+  InputGroup,
 } from "react-bootstrap";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -24,35 +34,38 @@ export default function AssignTest() {
   const [limitPreset, setLimitPreset] = useState("60"); // minutes as string; "custom" for custom
   const [customHours, setCustomHours] = useState("");
   const [customMinutes, setCustomMinutes] = useState("");
+  const navigate = useNavigate();
+  const submissions = () => navigate("/mentor-submissions");
 
-useEffect(() => {
-  (async () => {
-    try {
-      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
-      const email = loggedInUser.email;
+  useEffect(() => {
+    (async () => {
+      try {
+        const loggedInUser = JSON.parse(
+          localStorage.getItem("loggedInUser") || "{}"
+        );
+        const email = loggedInUser.email;
 
-      if (!email) {
-        setError("User email not found. Please log in again.");
+        if (!email) {
+          setError("User email not found. Please log in again.");
+          setLoading(false);
+          return;
+        }
+
+        const [t, s] = await Promise.all([
+          axios.get(`${API}/tests`, { params: { email } }),
+          axios.get(`${API}/students`),
+        ]);
+
+        setTests(t.data?.data || []);
+        setStudents(s.data?.data || []);
+      } catch (e) {
+        console.error(e);
+        setError("Failed to load tests or students");
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const [t, s] = await Promise.all([
-        axios.get(`${API}/tests`, { params: { email } }),
-        axios.get(`${API}/students`),
-      ]);
-
-      setTests(t.data?.data || []);
-      setStudents(s.data?.data || []);
-    } catch (e) {
-      console.error(e);
-      setError("Failed to load tests or students");
-    } finally {
-      setLoading(false);
-    }
-  })();
-}, []);
-
+    })();
+  }, []);
 
   const openAssign = (test) => {
     setSelectedTest(test);
@@ -78,7 +91,8 @@ useEffect(() => {
 
   const effectiveMinutes = useMemo(() => {
     if (!limitEnabled) return null; // no limit
-    if (limitPreset !== "custom") return Math.max(0, parseInt(limitPreset || "0", 10));
+    if (limitPreset !== "custom")
+      return Math.max(0, parseInt(limitPreset || "0", 10));
     const h = Math.max(0, parseInt(customHours || "0", 10));
     const m = Math.max(0, parseInt(customMinutes || "0", 10));
     return h * 60 + m;
@@ -145,8 +159,11 @@ useEffect(() => {
       <Container>
         <Row className="mb-3">
           <Col>
-            <h3 className="mb-0">Assign Tests</h3>
-            <div className="text-muted">Pick a test and assign it to students with a due date and a time limit.</div>
+            <h3 className="mb-4">Assign Tests</h3>
+            <div className="text-muted">
+              Pick a test and assign it to students with a due date and a time
+              limit.
+            </div>
           </Col>
         </Row>
 
@@ -182,7 +199,11 @@ useEffect(() => {
                     </td>
                     <td>{new Date(t.createdAt).toLocaleString()}</td>
                     <td className="text-end">
-                      <Button size="sm" variant="primary" onClick={() => openAssign(t)}>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => openAssign(t)}
+                      >
                         Assign
                       </Button>
                     </td>
@@ -203,7 +224,9 @@ useEffect(() => {
         {/* Assign modal */}
         <Modal show={show} onHide={() => setShow(false)} size="lg" centered>
           <Modal.Header closeButton>
-            <Modal.Title>Assign: {selectedTest?.subjects?.join(", ") || "(Test)"}</Modal.Title>
+            <Modal.Title>
+              Assign: {selectedTest?.subjects?.join(", ") || "(Test)"}
+            </Modal.Title>
           </Modal.Header>
 
           <Modal.Body>
@@ -216,7 +239,9 @@ useEffect(() => {
                 multiple
                 value={selectedStudentIds}
                 onChange={(e) => {
-                  const opts = Array.from(e.target.selectedOptions).map((o) => o.value);
+                  const opts = Array.from(e.target.selectedOptions).map(
+                    (o) => o.value
+                  );
                   setSelectedStudentIds(opts);
                 }}
               >
@@ -226,7 +251,9 @@ useEffect(() => {
                   </option>
                 ))}
               </Form.Select>
-              <div className="small text-muted mt-1">Hold Ctrl/Cmd to select multiple.</div>
+              <div className="small text-muted mt-1">
+                Hold Ctrl/Cmd to select multiple.
+              </div>
               <div className="mt-2 d-flex flex-wrap gap-2">
                 {selectedStudentIds.map((id) => {
                   const st = studentsById.get(id);
@@ -276,7 +303,9 @@ useEffect(() => {
                     checked={limitEnabled}
                     onChange={(e) => setLimitEnabled(e.target.checked)}
                   />
-                  <Badge bg="light" text="dark">{humanLimit}</Badge>
+                  <Badge bg="light" text="dark">
+                    {humanLimit}
+                  </Badge>
                 </div>
 
                 <Row className="g-2">
@@ -291,7 +320,11 @@ useEffect(() => {
                       ].map((p) => (
                         <Button
                           key={p.value}
-                          variant={limitPreset === p.value && limitEnabled ? "primary" : "outline-primary"}
+                          variant={
+                            limitPreset === p.value && limitEnabled
+                              ? "primary"
+                              : "outline-primary"
+                          }
                           size="sm"
                           disabled={!limitEnabled}
                           onClick={() => setLimitPreset(p.value)}
@@ -301,7 +334,11 @@ useEffect(() => {
                       ))}
 
                       <Button
-                        variant={limitPreset === "custom" && limitEnabled ? "primary" : "outline-primary"}
+                        variant={
+                          limitPreset === "custom" && limitEnabled
+                            ? "primary"
+                            : "outline-primary"
+                        }
                         size="sm"
                         disabled={!limitEnabled}
                         onClick={() => setLimitPreset("custom")}
@@ -334,7 +371,8 @@ useEffect(() => {
                       />
                     </InputGroup>
                     <div className="small text-muted mt-1">
-                      This will be the countdown clock when the student starts the test.
+                      This will be the countdown clock when the student starts
+                      the test.
                     </div>
                   </Col>
                 </Row>
@@ -355,6 +393,14 @@ useEffect(() => {
             </Button>
           </Modal.Footer>
         </Modal>
+        <Button
+          variant="outline-primary"
+          size="sm"
+          className="ms-2 mb-13 mt-13"
+          onClick={submissions}
+        >
+          View Submissions
+        </Button>
       </Container>
     </div>
   );

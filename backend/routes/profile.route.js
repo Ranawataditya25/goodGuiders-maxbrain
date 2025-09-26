@@ -30,34 +30,48 @@ router.get("/", async (req, res) => {
  */
 router.put("/", upload.single("profileImage"), async (req, res) => {
   const email = req.body.email;
-
   try {
     const existingUser = await User.findOne({ email });
     if (!existingUser) return res.status(404).json({ msg: "User not found" });
 
-    // ✅ If a new image is uploaded, delete the old one
+    // If new image uploaded -> delete old (best-effort)
     if (req.file) {
-      // Delete old image from file system if it exists
-      if (existingUser.profileImage) {
-        const oldImagePath = path.join("profilePhotoUploads", path.basename(existingUser.profileImage));
-        fs.unlink(oldImagePath, (err) => {
-          if (err) console.error("Error deleting old image:", err);
-        });
+      if (existingUser.profileImage && typeof existingUser.profileImage === "string") {
+        try {
+          const oldImagePath = path.resolve(process.cwd(), "profilePhotoUploads", path.basename(existingUser.profileImage));
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        } catch (err) {
+          console.error("Error deleting old image:", err);
+        }
       }
-
-      // Set new profile image path
       req.body.profileImage = `/profilePhotoUploads/${req.file.filename}`;
     }
 
-    // ✅ Parse mentorAbilities from string if present
-    const updateFields = {
-      ...req.body,
-      mentorAbilities: req.body.mentorAbilities
-        ? JSON.parse(req.body.mentorAbilities)
-        : [],
-    };
+    // Build update fields
+    const updateFields = { ...req.body };
 
-    delete updateFields.email; // prevent email from being updated
+    // Parse JSON fields sent via FormData
+    if (typeof req.body.mentorAbilities === "string") {
+      try {
+        updateFields.mentorAbilities = JSON.parse(req.body.mentorAbilities);
+      } catch (err) {
+        // if parsing failed, keep as single string or empty array
+        updateFields.mentorAbilities = req.body.mentorAbilities ? [req.body.mentorAbilities] : [];
+      }
+    }
+
+    if (typeof req.body.education === "string") {
+      try {
+        updateFields.education = JSON.parse(req.body.education);
+      } catch (err) {
+        updateFields.education = [];
+      }
+    }
+
+    // prevent updating email
+    delete updateFields.email;
 
     const updatedUser = await User.findOneAndUpdate(
       { email },
