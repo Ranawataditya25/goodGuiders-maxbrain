@@ -6,7 +6,7 @@ import Dashboard2 from "./pages/Dashboard2";
 import Dashboard3 from "./pages/Dashboard3";
 
 import All_doctor from "./pages/All_doctor";
-import Add_doctor from "./pages/Add_doctor";
+// import Add_doctor from "./pages/Add_doctor";
 import Edit_doctor from "./pages/Edit_doctor";
 
 import AssignTest from "./pages/AssignTest";
@@ -19,7 +19,7 @@ import MyAssignments from "./pages/MyAssignments";
 import ExamInstructions from "./pages/ExamInstructions";
 
 import All_patient from "./pages/All_patient";
-import Add_patient from "./pages/Add_patient";
+// import Add_patient from "./pages/Add_patient";
 import Edit_patient from "./pages/Edit_patient";
 
 import Doctor_schedule from "./pages/Doctor_schedule";
@@ -178,7 +178,7 @@ function AppContent() {
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
 
         <Route exact path="/all-doctors" element={<All_doctor />} />
-        <Route exact path="/add-doctor" element={<Add_doctor />} />
+        {/* <Route exact path="/add-doctor" element={<Add_doctor />} /> */}
         <Route exact path="/edit-doctor" element={<Edit_doctor />} />
 
         {/* Classes CRUD */}
@@ -199,7 +199,7 @@ function AppContent() {
         <Route exact path="/my-assignments" element={<MyAssignments />} />
 
         <Route exact path="/all-patients" element={<All_patient />} />
-        <Route exact path="/add-patient" element={<Add_patient />} />
+        {/* <Route exact path="/add-patient" element={<Add_patient />} /> */}
         <Route exact path="/edit-patient" element={<Edit_patient />} />
 
         <Route exact path="/test-page" element={<TestPage />} />

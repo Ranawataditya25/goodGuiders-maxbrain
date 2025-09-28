@@ -9,7 +9,6 @@
 // // // For Font Awesome CSS
 // // import 'font-awesome/css/font-awesome.min.css';
 
-
 // // const menuPaths = {
 // //     Dashboards: ["/index", "/doctor-dashboard", "/patient-dashboard"],
 // //     Mentor: ["/all-doctors", "/add-doctor", "/edit-doctor"],
@@ -27,7 +26,7 @@
 // // };
 // // export default function Sidebar() {
 
-// //  // Sidebar Menu    
+// //  // Sidebar Menu
 // //     const location = useLocation();
 // //     const [activeIndex, setActiveIndex] = useState(null);
 
@@ -40,10 +39,10 @@
 
 // //     const handleMenuClick = (index) => {
 // //         setActiveIndex(prevIndex => (prevIndex === index ? null : index));
-// //     };      
+// //     };
 
 // //     // Sidebar Action
-// //     const { toggleSidebar } = useSidebarContext();   
+// //     const { toggleSidebar } = useSidebarContext();
 // //     return (
 // //         <div className="codex-sidebar">
 // //             <div className="logo-gridwrap">
@@ -249,8 +248,8 @@
 // //                     <li onClick={() => handleMenuClick(9)} className={`menu-item ${activeIndex === 9 ? 'active' : ''}`}>
 // //                         <Link >
 // //                             <div className="icon-item">
-                                
-// //                             <i className="fa fa-sitemap"></i> 
+
+// //                             <i className="fa fa-sitemap"></i>
 // //                             </div>
 // //                             <span>Forms</span>
 // //                             <i className="fa fa-angle-down"></i>
@@ -396,10 +395,6 @@
 // //     )
 // // }
 
-
-
-
-
 // // import React, { useEffect, useState } from 'react';
 // // import { Link, useLocation } from "react-router-dom";
 // // import SimpleBar from 'simplebar-react';
@@ -410,7 +405,6 @@
 // // import sidebarvactor from '/src/assets/images/pro-sec.png';
 // // // For Font Awesome CSS
 // // import 'font-awesome/css/font-awesome.min.css';
-
 
 // // const menuPaths = {
 // //     Dashboards: ["/index", "/doctor-dashboard", "/patient-dashboard"],
@@ -429,7 +423,7 @@
 // // };
 // // export default function Sidebar() {
 
-// //  // Sidebar Menu    
+// //  // Sidebar Menu
 // //     const location = useLocation();
 // //     const [activeIndex, setActiveIndex] = useState(null);
 
@@ -442,10 +436,10 @@
 
 // //     const handleMenuClick = (index) => {
 // //         setActiveIndex(prevIndex => (prevIndex === index ? null : index));
-// //     };      
+// //     };
 
 // //     // Sidebar Action
-// //     const { toggleSidebar } = useSidebarContext();   
+// //     const { toggleSidebar } = useSidebarContext();
 // //     return (
 // //         <div className="codex-sidebar">
 // //             <div className="logo-gridwrap">
@@ -628,7 +622,7 @@
 // //                             </li>
 // //                         </ul>
 // //                     </li>
-                
+
 // //                 </ul>
 // //             </SimpleBar>
 // //             {/* <div className="sidebarpro-sec">
@@ -640,9 +634,6 @@
 // //     )
 // // }
 
-
-
-
 // // import React, { useEffect, useState } from 'react';
 // // import { Link, useLocation } from "react-router-dom";
 // // import SimpleBar from 'simplebar-react';
@@ -651,7 +642,6 @@
 // // import logo from '/src/assets/images/logo/icon-logo.png';
 // // import logo1 from '/src/assets/images/logo/icon-logo.png';
 // // import 'font-awesome/css/font-awesome.min.css';
-
 
 // // const menuPaths = {
 // //     Dashboards: ["/index", "/doctor-dashboard", "/patient-dashboard"],
@@ -858,8 +848,6 @@
 // //         </div>
 // //     );
 // // }
-
-
 
 // // import React, { useEffect, useState } from 'react';
 // // import { Link, useLocation } from "react-router-dom";
@@ -1070,12 +1058,6 @@
 // //     );
 // // }
 
-
-
-
-
-
-
 // // import React, { useEffect, useState } from 'react';
 // // import { Link, useLocation } from "react-router-dom";
 // // import SimpleBar from 'simplebar-react';
@@ -1101,13 +1083,11 @@
 // //     const [activeIndex, setActiveIndex] = useState(null);
 // //     const [userEmail, setUserEmail] = useState(null);
 
-    
 // //     useEffect(() => {
 // //         const email = localStorage.getItem("userEmail");
 // //         setUserEmail(email);
 // //     }, []);
 
-   
 // //     useEffect(() => {
 // //         const currentPath = location.pathname;
 // //         const category = Object.keys(menuPaths).find(key =>
@@ -1343,9 +1323,6 @@
 // //     );
 // // }
 
-
-
-
 // // import React, { useEffect, useState } from 'react';
 // // import { Link, useLocation } from "react-router-dom";
 // // import SimpleBar from 'simplebar-react';
@@ -1530,10 +1507,6 @@
 // //   );
 // // }
 
-
-
-
-
 // // import React, { useEffect, useState } from 'react';
 // // import { Link, useLocation } from "react-router-dom";
 // // import SimpleBar from 'simplebar-react';
@@ -1644,12 +1617,12 @@
 // //             </Link>
 // //             <ul className="submenu-list">
 // //               <li><Link to="/all-doctors">All Mentor</Link></li>
-           
+
 // //                 <>
 // //                   <li><Link to="/add-doctor">Add Mentor</Link></li>
 // //                   <li><Link to="/edit-doctor">Edit Mentor</Link></li>
 // //                 </>
-           
+
 // //             </ul>
 // //           </li>
 
@@ -1725,10 +1698,6 @@
 // //     </div>
 // //   );
 // // }
-
-
-
-
 
 // // import React, { useEffect, useState } from 'react';
 // // import { Link, useLocation } from "react-router-dom";
@@ -1924,8 +1893,6 @@
 // //   );
 // // }
 
-
-
 // import React, { useEffect, useState } from 'react';
 // import { Link, useLocation } from "react-router-dom";
 // import SimpleBar from 'simplebar-react';
@@ -2039,7 +2006,7 @@
 //             </Link>
 //             <ul className="submenu-list">
 //               <li><Link to="/all-doctors">All Mentor</Link></li>
-           
+
 //               {isAdmin && (
 //                 <>
 //                   <li><Link to="/add-doctor">Add Mentor</Link></li>
@@ -2058,7 +2025,7 @@
 //             </Link>
 //             <ul className="submenu-list">
 //               <li><Link to="/all-patients">All Student</Link></li>
-             
+
 //               {isAdmin && (
 //                 <>
 //                   <li><Link to="/add-patient">Add Student</Link></li>
@@ -2122,13 +2089,6 @@
 //     </div>
 //   );
 // }
-
-
-
-
-
-
-
 
 // // import React, { useEffect, useState } from 'react';
 // // import { Link, useLocation } from "react-router-dom";
@@ -2243,10 +2203,10 @@
 // //             </Link>
 // //             <ul className="submenu-list">
 // //               <li><Link to="/all-doctors">All Mentor</Link></li>
-           
+
 // //               <li><Link to="/add-doctor">Add Mentor</Link></li>
 // //                   <li><Link to="/edit-doctor">Edit Mentor</Link></li>
-            
+
 // //             </ul>
 // //           </li>
 
@@ -2259,11 +2219,10 @@
 // //             </Link>
 // //             <ul className="submenu-list">
 // //               <li><Link to="/all-patients">All Student</Link></li>
-             
-               
+
 // //                   <li><Link to="/add-patient">Add Student</Link></li>
 // //                   <li><Link to="/edit-patient">Edit Student</Link></li>
-            
+
 // //             </ul>
 // //           </li>
 
@@ -2321,9 +2280,6 @@
 // //     </div>
 // //   );
 // // }
-
-
-
 
 // import React, { useEffect, useState } from 'react';
 // import { Link, useLocation } from "react-router-dom";
@@ -2515,13 +2471,6 @@
 //   );
 // }
 
-
-
-
-
-
-
-
 // import React, { useEffect, useState } from 'react';
 // import { Link, useLocation } from "react-router-dom";
 // import SimpleBar from 'simplebar-react';
@@ -2613,10 +2562,6 @@
 //     );
 // }
 
-
-
-
-
 // import React, { useEffect, useState } from 'react';
 // import { Link, useLocation } from "react-router-dom";
 // import SimpleBar from 'simplebar-react';
@@ -2647,7 +2592,7 @@
 //   const { toggleSidebar } = useSidebarContext();
 
 //   useEffect(() => {
-  
+
 //       const email = localStorage.getItem('loggedInEmail');
 //     console.log("Logged-in Email:", email);
 //     setUserEmail(email);
@@ -2670,12 +2615,9 @@
 //   const isStudent = userEmail === "student@gmail.com";
 //   const isAdmin = userEmail === "admin@gmail.com";
 
-  
 //   if (userEmail === null) {
 //     return null;
 //   }
-
-  
 
 //   return (
 //     <div className="codex-sidebar">
@@ -2698,7 +2640,6 @@
 //         <ul>
 //           <li className="cdxmenu-title"><h5>main</h5></li>
 
-        
 //           <li onClick={() => handleMenuClick(0)} className={`menu-item ${activeIndex === 0 ? "active" : ""}`}>
 //             <Link>
 //               <div className="icon-item"><FeatherIcon icon="home" /></div>
@@ -2706,7 +2647,7 @@
 //               <i className="fa fa-angle-down"></i>
 //             </Link>
 //             <ul className="submenu-list">
-             
+
 //      {isAdmin && (
 //     <>
 //       <li><Link to="/">Super Admin Dashboard</Link></li>
@@ -2759,13 +2700,13 @@
 //                 {isAdmin && <li><Link to="/all-patients">All Student</Link></li>}
 //                 {isMentor && <li><Link to="/all-patients">Profile</Link></li>}
 //                 {isStudent && <li><Link to="/all-patients">Profile</Link></li> }
-            
+
 //         {isStudent &&  <li><Link to="/edit-patient">Edit Profile</Link></li>}
 //             {isMentor &&  <li><Link to="/edit-patient">Edit Profile</Link></li>}
 //               {isAdmin && (
 //                 <>
 //                   <li><Link to="/add-patient">Add Student</Link></li>
-              
+
 //                   <li><Link to="/edit-patient">Edit Student</Link></li>
 //                 </>
 //               )}
@@ -2836,35 +2777,38 @@
 //   );
 // }
 
-
-
-
-
-
-
-
-
-
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import SimpleBar from 'simplebar-react';
-import FeatherIcon from 'feather-icons-react';
-import { useSidebarContext } from '../pages/api/useSidebarContext';
-import logo from '/src/assets/images/logo/icon-logo.png';
-import logo1 from '/src/assets/images/logo/icon-logo.png';
-import 'font-awesome/css/font-awesome.min.css';
+import SimpleBar from "simplebar-react";
+import FeatherIcon from "feather-icons-react";
+import { useSidebarContext } from "../pages/api/useSidebarContext";
+import logo from "/src/assets/images/logo/icon-logo.png";
+import logo1 from "/src/assets/images/logo/icon-logo.png";
+import "font-awesome/css/font-awesome.min.css";
 
 const menuPaths = {
   Dashboards: ["/index", "/doctor-dashboard", "/patient-dashboard"],
   Mentor: ["/all-doctors", "/add-doctor", "/edit-doctor"],
   Student: ["/all-patients", "/add-patient", "/edit-patient"],
   Classes: ["/classes"],
-  Appointments: ["/doctor-schedule", "/add-appointment", "/edit-appointment", "/appointment-list"],
+  Appointments: [
+    "/doctor-schedule",
+    "/add-appointment",
+    "/edit-appointment",
+    "/appointment-list",
+  ],
   Billing: ["/payment-list", "/add-payment", "/patient-invoice"],
   EventManagement: ["/event-management"],
-  AccessPages: ["/login", "/register", "/forgot-password", "/new-password", "/verify-email", "/verify-pin", "/error-page"],
-  Support: ["/faq", "/support"]
+  AccessPages: [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/new-password",
+    "/verify-email",
+    "/verify-pin",
+    "/error-page",
+  ],
+  Support: ["/faq", "/support"],
 };
 
 export default function Sidebar() {
@@ -2878,20 +2822,20 @@ export default function Sidebar() {
 
   const [userRole, setUserRole] = useState(null);
 
-useEffect(() => {
-  const storedUser = localStorage.getItem("loggedInUser");
-  if (storedUser) {
-    const parsedUser = JSON.parse(storedUser);
-    const email = parsedUser.email;
-    console.log("Logged-in Email:", email);
-    setUserEmail(email);
-    setUserRole(parsedUser.role);
-  }
-}, []);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("loggedInUser");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      const email = parsedUser.email;
+      console.log("Logged-in Email:", email);
+      setUserEmail(email);
+      setUserRole(parsedUser.role);
+    }
+  }, []);
 
   useEffect(() => {
     const currentPath = location.pathname;
-    const category = Object.keys(menuPaths).find(key =>
+    const category = Object.keys(menuPaths).find((key) =>
       menuPaths[key].includes(currentPath)
     );
     const index = category ? Object.keys(menuPaths).indexOf(category) : null;
@@ -2899,7 +2843,7 @@ useEffect(() => {
   }, [location.pathname]);
 
   const handleMenuClick = (index) => {
-    setActiveIndex(prevIndex => (prevIndex === index ? null : index));
+    setActiveIndex((prevIndex) => (prevIndex === index ? null : index));
   };
 
   // const isMentor = userEmail === "mentor@gmail.com";
@@ -2910,16 +2854,11 @@ useEffect(() => {
   const isStudent = userRole === "student";
   const isAdmin = userRole === "admin";
 
-
-  
   if (userEmail === null) {
     return null;
   }
 
   if (!userRole) return null;
-
-  
-
 
   return (
     <div className="codex-sidebar">
@@ -2940,168 +2879,276 @@ useEffect(() => {
 
       <SimpleBar className="codex-menu custom-scroll">
         <ul>
-          <li className="cdxmenu-title"><h5>main</h5></li>
+          <li className="cdxmenu-title">
+            <h5>main</h5>
+          </li>
 
-        
-          <li onClick={() => handleMenuClick(0)} className={`menu-item ${activeIndex === 0 ? "active" : ""}`}>
+          {/* Dashboard */}
+          <li
+            onClick={() => handleMenuClick(0)}
+            className={`menu-item ${activeIndex === 0 ? "active" : ""}`}
+          >
             <Link>
-              <div className="icon-item"><FeatherIcon icon="home" /></div>
-              <span>dashboard</span>
+              <div className="icon-item">
+                <FeatherIcon icon="home" />
+              </div>
+              <span>Dashboard</span>
               <i className="fa fa-angle-down"></i>
             </Link>
             <ul className="submenu-list">
-             
-     {isAdmin && (
-    <>
-      <li><Link to="/">Super Admin Dashboard</Link></li>
-      <li><Link to="/doctor-dashboard">Mentor Dashboard</Link></li>
-      <li><Link to="/patient-dashboard">Student Dashboard</Link></li>
-      <li><Link to="/classes">Class Management</Link></li>
-    </>
-  )}
+              {isAdmin && (
+                <>
+                  <li>
+                    <Link to="/admin-dashboard">Admin Dashboard</Link>
+                  </li>
+                  <li>
+                    <Link to="/classes">Class Management</Link>
+                  </li>
+                </>
+              )}
 
-  {isMentor && !isAdmin && (
-    <li><Link to="/doctor-dashboard">Mentor Dashboard</Link></li>
-  )}
+              {isMentor && !isAdmin && (
+                <li>
+                  <Link to="/doctor-dashboard">Mentor Dashboard</Link>
+                </li>
+              )}
 
-  {isStudent && !isAdmin && (
-    <li><Link to="/patient-dashboard">Student Dashboard</Link></li>
-  )}
+              {isStudent && !isAdmin && (
+                <li>
+                  <Link to="/patient-dashboard">Student Dashboard</Link>
+                </li>
+              )}
             </ul>
           </li>
 
           {/* Mentor */}
-          <li onClick={() => handleMenuClick(1)} className={`menu-item ${activeIndex === 1 ? "active" : ""}`}>
+          <li
+            onClick={() => handleMenuClick(1)}
+            className={`menu-item ${activeIndex === 1 ? "active" : ""}`}
+          >
             <Link>
-              <div className="icon-item"><i className="fa fa-user-md"></i></div>
+              <div className="icon-item">
+                <i className="fa fa-user-md"></i>
+              </div>
               <span>Mentor</span>
               <i className="fa fa-angle-down"></i>
             </Link>
             <ul className="submenu-list">
-              <li><Link to="/all-doctors">All Mentor</Link></li>
-              {isAdmin && (
-                <>
-                  <li><Link to="/add-doctor">Add Mentor</Link></li>
-                  <li><Link to="/edit-doctor">Edit Mentor</Link></li>
-                </>
+              {/* All mentors visible to all */}
+              <li>
+                <Link to="/all-doctors">
+                  {isMentor ? "Assign Test" : "All Mentor"}
+                </Link>
+              </li>
+            </ul>
+          </li>
+
+          {/* Student */}
+          <li
+            onClick={() => handleMenuClick(2)}
+            className={`menu-item ${activeIndex === 2 ? "active" : ""}`}
+          >
+            <Link>
+              <div className="icon-item">
+                <i className="fa fa-wheelchair" aria-hidden="true"></i>
+              </div>
+              {/* Role-based label */}
+              {isAdmin && <span>Student</span>}
+              {isMentor && <span>My Profile</span>}
+              {isStudent && <span>My Profile</span>}
+              <i className="fa fa-angle-down"></i>
+            </Link>
+            <ul className="submenu-list">
+              {/* All student page visible only to Admin and Mentor */}
+              {(isAdmin || isMentor) && (
+                <li>
+                  <Link to="/all-patients">All Student</Link>
+                </li>
+              )}
+
+              {/* Edit Profile links */}
+              {isStudent && (
+                <li>
+                  <Link to="/edit-patient">Edit Profile</Link>
+                </li>
+              )}
+              {isMentor && (
+                <li>
+                  <Link to="/edit-doctor">Edit Profile</Link>
+                </li>
               )}
             </ul>
           </li>
 
           {/* Student */}
-          <li onClick={() => handleMenuClick(2)} className={`menu-item ${activeIndex === 2 ? "active" : ""}`}>
+          <li
+            onClick={() => handleMenuClick(8)}
+            className={`menu-item ${activeIndex === 8 ? "active" : ""}`}
+          >
             <Link>
-              <div className="icon-item"><i className="fa fa-wheelchair" aria-hidden="true"></i></div>
+              <div className="icon-item">
+                <i className="fa fa-wheelchair" aria-hidden="true"></i>
+              </div>
               {/* <span>Student</span> */}
-              {isAdmin && <span>Student</span>  }
-                {isMentor && <span>My Profile</span>  }
-                  {isStudent && <span>My Profile</span>  }
+              {isAdmin && <span>Assigned Test</span>}
+              {isMentor && <span>Test Assigned To Students</span>}
+              {isStudent && <span>My Tests</span>}
 
               <i className="fa fa-angle-down"></i>
             </Link>
             <ul className="submenu-list">
-
-                {isAdmin && <li><Link to="/all-patients">All Student</Link></li>}
-                {isMentor && <li><Link to="/all-patients">Profile</Link></li>}
-                {isStudent && <li><Link to="/all-patients">Profile</Link></li> }
-            
-        {isStudent &&  <li><Link to="/edit-patient">Edit Profile</Link></li>}
-            {isMentor &&  <li><Link to="/edit-doctor">Edit Profile</Link></li>}
               {isAdmin && (
-                <>
-                  <li><Link to="/add-patient">Add Student</Link></li>
-              
-                  <li><Link to="/edit-patient">Edit Student</Link></li>
-                </>
+                <li>
+                  <Link to="/all-patients">All Student</Link>
+                </li>
               )}
-            </ul>
-          </li>
+              {isMentor && (
+                <li>
+                  <Link to="/all-patients">Profile</Link>
+                </li>
+              )}
+              {isStudent && (
+                <li>
+                  <Link to="/my-assignments">Tests</Link>
+                </li>
+              )}
 
-          {/* Student */}
-          <li onClick={() => handleMenuClick(8)} className={`menu-item ${activeIndex === 8 ? "active" : ""}`}>
-            <Link>
-              <div className="icon-item"><i className="fa fa-wheelchair" aria-hidden="true"></i></div>
-              {/* <span>Student</span> */}
-              {isAdmin && <span>Assigned Test</span>  }
-                {isMentor && <span>Test Assigned To Students</span>  }
-                  {isStudent && <span>My Tests</span>  }
-
-              <i className="fa fa-angle-down"></i>
-            </Link>
-            <ul className="submenu-list">
-
-                {isAdmin && <li><Link to="/all-patients">All Student</Link></li>}
-                {isMentor && <li><Link to="/all-patients">Profile</Link></li>}
-                {isStudent && <li><Link to="/my-assignments">Tests</Link></li> }
-            
-        {isStudent &&  <li><Link to="/edit-patient">Edit Profile</Link></li>}
-            {isMentor &&  <li><Link to="/edit-doctor">Edit Profile</Link></li>}
+              {isStudent && (
+                <li>
+                  <Link to="/edit-patient">Edit Profile</Link>
+                </li>
+              )}
+              {isMentor && (
+                <li>
+                  <Link to="/edit-doctor">Edit Profile</Link>
+                </li>
+              )}
               {isAdmin && (
                 <>
-                  <li><Link to="/add-patient">Add Student</Link></li>
-              
-                  <li><Link to="/edit-patient">Edit Student</Link></li>
+                  <li>
+                    <Link to="/add-patient">Add Student</Link>
+                  </li>
+
+                  <li>
+                    <Link to="/edit-patient">Edit Student</Link>
+                  </li>
                 </>
               )}
             </ul>
           </li>
 
           {/* Appointments */}
-          <li onClick={() => handleMenuClick(3)} className={`menu-item ${activeIndex === 3 ? "active" : ""}`}>
+          <li
+            onClick={() => handleMenuClick(3)}
+            className={`menu-item ${activeIndex === 3 ? "active" : ""}`}
+          >
             <Link>
-              <div className="icon-item"><i className="fa fa-calendar"></i></div>
+              <div className="icon-item">
+                <i className="fa fa-calendar"></i>
+              </div>
               <span>Appointments</span>
               <i className="fa fa-angle-down"></i>
             </Link>
             <ul className="submenu-list">
-              <li><Link to="/doctor-schedule">Mentor Schedule</Link></li>
-              <li><Link to="/add-appointment">Add Appointment</Link></li>
-              <li><Link to="/edit-appointment">Edit Appointment</Link></li>
+              <li>
+                <Link to="/doctor-schedule">Mentor Schedule</Link>
+              </li>
+              <li>
+                <Link to="/add-appointment">Add Appointment</Link>
+              </li>
+              <li>
+                <Link to="/edit-appointment">Edit Appointment</Link>
+              </li>
 
-            {isAdmin && <li><Link to="/appointment-list">View All Appointments</Link></li>}
+              {isAdmin && (
+                <li>
+                  <Link to="/appointment-list">View All Appointments</Link>
+                </li>
+              )}
 
-            {isMentor &&   <li><Link to="/appointment-list">My Appointments</Link></li>}
-            {isStudent &&   <li><Link to="/appointment-list">My Appointments</Link></li>}
-
+              {isMentor && (
+                <li>
+                  <Link to="/appointment-list">My Appointments</Link>
+                </li>
+              )}
+              {isStudent && (
+                <li>
+                  <Link to="/appointment-list">My Appointments</Link>
+                </li>
+              )}
             </ul>
           </li>
 
           {/* Billing */}
-          <li onClick={() => handleMenuClick(4)} className={`menu-item ${activeIndex === 4 ? "active" : ""}`}>
+          <li
+            onClick={() => handleMenuClick(4)}
+            className={`menu-item ${activeIndex === 4 ? "active" : ""}`}
+          >
             <Link>
-              <div className="icon-item"><FeatherIcon icon="file" /></div>
+              <div className="icon-item">
+                <FeatherIcon icon="file" />
+              </div>
               <span>Billing</span>
               <i className="fa fa-angle-down"></i>
             </Link>
             <ul className="submenu-list">
-              <li><Link to="/payment-list">Payment</Link></li>
-              <li><Link to="/add-payment">Add Payment</Link></li>
+              <li>
+                <Link to="/payment-list">Payment</Link>
+              </li>
+              <li>
+                <Link to="/add-payment">Add Payment</Link>
+              </li>
 
-            {isAdmin &&  <li><Link to="/patient-invoice">Student Invoice</Link></li>}
-            {isStudent &&  <li><Link to="/patient-invoice">My Invoice</Link></li>}
-            {isMentor &&  <li><Link to="/patient-invoice">My Invoice</Link></li>}
-
+              {isAdmin && (
+                <li>
+                  <Link to="/patient-invoice">Student Invoice</Link>
+                </li>
+              )}
+              {isStudent && (
+                <li>
+                  <Link to="/patient-invoice">My Invoice</Link>
+                </li>
+              )}
+              {isMentor && (
+                <li>
+                  <Link to="/patient-invoice">My Invoice</Link>
+                </li>
+              )}
             </ul>
           </li>
 
           {/* Event Management */}
-          <li onClick={() => handleMenuClick(5)} className={`menu-item ${activeIndex === 5 ? "active" : ""}`}>
+          <li
+            onClick={() => handleMenuClick(5)}
+            className={`menu-item ${activeIndex === 5 ? "active" : ""}`}
+          >
             <Link to="/event-management">
-              <div className="icon-item"><FeatherIcon icon="list" /></div>
+              <div className="icon-item">
+                <FeatherIcon icon="list" />
+              </div>
               <span>Event Management</span>
             </Link>
           </li>
 
           {/* Support */}
-          <li onClick={() => handleMenuClick(7)} className={`menu-item ${activeIndex === 7 ? "active" : ""}`}>
+          <li
+            onClick={() => handleMenuClick(7)}
+            className={`menu-item ${activeIndex === 7 ? "active" : ""}`}
+          >
             <Link>
-              <div className="icon-item"><i className="fa fa-life-ring"></i></div>
+              <div className="icon-item">
+                <i className="fa fa-life-ring"></i>
+              </div>
               <span>Support</span>
               <i className="fa fa-angle-down"></i>
             </Link>
             <ul className="submenu-list">
-              <li><Link to="/faq">FAQ</Link></li>
-              <li><Link to="/support">Help Center</Link></li>
+              <li>
+                <Link to="/faq">FAQ</Link>
+              </li>
+              <li>
+                <Link to="/support">Help Center</Link>
+              </li>
             </ul>
           </li>
         </ul>

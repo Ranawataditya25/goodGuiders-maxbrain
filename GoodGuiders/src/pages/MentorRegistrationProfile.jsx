@@ -23,6 +23,7 @@ export default function MentorRegistrationProfile() {
     experience: "",
     mentorAbilities: [],
     specializedIn: "",
+    latestDegree: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -181,6 +182,20 @@ export default function MentorRegistrationProfile() {
                             <option value="Female">Female</option>
                             <option value="Other">Others</option>
                           </Form.Select>
+                        </Form.Group>
+                      </Col>
+
+                      {/* Specialization */}
+                      <Col md={4}>
+                        <Form.Group className="mb-20">
+                          <Form.Label>Latest Degree</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="latestDegree"
+                            value={formData.latestDegree}
+                            onChange={handleInputChange}
+                            required
+                          />
                         </Form.Group>
                       </Col>
 

@@ -16,20 +16,33 @@ export default function AdminMentorRequests() {
   }, []);
 
   // approve or reject mentor
-  const updateStatus = (id, status) => {
-    fetch(`http://127.0.0.1:5000/api/mentor/mentor-status/${id}`, {
+const updateStatus = async (id, status) => {
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/mentor/mentor-status/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mentorStatus: status }),
-    })
-      .then((res) => res.json())
-      .then(() => {
-        // update UI
-        setMentors((prev) => prev.filter((m) => m._id !== id));
-        alert(`Mentor ${status}`);
-      })
-      .catch((err) => console.error(err));
-  };
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(`❌ ${data.error || "Something went wrong"}`);
+      return;
+    }
+
+    alert(`Mentor ${status}`);
+
+    // Only remove from list if approved or rejected
+    if (status === "approved" || status === "rejected") {
+      setMentors((prev) => prev.filter((m) => m._id !== id));
+    }
+    // If status is verifyDocs, keep in the list
+  } catch (err) {
+    console.error(err);
+    alert("Server error. Please try again.");
+  }
+};
 
   if (loading) return <p>Loading...</p>;
 
@@ -38,7 +51,7 @@ export default function AdminMentorRequests() {
       <h1>Mentor Requests</h1>
       {mentors.length === 0 && <p>No pending requests</p>}
 
-      <table className="table table-bordered mt-9">
+      <table className="table table-bordered mt-3">
         <thead>
           <tr>
             <th>Name</th>
@@ -66,9 +79,7 @@ export default function AdminMentorRequests() {
               <td>{mentor?.email || "-"}</td>
               <td>{mentor?.mobileNo || "-"}</td>
               <td>
-                {mentor?.dob
-                  ? new Date(mentor.dob).toLocaleDateString()
-                  : "-"}
+                {mentor?.dob ? new Date(mentor.dob).toLocaleDateString() : "-"}
               </td>
               <td>{mentor?.gender || "-"}</td>
               <td>{mentor?.city || "-"}</td>
@@ -78,22 +89,16 @@ export default function AdminMentorRequests() {
               <td>{mentor?.address || "-"}</td>
               <td>{mentor?.bio || "-"}</td>
               <td>{mentor?.experience || "-"}</td>
-
-              {/* Handle array or string for abilities */}
               <td>
                 {Array.isArray(mentor?.mentorAbilities)
                   ? mentor.mentorAbilities.join(", ")
                   : mentor?.mentorAbilities || "-"}
               </td>
-
-              {/* Handle array or string for specializedIn */}
               <td>
                 {Array.isArray(mentor?.specializedIn)
                   ? mentor.specializedIn.join(", ")
                   : mentor?.specializedIn || "-"}
               </td>
-
-              
               <td>
                 <button
                   className="btn btn-success btn-sm me-2"
@@ -102,10 +107,16 @@ export default function AdminMentorRequests() {
                   Approve
                 </button>
                 <button
-                  className="btn btn-danger btn-sm"
+                  className="btn btn-danger btn-sm me-2"
                   onClick={() => updateStatus(mentor._id, "rejected")}
                 >
                   Reject
+                </button>
+                <button
+                  className="btn btn-warning btn-sm"
+                  onClick={() => updateStatus(mentor._id, "verifyDocs")}
+                >
+                  Verify Degree
                 </button>
               </td>
             </tr>

@@ -1,13 +1,16 @@
 import mongoose from "mongoose";
 
-const EducationSchema = new mongoose.Schema({
-  className: String,
-  degree: String,
-  passout: String,
-  board: String,
-  subject: String,
-  grade: String,
-}, { _id: false });
+const EducationSchema = new mongoose.Schema(
+  {
+    className: String,
+    degree: String,
+    passout: String,
+    board: String,
+    subject: String,
+    grade: String,
+  },
+  { _id: false }
+);
 
 const userSchema = new mongoose.Schema(
   {
@@ -58,7 +61,7 @@ const userSchema = new mongoose.Schema(
     address: String,
     profileImage: {
       type: String, // Store the relative path like "/uploads/abc.jpg"
-      default: "/default-avatar.png", 
+      default: "/default-avatar.png",
     },
 
     // ✅ Mentor-specific fields
@@ -66,12 +69,13 @@ const userSchema = new mongoose.Schema(
     mentorAbilities: [String],
     bio: String,
     experience: String,
+    latestDegree: String,
 
-     // Mentor approval status
+    // Mentor approval status
     mentorStatus: {
       type: String,
-      enum: ["pending", "approved", "rejected", ""],
-      default: "",
+      enum: ["pending", "approved", "rejected", "verifyDocs"],
+      default: "pending", // better than empty string
     },
 
     // NEW: education array
@@ -84,6 +88,5 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
 
 export default mongoose.model("User", userSchema);

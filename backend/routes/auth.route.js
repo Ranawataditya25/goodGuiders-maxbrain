@@ -76,29 +76,27 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ msg: "Invalid email or password" });
     }
 
-    // 🚨 Check mentor approval before allowing login
-    if (user.role === "mentor" && user.mentorStatus !== "approved") {
-      return res.status(403).json({
-        msg:
-          user.mentorStatus === "pending"
-            ? "Your mentor profile is still pending admin approval."
-            : "Your mentor application was rejected by admin.",
-      });
+    // 🚨 Mentor approval checks
+    if (user.role === "mentor") {
+      if (user.mentorStatus === "pending") {
+        return res.status(403).json({ msg: "Your mentor profile is still pending admin review." });
+      }
+      if (user.mentorStatus === "rejected") {
+        return res.status(403).json({ msg: "Your mentor application was rejected by admin." });
+      }
+      if (user.mentorStatus === "verifyDocs") {
+        return res.status(403).json({ msg: "Please check your email and submit your latest degree documents for verification before logging in." });
+      }
     }
 
-    // ✅ Get full profile (except password)
+    // ✅ Successful login
     const fullUser = await User.findOne({ email }).select("-password");
-
-    res.json({
-      msg: "Login successful",
-      user: fullUser,
-    });
+    res.json({ msg: "Login successful", user: fullUser });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 });
-
 
 // 👉 GET /api/auth/dashboard?email=...
 router.get("/dashboard", async (req, res) => {

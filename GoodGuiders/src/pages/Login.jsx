@@ -842,7 +842,6 @@
 //   );
 // }
 
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button, Form, InputGroup } from "react-bootstrap";
@@ -870,49 +869,68 @@ export default function Login() {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { email, password } = formData;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const { email, password } = formData;
 
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await res.json();
-      
+    const data = await res.json();
 
-      if (res.ok) {
-        alert("✅ Login successful!");
-
-        // Save user data locally if needed
-        localStorage.setItem("loggedInUser", JSON.stringify(data.user));
-
-        // const role = data.user?.role?.toLowerCase();
-
-        // Navigate based on role
-        if (data.user.role === "admin") {
-          navigate("/admin-dashboard");
-        } else if (data.user.role === "student") {
-          navigate("/patient-dashboard");
-        } else if (data.user.role === "mentor") {
-          navigate("/doctor-dashboard");
-        } else {
-          navigate("/");
-          console.log(data)
-        }
-      } else {
-        alert(`❌ ${data.msg}`);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Server error. Please try again.");
+    if (!res.ok) {
+      alert(`❌ ${data.msg}`);
+      return;
     }
-  };
+
+    const user = data.user;
+
+    if (user.role === "mentor") {
+      switch (user.mentorStatus) {
+        case "approved":
+          localStorage.setItem("loggedInUser", JSON.stringify(user));
+          navigate("/doctor-dashboard");
+          break;
+        case "rejected":
+          alert(
+            "❌ Your mentor request has been rejected by admin. You cannot login."
+          );
+          break;
+        case "verifyDocs":
+          alert(
+            "📧 Please check your email and upload latest documents for verification before you can login."
+          );
+          break;
+        case "pending":
+        default:
+          alert(
+            "⏳ Your mentor application is still under review. Please wait for admin approval."
+          );
+      }
+    } else {
+      // Non-mentor users (admin or student)
+      localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+      if (user.role === "admin") {
+        navigate("/admin-dashboard");
+      } else if (user.role === "student") {
+        navigate("/patient-dashboard");
+      } else {
+        navigate("/");
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Server error. Please try again.");
+  }
+};
+
 
   return (
     <div className="auth-main" style={{ padding: 30 }}>
@@ -1016,5 +1034,3 @@ export default function Login() {
     </div>
   );
 }
-
-

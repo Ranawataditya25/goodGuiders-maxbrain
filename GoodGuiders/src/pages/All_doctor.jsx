@@ -921,7 +921,7 @@ import { DataTable } from "primereact/datatable";
 import FeatherIcon from "feather-icons-react";
 import { Column } from "primereact/column"; // ✅ import Column
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Row,
@@ -1101,7 +1101,7 @@ export default function All_Mentor() {
                 <Card>
                   <Card.Body>
                     <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
-                      {role === "mentor" && (
+                      {(role === "mentor" || role === "admin") && (
                         <>
                           <Button
                             variant="primary"
@@ -1122,37 +1122,6 @@ export default function All_Mentor() {
                             <FeatherIcon icon="send" className="me-2" />
                             Assign Test
                           </Button>
-                        </>
-                      )}
-
-                      {role === "admin" && (
-                        <>
-                          <Button
-                            variant="primary"
-                            size="lg"
-                            className="px-4 rounded-pill shadow-sm"
-                            onClick={handleTestClick}
-                          >
-                            <FeatherIcon icon="plus-circle" className="me-2" />
-                            Create Mock Test
-                          </Button>
-
-                          <Button
-                            variant="success"
-                            size="lg"
-                            className="px-4 rounded-pill shadow-sm"
-                            onClick={assignTestClick}
-                          >
-                            <FeatherIcon icon="send" className="me-2" />
-                            Assign Test
-                          </Button>
-
-                          <Link
-                            className="btn btn-primary float-end mb-15"
-                            onClick={emailcreat}
-                          >
-                            <i className="fa fa-plus me-2"></i> Add Mentor
-                          </Link>
                         </>
                       )}
                     </div>

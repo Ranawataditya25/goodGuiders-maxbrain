@@ -340,118 +340,152 @@
 
 // src/components/ProfilePage.js
 
-import "./css/ProfilePage.css";
 import { useState, useEffect } from "react";
-import { Container, Spinner, Alert } from "react-bootstrap";
-import SimpleBar from "simplebar-react";
+import { FilterMatchMode, FilterOperator } from "primereact/api";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  InputGroup,
+} from "react-bootstrap";
 
-const ProfilePage = () => {
-  const [user, setUser] = useState(null);
+import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
+import PageBreadcrumb from "../componets/PageBreadcrumb";
+
+export default function All_Student() {
+
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchStudents = async () => {
       try {
-        const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
-        console.log("Stored User:", storedUser);
-
-        if (!storedUser?.email)
-          throw new Error("User not found in localStorage");
-
-        const res = await fetch(
-          `http://localhost:5000/api/profile?email=${storedUser?.email}`
-        );
-        if (!res.ok) throw new Error("Failed to fetch user data");
-
+        const res = await fetch("http://127.0.0.1:5000/api/stats/students");
         const data = await res.json();
-        setUser(data);
+        if (res.ok) {
+          const mappedStudents = data.students.map((s, idx) => ({
+            id: idx + 1,
+            image: `avtar/${(idx % 10) + 1}.jpg`,
+            title: s.name,
+            Email: s.email,
+            Mobile: s.mobileNo || "-",
+            DOB: s.dob || "-",
+            Address: s.address || "-",
+            Class: s.education && s.education.length > 0
+              ? s.education.join(", ")
+              : "-",
+          }));
+          setStudents(mappedStudents);
+        } else {
+          console.error("Error fetching students:", data.message);
+        }
       } catch (err) {
-        console.error(err);
-        setError("Unable to load profile. Please try again.");
+        console.error("Server error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchStudents();
   }, []);
 
-  if (loading)
-    return (
-      <div className="text-center mt-5">
-        <Spinner animation="border" />
-      </div>
-    );
-  if (error)
-    return (
-      <Alert variant="danger" className="mt-3 text-center">
-        {error}
-      </Alert>
-    );
-
-  return (
-    <div className="themebody-wrap">
-      <SimpleBar className="theme-body common-dash">
-        <Container fluid>
-          <div className="profile-container">
-            <div className="profile-left">
-              <img
-                src={
-                  user?.profileImage
-                    ? user.profileImage.startsWith("/profilePhotoUploads")
-                      ? `http://localhost:5000${user.profileImage}`
-                      : `${import.meta.env.BASE_URL}default-avatar.png`
-                    : `${import.meta.env.BASE_URL}default-avatar.png`
-                }
-                alt="Profile"
-                className="profile-pic"
-              />
-
-              <h2>{user.name}</h2>
-              {/* <p className="bio">{user.bio}</p> */}
-            </div>
-
-            <div className="profile-right">
-              <p className="bio">
-                <strong>Name:</strong> {user?.name}
-              </p>
-              <p className="bio">
-                <strong>Email:</strong> {user?.email}
-              </p>
-              <p className="bio">
-                <strong>Date of Birth:</strong> {user?.dob}
-              </p>
-              <p className="bio">
-                <strong>Gender:</strong> {user?.gender}
-              </p>
-              <p className="bio">
-                <strong>Phone Number:</strong> {user?.mobileNo}
-              </p>
-              <p className="bio">
-                <strong>City:</strong> {user?.city}
-              </p>
-              <p className="bio">
-                <strong>State:</strong> {user?.state}
-              </p>
-              <p className="bio">
-                <strong>Country:</strong> {user?.country}
-              </p>
-              <p className="bio">
-                <strong>Address:</strong> {user?.address}
-              </p>
-              <p className="bio">
-                <strong>Zip Code:</strong> {user?.postalCode}
-              </p>
-              {/* <p className="bio"><strong>Graduation:</strong> {user.graduation}</p>
-              <p className="bio"><strong>Post Graduation:</strong> {user.postGraduation}</p>
-              <p className="bio"><strong>PhD:</strong> {user.phd}</p> */}
-            </div>
-          </div>
-        </Container>
-      </SimpleBar>
+  const imageBodyTemplate = ({ image, title }) => (
+    <div className="d-flex align-items-center">
+      <img
+        src={IMAGE_URLS[image]}
+        alt={image}
+        className="product-image rounded-50 w-40"
+      />
+      <span className="ml-10">{title}</span>
     </div>
   );
-};
 
-export default ProfilePage;
+  const [filters1, setFilters1] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    name: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    },
+  });
+
+  const filtersMap = {
+    filters1: { value: filters1, callback: setFilters1 },
+  };
+
+  const onGlobalFilterChange = (event, filtersKey) => {
+    const value = event.target.value;
+    let filters = { ...filtersMap[filtersKey].value };
+    filters.global.value = value;
+    filtersMap[filtersKey].callback(filters);
+  };
+
+  const renderHeader = (filtersKey) => {
+    const filters = filtersMap[filtersKey].value;
+    const value = filters.global ? filters.global.value : "";
+    return (
+      <div className="d-flex justify-content-end align-align-items-baseline">
+        <Form.Group className="d-flex align-items-center">
+          <Form.Label className="pe-3 mb-0">Search</Form.Label>
+          <InputGroup className="px-2">
+            <Form.Control
+              type="search"
+              className="form-control px-2"
+              value={value || ""}
+              onChange={(e) => onGlobalFilterChange(e, filtersKey)}
+              placeholder="Global Search"
+            />
+          </InputGroup>
+        </Form.Group>
+      </div>
+    );
+  };
+
+  const header1 = renderHeader("filters1");
+
+  return (
+    <>
+      <div className="themebody-wrap">
+        <PageBreadcrumb pagename="All Student" />
+        <div className="theme-body">
+          <Container fluid>
+            <Row>
+              <Col>
+                <Card>
+                  <Card.Body>
+                    <DataTable
+                      value={students}
+                      rows={10}
+                      header={header1}
+                      filters={filters1}
+                      paginator
+                      rowsPerPageOptions={[5, 10, 50]}
+                      className="p-datatable-customers"
+                      loading={loading}
+                    >
+                      <Column
+                        header="Name"
+                        sortable
+                        body={imageBodyTemplate}
+                      ></Column>
+                      <Column field="Class" header="Class"></Column>
+                      <Column field="Email" header="Email" sortable></Column>
+                      <Column field="Mobile" header="Mobile" sortable></Column>
+                      <Column field="DOB" header="DOB" sortable></Column>
+                      <Column field="Address" header="Address" sortable></Column>
+                    </DataTable>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </Container>
+        </div>
+      </div>
+    </>
+  );
+}
+
+

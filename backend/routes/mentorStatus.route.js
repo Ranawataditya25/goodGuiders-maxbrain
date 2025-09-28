@@ -1,9 +1,11 @@
 import express from "express";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
 import User from "../models/User.model.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const router = express.Router();
-
 /**
  * Mentor Profile Setup
  * POST /api/mentor/profile-setup
@@ -27,6 +29,7 @@ router.post("/profile-setup", async (req, res) => {
       mentorAbilities,
       specializedIn,
       referredBy,
+      latestDegree, 
     } = req.body;
 
     // check if user already exists
@@ -68,6 +71,7 @@ router.post("/profile-setup", async (req, res) => {
       referralCode,
       referredBy,
       credits: 0, // default
+      latestDegree,
     });
 
     // ✅ referral reward system
@@ -114,30 +118,61 @@ router.get("/pending", async (req, res) => {
 });
 
 
-/**
- * Admin Approval
- * PATCH /api/mentor/mentor-status/:id
- */
+// Admin Approval
+// ✅ PATCH /api/mentor/mentor-status/:id
+
 router.patch("/mentor-status/:id", async (req, res) => {
   try {
-    const { mentorStatus  } = req.body; // "approved" or "rejected"
+    const { mentorStatus } = req.body; // "approved" | "rejected" | "verifyDocs"
 
-    if (!["approved", "rejected"].includes( mentorStatus )) {
+    if (!["approved", "rejected", "verifyDocs"].includes(mentorStatus)) {
       return res.status(400).json({ error: "Invalid status" });
     }
 
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found" });
+
     if (user.role !== "mentor") {
       return res
         .status(400)
         .json({ error: "Only mentors can be approved/rejected" });
     }
 
-    user.mentorStatus = mentorStatus ;
+    // ✅ Update status
+    user.mentorStatus = mentorStatus;
     await user.save();
 
-    res.json({ message: `Mentor ${mentorStatus }`, user });
+    // ✅ Setup nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // ✅ Email text based on action
+    let subject, text;
+    if (mentorStatus === "approved") {
+      subject = "Mentor Application Approved 🎉";
+      text = `Dear ${user.name},\n\nCongratulations! Your mentor application has been approved. You can now log in and start mentoring students.\n\nBest Regards,\nAdmin Team`;
+    } else if (mentorStatus === "rejected") {
+      subject = "Mentor Application Rejected ❌";
+      text = `Dear ${user.name},\n\nWe regret to inform you that your mentor application has been rejected by the admin. You cannot log in at this time.\n\nBest Regards,\nAdmin Team`;
+    } else if (mentorStatus === "verifyDocs") {
+      subject = "Degree Verification Required 📑";
+      text = `Dear ${user.name},\n\nBefore your mentor account can be approved, we require a copy of your latest degree for verification. Please reply to this email with the document attached.\n\nBest Regards,\nAdmin Team`;
+    }
+
+    // ✅ Send email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject,
+      text,
+    });
+
+    res.json({ message: `Mentor ${mentorStatus} and email sent`, user });
   } catch (err) {
     console.error("Admin approval error:", err);
     res.status(500).json({ error: "Server error" });

@@ -5,13 +5,12 @@ import SimpleBar from "simplebar-react";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import "./css/ProfilePage.css";
 
-// ✅ Allowed classes (excluding 10 & 12)
-const SELECTABLE_CLASSES = ["6th", "7th", "8th", "9th", "11th"];
+// ✅ Allowed classes (6 to 12)
+const SELECTABLE_CLASSES = ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
 
-// ✅ Default structure: 10th and 12th only
+// ✅ Default: only one row
 const DEFAULT_EDUCATION = [
-  { className: "10th", passout: "", board: "", subject: "", grade: "" },
-  { className: "12th", passout: "", board: "", subject: "", grade: "" },
+  { className: "", passout: "", board: "", subject: "", grade: "" },
 ];
 
 export default function Edit_patient() {
@@ -367,98 +366,65 @@ export default function Edit_patient() {
                                         <th>Per/CGPA</th>
                                       </tr>
                                     </thead>
-                                    <tbody>
-                                      {formData.education.map((edu, index) => (
-                                        <tr key={index}>
-                                          <td>
-                                            {edu.className === "10th" ||
-                                            edu.className === "12th" ? (
-                                              // Hardcoded 10th and 12th
-                                              edu.className
-                                            ) : (
-                                              // Other selectable classes (6–9, 11th)
-                                              <Form.Control
-                                                as="select"
-                                                value={edu.className}
-                                                onChange={(e) =>
-                                                  handleEducationChange(
-                                                    index,
-                                                    "className",
-                                                    e.target.value
-                                                  )
-                                                }
-                                              >
-                                                <option value="">
-                                                  Other Class
-                                                </option>
-                                                {SELECTABLE_CLASSES.map(
-                                                  (cls) => (
-                                                    <option
-                                                      key={cls}
-                                                      value={cls}
-                                                    >
-                                                      {cls}
-                                                    </option>
-                                                  )
-                                                )}
-                                              </Form.Control>
-                                            )}
-                                          </td>
-                                          <td>
-                                            <Form.Control
-                                              type="text"
-                                              value={edu.passout}
-                                              onChange={(e) =>
-                                                handleEducationChange(
-                                                  index,
-                                                  "passout",
-                                                  e.target.value
-                                                )
-                                              }
-                                            />
-                                          </td>
-                                          <td>
-                                            <Form.Control
-                                              type="text"
-                                              value={edu.board}
-                                              onChange={(e) =>
-                                                handleEducationChange(
-                                                  index,
-                                                  "board",
-                                                  e.target.value
-                                                )
-                                              }
-                                            />
-                                          </td>
-                                          <td>
-                                            <Form.Control
-                                              type="text"
-                                              value={edu.subject}
-                                              onChange={(e) =>
-                                                handleEducationChange(
-                                                  index,
-                                                  "subject",
-                                                  e.target.value
-                                                )
-                                              }
-                                            />
-                                          </td>
-                                          <td>
-                                            <Form.Control
-                                              type="text"
-                                              value={edu.grade}
-                                              onChange={(e) =>
-                                                handleEducationChange(
-                                                  index,
-                                                  "grade",
-                                                  e.target.value
-                                                )
-                                              }
-                                            />
-                                          </td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
+                                  <tbody>
+  {formData.education.map((edu, index) => (
+    <tr key={index}>
+      <td>
+        <Form.Control
+          as="select"
+          value={edu.className}
+          onChange={(e) =>
+            handleEducationChange(index, "className", e.target.value)
+          }
+        >
+          <option value="">Select Class</option>
+          {SELECTABLE_CLASSES.map((cls) => (
+            <option key={cls} value={cls}>
+              {cls}
+            </option>
+          ))}
+        </Form.Control>
+      </td>
+      <td>
+        <Form.Control
+          type="text"
+          value={edu.passout}
+          onChange={(e) =>
+            handleEducationChange(index, "passout", e.target.value)
+          }
+        />
+      </td>
+      <td>
+        <Form.Control
+          type="text"
+          value={edu.board}
+          onChange={(e) =>
+            handleEducationChange(index, "board", e.target.value)
+          }
+        />
+      </td>
+      <td>
+        <Form.Control
+          type="text"
+          value={edu.subject}
+          onChange={(e) =>
+            handleEducationChange(index, "subject", e.target.value)
+          }
+        />
+      </td>
+      <td>
+        <Form.Control
+          type="text"
+          value={edu.grade}
+          onChange={(e) =>
+            handleEducationChange(index, "grade", e.target.value)
+          }
+        />
+      </td>
+    </tr>
+  ))}
+</tbody>
+
                                   </table>
                                 </div>
                               </div>
