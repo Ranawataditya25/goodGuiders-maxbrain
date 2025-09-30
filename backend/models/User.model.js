@@ -70,6 +70,7 @@ const userSchema = new mongoose.Schema(
     bio: String,
     experience: String,
     latestDegree: String,
+    isDisabled: { type: Boolean, default: false },
 
     // Mentor approval status
     mentorStatus: {

@@ -360,6 +360,8 @@ export default function All_Student() {
 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+const role = loggedInUser.role; // "admin" | "mentor" | "student"
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -378,6 +380,7 @@ export default function All_Student() {
             Class: s.education && s.education.length > 0
               ? s.education.join(", ")
               : "-",
+            isDisabled: s.isDisabled,
           }));
           setStudents(mappedStudents);
         } else {
@@ -393,16 +396,25 @@ export default function All_Student() {
     fetchStudents();
   }, []);
 
-  const imageBodyTemplate = ({ image, title }) => (
+const imageBodyTemplate = (rowData) => {
+  return (
     <div className="d-flex align-items-center">
       <img
-        src={IMAGE_URLS[image]}
-        alt={image}
+        src={IMAGE_URLS[rowData.image]}
+        alt={rowData.image}
         className="product-image rounded-50 w-40"
       />
-      <span className="ml-10">{title}</span>
+      <span className="ml-10">{rowData.title}</span>
     </div>
   );
+};
+
+const rowClassName = (rowData) => {
+  if (rowData.isDisabled && role !== "admin") {
+    return "blurred-row";
+  }
+  return "";
+};
 
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -446,6 +458,51 @@ export default function All_Student() {
 
   const header1 = renderHeader("filters1");
 
+// ✅ Delete Student (using unified API)
+const handleDeleteStudent = async (email) => {
+  if (!window.confirm("Are you sure you want to delete this student?")) return;
+
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:5000/api/stats/student/${encodeURIComponent(email)}`,
+      { method: "DELETE" }
+    );
+    const data = await res.json();
+    if (res.ok) {
+      alert("✅ Student deleted successfully");
+      setStudents((prev) => prev.filter((s) => s.Email !== email));
+    } else {
+      alert(`❌ ${data.message}`);
+    }
+  } catch (err) {
+    console.error("Error deleting student:", err);
+  }
+};
+
+// ✅ Toggle Disable/Enable Student (using unified API)
+const handleToggleStudent = async (email) => {
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:5000/api/stats/student/${encodeURIComponent(email)}/toggle`,
+      { method: "PATCH" }
+    );
+    const data = await res.json();
+
+    if (res.ok) {
+      alert(`✅ Student ${data.isDisabled ? "disabled" : "enabled"} successfully`);
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.Email === email ? { ...s, isDisabled: data.isDisabled } : s
+        )
+      );
+    } else {
+      alert(`❌ ${data.message}`);
+    }
+  } catch (err) {
+    console.error("Error toggling student:", err);
+  }
+};
+
   return (
     <>
       <div className="themebody-wrap">
@@ -457,26 +514,45 @@ export default function All_Student() {
                 <Card>
                   <Card.Body>
                     <DataTable
-                      value={students}
-                      rows={10}
-                      header={header1}
-                      filters={filters1}
-                      paginator
-                      rowsPerPageOptions={[5, 10, 50]}
-                      className="p-datatable-customers"
-                      loading={loading}
-                    >
-                      <Column
-                        header="Name"
-                        sortable
-                        body={imageBodyTemplate}
-                      ></Column>
-                      <Column field="Class" header="Class"></Column>
-                      <Column field="Email" header="Email" sortable></Column>
-                      <Column field="Mobile" header="Mobile" sortable></Column>
-                      <Column field="DOB" header="DOB" sortable></Column>
-                      <Column field="Address" header="Address" sortable></Column>
-                    </DataTable>
+  value={students}
+  rows={10}
+  header={header1}
+  filters={filters1}
+  paginator
+  rowsPerPageOptions={[5, 10, 50]}
+  className="p-datatable-customers"
+  loading={loading}
+  rowClassName={rowClassName}  // ✅ apply blur to entire row
+>
+  <Column header="Name" sortable body={imageBodyTemplate}></Column>
+  <Column field="Class" header="Class"></Column>
+  <Column field="Email" header="Email" sortable></Column>
+  <Column field="Mobile" header="Mobile" sortable></Column>
+  <Column field="DOB" header="DOB" sortable></Column>
+  <Column field="Address" header="Address" sortable></Column>
+  {role === "admin" && (
+    <Column
+      header="Actions"
+      body={(rowData) => (
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={() => handleDeleteStudent(rowData.Email)}
+          >
+            Delete
+          </button>
+          <button
+            className={`btn btn-sm ${rowData.isDisabled ? "btn-success" : "btn-warning"}`}
+            onClick={() => handleToggleStudent(rowData.Email)}
+          >
+            {rowData.isDisabled ? "Enable" : "Disable"}
+          </button>
+        </div>
+      )}
+    ></Column>
+  )}
+</DataTable>
+
                   </Card.Body>
                 </Card>
               </Col>
@@ -484,6 +560,14 @@ export default function All_Student() {
           </Container>
         </div>
       </div>
+      <style>{`
+  .blurred-row {
+    filter: blur(2px) grayscale(50%);
+    pointer-events: none;
+    opacity: 0.6;
+  }
+`}</style>
+
     </>
   );
 }

@@ -891,30 +891,30 @@ const handleSubmit = async (e) => {
 
     const user = data.user;
 
+    // ✅ Check for disabled mentors
     if (user.role === "mentor") {
+      if (user.isDisabled) {
+        alert("🚫 Your account has been disabled by admin. Contact support.");
+        return;
+      }
+
       switch (user.mentorStatus) {
         case "approved":
           localStorage.setItem("loggedInUser", JSON.stringify(user));
           navigate("/doctor-dashboard");
           break;
         case "rejected":
-          alert(
-            "❌ Your mentor request has been rejected by admin. You cannot login."
-          );
+          alert("❌ Your mentor request has been rejected by admin. You cannot login.");
           break;
         case "verifyDocs":
-          alert(
-            "📧 Please check your email and upload latest documents for verification before you can login."
-          );
+          alert("📧 Please check your email and upload latest documents for verification before you can login.");
           break;
         case "pending":
         default:
-          alert(
-            "⏳ Your mentor application is still under review. Please wait for admin approval."
-          );
+          alert("⏳ Your mentor application is still under review. Please wait for admin approval.");
       }
     } else {
-      // Non-mentor users (admin or student)
+      // ✅ Non-mentor users (admin or student)
       localStorage.setItem("loggedInUser", JSON.stringify(user));
 
       if (user.role === "admin") {

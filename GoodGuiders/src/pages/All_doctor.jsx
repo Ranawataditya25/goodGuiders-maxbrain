@@ -964,7 +964,7 @@ function getLatestDegree(education = []) {
 export default function All_Mentor() {
   const [show, setShow] = useState(false);
   const Close_btn = () => setShow(false);
-  const emailcreat = () => setShow(true);
+  // const emailcreat = () => setShow(true);
 
   const navigate = useNavigate();
 
@@ -1007,6 +1007,7 @@ export default function All_Mentor() {
             Degree: getLatestDegree(m.education), // ✅ dynamically get latest degree
             Mobile: m.mobileNo,
             Email: m.email,
+            isDisabled: m.isDisabled,
           }));
           setMentors(mappedMentors);
         } else {
@@ -1022,16 +1023,26 @@ export default function All_Mentor() {
     fetchMentors();
   }, []);
 
-  const imageBodyTemplate = ({ image, title }) => (
+const imageBodyTemplate = (rowData) => {
+  return (
     <div className="d-flex align-items-center">
       <img
-        src={IMAGE_URLS[image]}
-        alt={image}
+        src={IMAGE_URLS[rowData.image]}
+        alt={rowData.image}
         className="product-image rounded-50 w-40"
       />
-      <span className="ml-10">{title}</span>
+      <span className="ml-10">{rowData.title}</span>
     </div>
   );
+};
+
+
+const rowClassName = (rowData) => {
+  if (rowData.isDisabled && role !== "admin") {
+    return "blurred-row";
+  }
+  return "";
+};
 
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -1075,17 +1086,81 @@ export default function All_Mentor() {
 
   const header1 = renderHeader("filters1");
 
-  const actionBodyTemplate = (rowData) => (
+// ✅ Delete Mentor
+const handleDeleteMentor = async (email) => {
+  if (!window.confirm("Are you sure you want to delete this mentor?")) return;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(email)}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("✅ Mentor deleted successfully");
+      setMentors((prev) => prev.filter((m) => m.Email !== email));
+    } else {
+      alert(`❌ ${data.message}`);
+    }
+  } catch (err) {
+    console.error("Error deleting mentor:", err);
+  }
+};
+
+// ✅ Toggle Disable/Enable Mentor
+const handleToggleMentor = async (email) => {
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(email)}/toggle`,
+      { method: "PATCH" }
+    );
+    const data = await res.json();
+    if (res.ok) {
+      alert(`✅ Mentor ${data.isDisabled ? "disabled" : "enabled"} successfully`);
+      setMentors((prev) =>
+        prev.map((m) =>
+          m.Email === email ? { ...m, isDisabled: data.isDisabled } : m
+        )
+      );
+    } else {
+      alert(`❌ ${data.message}`);
+    }
+  } catch (err) {
+    console.error("Error toggling mentor:", err);
+  }
+};
+
+const actionBodyTemplate = (rowData) => {
+  return (
     <div className="cart-action d-flex gap-2">
-      <Button
-        size="sm"
-        variant="primary"
-        onClick={() => navigate(`/chat/${rowData.Email}`)}
-      >
-        Chat
-      </Button>
+      {role === "admin" ? (
+        <>
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={() => handleDeleteMentor(rowData.Email)}
+          >
+            Delete
+          </Button>
+          <Button
+            size="sm"
+            variant={rowData.isDisabled ? "success" : "warning"}
+            onClick={() => handleToggleMentor(rowData.Email)}
+          >
+            {rowData.isDisabled ? "Enable" : "Disable"}
+          </Button>
+        </>
+      ) : (
+        <Button
+          size="sm"
+          variant="primary"
+          onClick={() => navigate(`/chat/${rowData.Email}`)}
+        >
+          Chat
+        </Button>
+      )}
     </div>
   );
+};
 
   // const userEmail = localStorage.getItem("loggedInEmail");
   // const isAdmin = userEmail === "admin@gmail.com";
@@ -1127,56 +1202,26 @@ export default function All_Mentor() {
                     </div>
 
                     {role !== "mentor" && (
-                      <DataTable
-                        value={mentors}
-                        rows={10}
-                        header={header1}
-                        filters={filters1}
-                        paginator
-                        rowsPerPageOptions={[5, 10, 50]}
-                        className="p-datatable-customers"
-                        loading={loading}
-                      >
-                        <Column
-                          header="Name"
-                          sortable
-                          body={imageBodyTemplate}
-                        ></Column>
-                        <Column
-                          field="experience"
-                          header="Experience"
-                          sortable
-                        ></Column>
-                        <Column
-                          field="Specialization"
-                          header="Specialization"
-                          sortable
-                        ></Column>
-                        <Column
-                          field="Degree"
-                          header="Degree"
-                          sortable
-                        ></Column>
+                    <DataTable
+  value={mentors}
+  rows={10}
+  header={header1}
+  filters={filters1}
+  paginator
+  rowsPerPageOptions={[5, 10, 50]}
+  className="p-datatable-customers"
+  loading={loading}
+  rowClassName={rowClassName} // ✅ blur entire row
+>
+  <Column header="Name" sortable body={imageBodyTemplate}></Column>
+  <Column field="experience" header="Experience" sortable></Column>
+  <Column field="Specialization" header="Specialization" sortable></Column>
+  <Column field="Degree" header="Degree" sortable></Column>
+  {role !== "student" && <Column field="Mobile" header="Mobile" sortable></Column>}
+  <Column field="Email" header="Email" sortable></Column>
+  <Column header="Action" body={actionBodyTemplate}></Column>
+</DataTable>
 
-                        {role !== "student" && (
-                          <Column
-                            field="Mobile"
-                            header="Mobile"
-                            sortable
-                          ></Column>
-                        )}
-
-                        <Column field="Email" header="Email" sortable></Column>
-
-                        {role !== "admin" && (
-                          <Column
-                            header="Action"
-                            body={actionBodyTemplate}
-                            exportable={false}
-                            style={{ minWidth: "8rem" }}
-                          ></Column>
-                        )}
-                      </DataTable>
                     )}
                   </Card.Body>
                 </Card>
@@ -1235,6 +1280,14 @@ export default function All_Mentor() {
           </Modal.Footer>
         </Modal>
       )}
+
+      <style>{`
+  .blurred-row {
+    filter: blur(2px) grayscale(50%);
+    pointer-events: none;
+    opacity: 0.6;
+  }
+`}</style>
     </>
   );
 }
