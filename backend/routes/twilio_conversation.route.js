@@ -257,6 +257,17 @@ router.get("/conversations", async (req, res) => {
   }
 });
 
-
+// GET /api/conversation/:uniqueName
+router.get("/conversation/:uniqueName", async (req, res) => {
+  try {
+    const uniqueName = req.params.uniqueName;
+    const conv = await Conversation.findOne({ uniqueName });
+    if (!conv) return res.status(404).json({ error: "Conversation not found" });
+    res.json(conv);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 export default router;

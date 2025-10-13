@@ -8,6 +8,13 @@ const conversationSchema = new mongoose.Schema({
 
   firstMessageTime: { type: Date }, // timestamp of first message
   subscribed: { type: Boolean, default: false }, // true if user paid
+
+    callStatus: {
+    type: String,
+    enum: ["idle", "ringing", "connected"],
+    default: "idle",
+  },
+  caller: { type: String }, // who started the call
 });
 
 export default mongoose.model("Conversation", conversationSchema);
