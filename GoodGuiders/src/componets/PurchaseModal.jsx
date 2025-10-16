@@ -3,11 +3,31 @@ import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 
 export default function PurchaseModal({ show, onHide, note }) {
+  const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
   const navigate = useNavigate();
 
-  const handlePurchase = () => {
-    // Redirect to temporary purchase page
-    navigate("/purchase-temp"); // create an empty route/component for now
+  const handlePurchase = async () => {
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user) return alert("Login required");
+  
+    const payload = {
+      userId: user._id,
+      pdfs: [{ id: note.id || note.title, title: note.title }], // single for now
+    };
+  
+    const res = await fetch(`${API}/purchase/buy`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    navigate("/purchase-temp"); 
+    if (data.ok) {
+      alert(`✅ ${data.message} — ₹${data.totalPrice}`);
+      onHide();
+    } else {
+      alert(data.message);
+    }
   };
 
   return (

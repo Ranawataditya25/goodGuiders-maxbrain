@@ -72,5 +72,15 @@ router.put("/:uniqueName/end-call", async (req, res) => {
   }
 });
 
+router.get("/:uniqueName", async (req, res) => {
+  try {
+    const convo = await Conversation.findOne({ uniqueName: req.params.uniqueName });
+    if (!convo) return res.status(404).json({ error: "Conversation not found" });
+    res.json(convo);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 export default router;

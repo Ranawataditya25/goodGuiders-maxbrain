@@ -168,6 +168,20 @@ export default function ChatPage() {
     setShowVideo(false);
   };
 
+  // add this function somewhere inside ChatPage
+const handleRejectCall = async () => {
+  try {
+    await fetch(
+      `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/end-call`,
+      { method: "PUT" }
+    );
+  } catch (err) {
+    console.error("Reject call error:", err);
+  } finally {
+    setIncomingCall(false);
+  }
+};
+
   const handleSendMessage = async () => {
     if (!input.trim() || !conversation) return;
     try {
@@ -296,12 +310,12 @@ export default function ChatPage() {
             <div className="bg-white rounded-lg p-5 text-center shadow-xl">
               <h4 className="mb-3">{caller} is calling...</h4>
               <div className="flex justify-center gap-3">
-                <Button variant="success" onClick={handleAcceptCall}>
-                  Accept
-                </Button>
-                <Button variant="danger" onClick={() => setIncomingCall(false)}>
-                  Reject
-                </Button>
+              <Button variant="success" onClick={handleAcceptCall}>
+  Accept
+</Button>
+<Button variant="danger" onClick={handleRejectCall}>
+  Reject
+</Button>
               </div>
             </div>
           </div>
@@ -311,7 +325,8 @@ export default function ChatPage() {
         {showVideo && (
           <VideoCall
             userName={userEmail}
-            roomName={conversation?.uniqueName}
+            roomName={conversation?.uniqueName} // for Twilio room
+    uniqueName={conversation?.uniqueName} // for backend polling
             onClose={handleEndCall}
           />
         )}

@@ -980,6 +980,7 @@ export default function All_Mentor() {
     degree: "",
     mobile: "",
     email: "",
+    mentorAbilities: [],
   });
 
   const handleInputChange = (e) => {
@@ -1007,6 +1008,7 @@ export default function All_Mentor() {
             Degree: getLatestDegree(m.education), // ✅ dynamically get latest degree
             Mobile: m.mobileNo,
             Email: m.email,
+            mentorAbilities: m.mentorAbilities || "-",
             isDisabled: m.isDisabled,
           }));
           setMentors(mappedMentors);
@@ -1023,26 +1025,25 @@ export default function All_Mentor() {
     fetchMentors();
   }, []);
 
-const imageBodyTemplate = (rowData) => {
-  return (
-    <div className="d-flex align-items-center">
-      <img
-        src={IMAGE_URLS[rowData.image]}
-        alt={rowData.image}
-        className="product-image rounded-50 w-40"
-      />
-      <span className="ml-10">{rowData.title}</span>
-    </div>
-  );
-};
+  const imageBodyTemplate = (rowData) => {
+    return (
+      <div className="d-flex align-items-center">
+        <img
+          src={IMAGE_URLS[rowData.image]}
+          alt={rowData.image}
+          className="product-image rounded-50 w-40"
+        />
+        <span className="ml-10">{rowData.title}</span>
+      </div>
+    );
+  };
 
-
-const rowClassName = (rowData) => {
-  if (rowData.isDisabled && role !== "admin") {
-    return "blurred-row";
-  }
-  return "";
-};
+  const rowClassName = (rowData) => {
+    if (rowData.isDisabled && role !== "admin") {
+      return "blurred-row";
+    }
+    return "";
+  };
 
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -1086,81 +1087,88 @@ const rowClassName = (rowData) => {
 
   const header1 = renderHeader("filters1");
 
-// ✅ Delete Mentor
-const handleDeleteMentor = async (email) => {
-  if (!window.confirm("Are you sure you want to delete this mentor?")) return;
+  // ✅ Delete Mentor
+  const handleDeleteMentor = async (email) => {
+    if (!window.confirm("Are you sure you want to delete this mentor?")) return;
 
-  try {
-    const res = await fetch(`http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(email)}`, {
-      method: "DELETE",
-    });
-    const data = await res.json();
-    if (res.ok) {
-      alert("✅ Mentor deleted successfully");
-      setMentors((prev) => prev.filter((m) => m.Email !== email));
-    } else {
-      alert(`❌ ${data.message}`);
-    }
-  } catch (err) {
-    console.error("Error deleting mentor:", err);
-  }
-};
-
-// ✅ Toggle Disable/Enable Mentor
-const handleToggleMentor = async (email) => {
-  try {
-    const res = await fetch(
-      `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(email)}/toggle`,
-      { method: "PATCH" }
-    );
-    const data = await res.json();
-    if (res.ok) {
-      alert(`✅ Mentor ${data.isDisabled ? "disabled" : "enabled"} successfully`);
-      setMentors((prev) =>
-        prev.map((m) =>
-          m.Email === email ? { ...m, isDisabled: data.isDisabled } : m
-        )
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(email)}`,
+        {
+          method: "DELETE",
+        }
       );
-    } else {
-      alert(`❌ ${data.message}`);
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ Mentor deleted successfully");
+        setMentors((prev) => prev.filter((m) => m.Email !== email));
+      } else {
+        alert(`❌ ${data.message}`);
+      }
+    } catch (err) {
+      console.error("Error deleting mentor:", err);
     }
-  } catch (err) {
-    console.error("Error toggling mentor:", err);
-  }
-};
+  };
 
-const actionBodyTemplate = (rowData) => {
-  return (
-    <div className="cart-action d-flex gap-2">
-      {role === "admin" ? (
-        <>
+  // ✅ Toggle Disable/Enable Mentor
+  const handleToggleMentor = async (email) => {
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+          email
+        )}/toggle`,
+        { method: "PATCH" }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        alert(
+          `✅ Mentor ${data.isDisabled ? "disabled" : "enabled"} successfully`
+        );
+        setMentors((prev) =>
+          prev.map((m) =>
+            m.Email === email ? { ...m, isDisabled: data.isDisabled } : m
+          )
+        );
+      } else {
+        alert(`❌ ${data.message}`);
+      }
+    } catch (err) {
+      console.error("Error toggling mentor:", err);
+    }
+  };
+
+  const actionBodyTemplate = (rowData) => {
+    return (
+      <div className="cart-action d-flex gap-2">
+        {role === "admin" ? (
+          <>
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={() => handleDeleteMentor(rowData.Email)}
+            >
+              Delete
+            </Button>
+            <Button
+              size="sm"
+              variant={rowData.isDisabled ? "success" : "warning"}
+              onClick={() => handleToggleMentor(rowData.Email)}
+            >
+              {rowData.isDisabled ? "Enable" : "Disable"}
+            </Button>
+          </>
+        ) : (
           <Button
             size="sm"
-            variant="danger"
-            onClick={() => handleDeleteMentor(rowData.Email)}
+            variant="primary"
+            onClick={() => navigate(`/chat/${rowData.Email}`)}
           >
-            Delete
+            Chat
           </Button>
-          <Button
-            size="sm"
-            variant={rowData.isDisabled ? "success" : "warning"}
-            onClick={() => handleToggleMentor(rowData.Email)}
-          >
-            {rowData.isDisabled ? "Enable" : "Disable"}
-          </Button>
-        </>
-      ) : (
-        <Button
-          size="sm"
-          variant="primary"
-          onClick={() => navigate(`/chat/${rowData.Email}`)}
-        >
-          Chat
-        </Button>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  };
 
   // const userEmail = localStorage.getItem("loggedInEmail");
   // const isAdmin = userEmail === "admin@gmail.com";
@@ -1202,26 +1210,57 @@ const actionBodyTemplate = (rowData) => {
                     </div>
 
                     {role !== "mentor" && (
-                    <DataTable
-  value={mentors}
-  rows={10}
-  header={header1}
-  filters={filters1}
-  paginator
-  rowsPerPageOptions={[5, 10, 50]}
-  className="p-datatable-customers"
-  loading={loading}
-  rowClassName={rowClassName} // ✅ blur entire row
->
-  <Column header="Name" sortable body={imageBodyTemplate}></Column>
-  <Column field="experience" header="Experience" sortable></Column>
-  <Column field="Specialization" header="Specialization" sortable></Column>
-  <Column field="Degree" header="Degree" sortable></Column>
-  {role !== "student" && <Column field="Mobile" header="Mobile" sortable></Column>}
-  <Column field="Email" header="Email" sortable></Column>
-  <Column header="Action" body={actionBodyTemplate}></Column>
-</DataTable>
-
+                      <DataTable
+                        value={mentors}
+                        rows={10}
+                        header={header1}
+                        filters={filters1}
+                        paginator
+                        rowsPerPageOptions={[5, 10, 50]}
+                        className="p-datatable-customers"
+                        loading={loading}
+                        rowClassName={rowClassName} // ✅ blur entire row
+                      >
+                        <Column
+                          header="Name"
+                          sortable
+                          body={imageBodyTemplate}
+                        ></Column>
+                        <Column
+                          field="experience"
+                          header="Experience"
+                          sortable
+                        ></Column>
+                        <Column
+                          field="Specialization"
+                          header="Specialization"
+                          sortable
+                        ></Column>
+                        <Column
+                          field="Degree"
+                          header="Degree"
+                          sortable
+                        ></Column>
+                        {role !== "student" && (
+                          <Column
+                            field="Mobile"
+                            header="Mobile"
+                            sortable
+                          ></Column>
+                        )}
+                        <Column field="Email" header="Email" sortable></Column>
+                        {/* NEW: Abilities Column */}
+  <Column
+    field="mentorAbilities"
+    header="Abilities"
+    body={(rowData) => rowData.mentorAbilities.join(", ")}
+    sortable
+  ></Column>
+                        <Column
+                          header="Action"
+                          body={actionBodyTemplate}
+                        ></Column>
+                      </DataTable>
                     )}
                   </Card.Body>
                 </Card>

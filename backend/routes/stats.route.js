@@ -24,7 +24,7 @@ router.get("/total-users", async (req, res) => {
 router.get("/mentors", async (req, res) => {
   try {
     const mentors = await User.find({ role: "mentor", mentorStatus: "approved" })
-      .select("name email mobileNo specializedIn experience education isDisabled -_id"); 
+      .select("name email mobileNo specializedIn experience education isDisabled mentorAbilities -_id"); 
 
     if (!mentors.length) {
       return res.status(404).json({ message: "No mentors found" });

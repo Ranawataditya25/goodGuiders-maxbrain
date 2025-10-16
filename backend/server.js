@@ -22,13 +22,14 @@ import forgotPasswordRoutes from "./routes/forgotPass.route.js";
 import statsRoutes from "./routes/stats.route.js";
 import answerRoutes from "./routes/submission.route.js";
 import storageRoutes from "./routes/storage.route.js";
-
+import purchasePdfRoutes from "./routes/purchasePdf.route.js";
 // Models used by server-level helpers
 import User from "./models/User.model.js";
 import TestAssignment from "./models/TestAssignment.model.js";
 import tokenRoute from "./routes/twilio_token.route.js";
 import twilioConversationRoutes from "./routes/twilio_conversation.route.js";
 import videoRoutes from "./routes/videoRoutes.route.js";
+
 
 
 dotenv.config();
@@ -141,6 +142,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/mentor", mentorRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/api/purchasePdf", purchasePdfRoutes);
 
 // some routers are internally scoped; "/api" here is fine
 app.use("/api", assignmentRoutes);
