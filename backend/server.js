@@ -142,7 +142,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/mentor", mentorRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/questions", questionRoutes);
-app.use("/api/purchasePdf", purchasePdfRoutes);
+app.use("/api/pdf", purchasePdfRoutes);
 
 // some routers are internally scoped; "/api" here is fine
 app.use("/api", assignmentRoutes);
