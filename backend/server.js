@@ -5,6 +5,8 @@ import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import http from "http";
+import { Server } from "socket.io";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -161,9 +163,51 @@ app.use((req, res) =>
   res.status(404).json({ ok: false, message: "Not found" })
 );
 
-/* --------------------- Start ------------------------- */
+/* --------------------- Start (Socket.IO Enabled) ------------------------- */
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Create socket server
+const io = new Server(server, {
+  cors: {
+    origin: "*",  // allow all for now
+  },
+});
+
+// Make socket instance available to all routes
+app.set("io", io);
+
+// Store online connected users
+const onlineUsers = new Map();
+
+io.on("connection", (socket) => {
+  console.log("🔌 Socket connected:", socket.id);
+
+  // User registers with userId
+  socket.on("register", (userId) => {
+    console.log("Registered:", userId);
+    onlineUsers.set(userId, socket.id);
+  });
+
+  // Handle disconnects
+  socket.on("disconnect", () => {
+    for (const [userId, socketId] of onlineUsers.entries()) {
+      if (socketId === socket.id) {
+        onlineUsers.delete(userId);
+        break;
+      }
+    }
+    console.log("❌ Socket disconnected:", socket.id);
+  });
+});
+
+// Export user map for routes
+app.set("onlineUsers", onlineUsers);
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+
+server.listen(PORT, () => {
   const base = process.env.PUBLIC_BASE_URL || `http://127.0.0.1:${PORT}`;
-  console.log(`🚀 API running at ${base}`);
+  console.log(`🚀 API + Socket.IO running at ${base}`);
 });
