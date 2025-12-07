@@ -992,38 +992,67 @@ export default function All_Mentor() {
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchMentors = async () => {
-      try {
-        const res = await fetch("http://127.0.0.1:5000/api/stats/mentors");
-        const data = await res.json();
-        if (res.ok) {
-          // Map API data to match your table fields
-          const mappedMentors = data.mentors.map((m, idx) => ({
-            id: idx + 1,
-            image: `avtar/${(idx % 10) + 1}.jpg`, // placeholder images
-            title: m.name,
-            experience: m.experience || "-",
-            Specialization: m.specializedIn || "-",
-            Degree: getLatestDegree(m.education), // ✅ dynamically get latest degree
-            Mobile: m.mobileNo,
-            Email: m.email,
-            mentorAbilities: m.mentorAbilities || "-",
-            isDisabled: m.isDisabled,
-          }));
-          setMentors(mappedMentors);
-        } else {
-          console.error("Error fetching mentors:", data.message);
-        }
-      } catch (err) {
-        console.error("Server error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [specializations, setSpecializations] = useState([]);
+const [selectedSpecialization, setSelectedSpecialization] = useState("All");
 
-    fetchMentors();
-  }, []);
+const fetchMentors = async (spec = "All") => {
+  try {
+    setLoading(true);
+
+    const url =
+      spec && spec !== "All"
+        ? `http://127.0.0.1:5000/api/stats/mentors?specialization=${encodeURIComponent(
+            spec
+          )}`
+        : "http://127.0.0.1:5000/api/stats/mentors";
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (res.ok) {
+      const mappedMentors = data.mentors.map((m, idx) => ({
+        id: idx + 1,
+        image: `avtar/${(idx % 10) + 1}.jpg`,
+        title: m.name,
+        experience: m.experience || "-",
+        Specialization: (m.specializedIn || "").trim() || "-",
+        Degree: getLatestDegree(m.education),
+        Mobile: m.mobileNo,
+        Email: m.email,
+        mentorAbilities: m.mentorAbilities || [],
+        isDisabled: m.isDisabled,
+      }));
+
+      setMentors(mappedMentors);
+
+      const uniqueSpecs = [
+        ...new Set(
+          mappedMentors
+            .map((m) => m.Specialization)
+            .filter((s) => s && s !== "-")
+        ),
+      ];
+      setSpecializations(uniqueSpecs);
+    } else {
+      console.error("Error fetching mentors:", data.message);
+    }
+  } catch (err) {
+    console.error("Server error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchMentors();
+
+}, []);
+
+const handleSpecializationChange = (e) => {
+  const value = e.target.value;
+  setSelectedSpecialization(value);
+  fetchMentors(value);
+};
 
   const imageBodyTemplate = (rowData) => {
     return (
@@ -1064,26 +1093,50 @@ export default function All_Mentor() {
     filtersMap[filtersKey].callback(filters);
   };
 
-  const renderHeader = (filtersKey) => {
-    const filters = filtersMap[filtersKey].value;
-    const value = filters.global ? filters.global.value : "";
-    return (
-      <div className="d-flex justify-content-end align-align-items-baseline">
-        <Form.Group className="d-flex align-items-center">
-          <Form.Label className="pe-3 mb-0">Search</Form.Label>
-          <InputGroup className="px-2">
-            <Form.Control
-              type="search"
-              className="form-control px-2"
-              value={value || ""}
-              onChange={(e) => onGlobalFilterChange(e, filtersKey)}
-              placeholder="Global Search"
-            />
-          </InputGroup>
+const renderHeader = (filtersKey) => {
+  const filters = filtersMap[filtersKey].value;
+  const value = filters.global ? filters.global.value : "";
+
+  return (
+    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      {/* 🔽 Left: Filter by specialization (admin + student only) */}
+      {(role === "admin" || role === "student") && (
+        <Form.Group className="d-flex align-items-center mb-0">
+          <Form.Label className="pe-2 mb-0">
+            Filter by Specialization
+          </Form.Label>
+          <Form.Select
+            size="sm"
+            value={selectedSpecialization}
+            onChange={handleSpecializationChange}
+            style={{ minWidth: "220px" }}
+          >
+            <option value="All">All Specializations</option>
+            {specializations.map((spec) => (
+              <option key={spec} value={spec}>
+                {spec}
+              </option>
+            ))}
+          </Form.Select>
         </Form.Group>
-      </div>
-    );
-  };
+      )}
+
+      {/* 🔽 Right: Global search */}
+      <Form.Group className="d-flex align-items-center mb-0">
+        <Form.Label className="pe-3 mb-0">Search</Form.Label>
+        <InputGroup className="px-2">
+          <Form.Control
+            type="search"
+            className="form-control px-2"
+            value={value || ""}
+            onChange={(e) => onGlobalFilterChange(e, filtersKey)}
+            placeholder="Global Search"
+          />
+        </InputGroup>
+      </Form.Group>
+    </div>
+  );
+};
 
   const header1 = renderHeader("filters1");
 
@@ -1184,30 +1237,30 @@ export default function All_Mentor() {
                 <Card>
                   <Card.Body>
                     <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
-                      {(role === "mentor" || role === "admin") && (
-                        <>
-                          <Button
-                            variant="primary"
-                            size="lg"
-                            className="px-4 rounded-pill shadow-sm"
-                            onClick={handleTestClick}
-                          >
-                            <FeatherIcon icon="plus-circle" className="me-2" />
-                            Create Mock Test
-                          </Button>
+  {(role === "mentor" || role === "admin") && (
+    <>
+      <Button
+        variant="primary"
+        size="lg"
+        className="px-4 rounded-pill shadow-sm"
+        onClick={handleTestClick}
+      >
+        <FeatherIcon icon="plus-circle" className="me-2" />
+        Create Mock Test
+      </Button>
 
-                          <Button
-                            variant="success"
-                            size="lg"
-                            className="px-4 rounded-pill shadow-sm"
-                            onClick={assignTestClick}
-                          >
-                            <FeatherIcon icon="send" className="me-2" />
-                            Assign Test
-                          </Button>
-                        </>
-                      )}
-                    </div>
+      <Button
+        variant="success"
+        size="lg"
+        className="px-4 rounded-pill shadow-sm"
+        onClick={assignTestClick}
+      >
+        <FeatherIcon icon="send" className="me-2" />
+        Assign Test
+      </Button>
+    </>
+  )}
+</div>
 
                     {role !== "mentor" && (
                       <DataTable
@@ -1250,12 +1303,16 @@ export default function All_Mentor() {
                         )}
                         <Column field="Email" header="Email" sortable></Column>
                         {/* NEW: Abilities Column */}
-  <Column
-    field="mentorAbilities"
-    header="Abilities"
-    body={(rowData) => rowData.mentorAbilities.join(", ")}
-    sortable
-  ></Column>
+<Column
+  field="mentorAbilities"
+  header="Abilities"
+  body={(rowData) =>
+    Array.isArray(rowData.mentorAbilities)
+      ? rowData.mentorAbilities.join(", ")
+      : rowData.mentorAbilities || "-"
+  }
+  sortable
+></Column>
                         <Column
                           header="Action"
                           body={actionBodyTemplate}

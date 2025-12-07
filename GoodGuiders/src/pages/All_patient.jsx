@@ -357,64 +357,87 @@ import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 
 export default function All_Student() {
-
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [classes, setClasses] = useState([]);          // ✅ list of unique classes
+  const [selectedClass, setSelectedClass] = useState("All"); // ✅ current filter
+
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
-const role = loggedInUser.role; // "admin" | "mentor" | "student"
+  const role = loggedInUser.role; // "admin" | "mentor" | "student"
+
+  // ✅ reusable fetch with optional class filter
+  const fetchStudents = async (cls = "All") => {
+    try {
+      setLoading(true);
+
+      const url =
+        cls && cls !== "All"
+          ? `http://127.0.0.1:5000/api/stats/students?class=${encodeURIComponent(
+              cls
+            )}`
+          : "http://127.0.0.1:5000/api/stats/students";
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (res.ok) {
+        const mappedStudents = data.students.map((s, idx) => ({
+          id: idx + 1,
+          image: `avtar/${(idx % 10) + 1}.jpg`,
+          title: s.name,
+          Email: s.email,
+          Mobile: s.mobileNo || "-",
+          DOB: s.dob || "-",
+          Address: s.address || "-",
+          Class: (s.className || "").trim() || "-", // ✅ main class
+          isDisabled: s.isDisabled,
+        }));
+
+        setStudents(mappedStudents);
+
+        // build unique class list (for dropdown) only from non-empty classes
+        const uniqueClasses = [
+          ...new Set(
+            mappedStudents
+              .map((st) => st.Class)
+              .filter((c) => c && c !== "-")
+          ),
+        ];
+        setClasses(uniqueClasses);
+      } else {
+        console.error("Error fetching students:", data.message);
+      }
+    } catch (err) {
+      console.error("Server error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const res = await fetch("http://127.0.0.1:5000/api/stats/students");
-        const data = await res.json();
-        if (res.ok) {
-          const mappedStudents = data.students.map((s, idx) => ({
-            id: idx + 1,
-            image: `avtar/${(idx % 10) + 1}.jpg`,
-            title: s.name,
-            Email: s.email,
-            Mobile: s.mobileNo || "-",
-            DOB: s.dob || "-",
-            Address: s.address || "-",
-            Class: s.education && s.education.length > 0
-              ? s.education.join(", ")
-              : "-",
-            isDisabled: s.isDisabled,
-          }));
-          setStudents(mappedStudents);
-        } else {
-          console.error("Error fetching students:", data.message);
-        }
-      } catch (err) {
-        console.error("Server error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStudents();
   }, []);
 
-const imageBodyTemplate = (rowData) => {
-  return (
-    <div className="d-flex align-items-center">
-      <img
-        src={IMAGE_URLS[rowData.image]}
-        alt={rowData.image}
-        className="product-image rounded-50 w-40"
-      />
-      <span className="ml-10">{rowData.title}</span>
-    </div>
-  );
-};
+  const imageBodyTemplate = (rowData) => {
+    return (
+      <div className="d-flex align-items-center">
+        <img
+          src={IMAGE_URLS[rowData.image]}
+          alt={rowData.image}
+          className="product-image rounded-50 w-40"
+        />
+        <span className="ml-10">{rowData.title}</span>
+      </div>
+    );
+  };
 
-const rowClassName = (rowData) => {
-  if (rowData.isDisabled && role !== "admin") {
-    return "blurred-row";
-  }
-  return "";
-};
+  const rowClassName = (rowData) => {
+    if (rowData.isDisabled && role !== "admin") {
+      return "blurred-row";
+    }
+    return "";
+  };
 
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -435,73 +458,106 @@ const rowClassName = (rowData) => {
     filtersMap[filtersKey].callback(filters);
   };
 
-  const renderHeader = (filtersKey) => {
-    const filters = filtersMap[filtersKey].value;
-    const value = filters.global ? filters.global.value : "";
-    return (
-      <div className="d-flex justify-content-end align-align-items-baseline">
-        <Form.Group className="d-flex align-items-center">
-          <Form.Label className="pe-3 mb-0">Search</Form.Label>
-          <InputGroup className="px-2">
-            <Form.Control
-              type="search"
-              className="form-control px-2"
-              value={value || ""}
-              onChange={(e) => onGlobalFilterChange(e, filtersKey)}
-              placeholder="Global Search"
-            />
-          </InputGroup>
-        </Form.Group>
-      </div>
-    );
+    // ✅ handle class dropdown change
+  const handleClassChange = (e) => {
+    const value = e.target.value;
+    setSelectedClass(value);
+    fetchStudents(value);
   };
+
+const renderHeader = (filtersKey) => {
+  const filters = filtersMap[filtersKey].value;
+  const value = filters.global ? filters.global.value : "";
+
+  return (
+    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      {/* 🔽 Left: Class filter (only for admin & mentor) */}
+      {(role === "admin" || role === "mentor") && (
+        <Form.Group className="d-flex align-items-center mb-0">
+          <Form.Label className="pe-2 mb-0">Filter by Class</Form.Label>
+          <Form.Select
+            size="sm"
+            value={selectedClass}
+            onChange={handleClassChange}
+            style={{ minWidth: "200px" }}
+          >
+            <option value="All">All Classes</option>
+            {classes.map((cls) => (
+              <option key={cls} value={cls}>
+                {cls}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+      )}
+
+      {/* 🔽 Right: Global search (everyone) */}
+      <Form.Group className="d-flex align-items-center mb-0">
+        <Form.Label className="pe-3 mb-0">Search</Form.Label>
+        <InputGroup className="px-2">
+          <Form.Control
+            type="search"
+            className="form-control px-2"
+            value={value || ""}
+            onChange={(e) => onGlobalFilterChange(e, filtersKey)}
+            placeholder="Global Search"
+          />
+        </InputGroup>
+      </Form.Group>
+    </div>
+  );
+};
 
   const header1 = renderHeader("filters1");
 
-// ✅ Delete Student (using unified API)
-const handleDeleteStudent = async (email) => {
-  if (!window.confirm("Are you sure you want to delete this student?")) return;
+  // ✅ Delete Student
+  const handleDeleteStudent = async (email) => {
+    if (!window.confirm("Are you sure you want to delete this student?")) return;
 
-  try {
-    const res = await fetch(
-      `http://127.0.0.1:5000/api/stats/student/${encodeURIComponent(email)}`,
-      { method: "DELETE" }
-    );
-    const data = await res.json();
-    if (res.ok) {
-      alert("✅ Student deleted successfully");
-      setStudents((prev) => prev.filter((s) => s.Email !== email));
-    } else {
-      alert(`❌ ${data.message}`);
-    }
-  } catch (err) {
-    console.error("Error deleting student:", err);
-  }
-};
-
-// ✅ Toggle Disable/Enable Student (using unified API)
-const handleToggleStudent = async (email) => {
-  try {
-    const res = await fetch(
-      `http://127.0.0.1:5000/api/stats/student/${encodeURIComponent(email)}/toggle`,
-      { method: "PATCH" }
-    );
-    const data = await res.json();
-
-    if (res.ok) {
-      alert(`✅ Student ${data.isDisabled ? "disabled" : "enabled"} successfully`);
-      setStudents((prev) =>
-        prev.map((s) =>
-          s.Email === email ? { ...s, isDisabled: data.isDisabled } : s
-        )
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:5000/api/stats/student/${encodeURIComponent(email)}`,
+        { method: "DELETE" }
       );
-    } else {
-      alert(`❌ ${data.message}`);
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ Student deleted successfully");
+        setStudents((prev) => prev.filter((s) => s.Email !== email));
+      } else {
+        alert(`❌ ${data.message}`);
+      }
+    } catch (err) {
+      console.error("Error deleting student:", err);
     }
-  } catch (err) {
-    console.error("Error toggling student:", err);
-  }
-};
+  };
+
+  // ✅ Toggle Disable/Enable Student
+  const handleToggleStudent = async (email) => {
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:5000/api/stats/student/${encodeURIComponent(
+          email
+        )}/toggle`,
+        { method: "PATCH" }
+      );
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(
+          `✅ Student ${data.isDisabled ? "disabled" : "enabled"} successfully`
+        );
+        setStudents((prev) =>
+          prev.map((s) =>
+            s.Email === email ? { ...s, isDisabled: data.isDisabled } : s
+          )
+        );
+      } else {
+        alert(`❌ ${data.message}`);
+      }
+    } catch (err) {
+      console.error("Error toggling student:", err);
+    }
+  };
 
   return (
     <>
@@ -513,46 +569,62 @@ const handleToggleStudent = async (email) => {
               <Col>
                 <Card>
                   <Card.Body>
-                    <DataTable
-  value={students}
-  rows={10}
-  header={header1}
-  filters={filters1}
-  paginator
-  rowsPerPageOptions={[5, 10, 50]}
-  className="p-datatable-customers"
-  loading={loading}
-  rowClassName={rowClassName}  // ✅ apply blur to entire row
->
-  <Column header="Name" sortable body={imageBodyTemplate}></Column>
-  <Column field="Class" header="Class"></Column>
-  <Column field="Email" header="Email" sortable></Column>
-  <Column field="Mobile" header="Mobile" sortable></Column>
-  <Column field="DOB" header="DOB" sortable></Column>
-  <Column field="Address" header="Address" sortable></Column>
-  {role === "admin" && (
-    <Column
-      header="Actions"
-      body={(rowData) => (
-        <div className="d-flex gap-2">
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={() => handleDeleteStudent(rowData.Email)}
-          >
-            Delete
-          </button>
-          <button
-            className={`btn btn-sm ${rowData.isDisabled ? "btn-success" : "btn-warning"}`}
-            onClick={() => handleToggleStudent(rowData.Email)}
-          >
-            {rowData.isDisabled ? "Enable" : "Disable"}
-          </button>
-        </div>
-      )}
-    ></Column>
-  )}
-</DataTable>
 
+                    <DataTable
+                      value={students}
+                      rows={10}
+                      header={header1}
+                      filters={filters1}
+                      paginator
+                      rowsPerPageOptions={[5, 10, 50]}
+                      className="p-datatable-customers"
+                      loading={loading}
+                      rowClassName={rowClassName}
+                    >
+                      <Column
+                        header="Name"
+                        sortable
+                        body={imageBodyTemplate}
+                      ></Column>
+                      <Column field="Class" header="Class" sortable></Column>
+                      <Column field="Email" header="Email" sortable></Column>
+                      <Column field="Mobile" header="Mobile" sortable></Column>
+                      <Column field="DOB" header="DOB" sortable></Column>
+                      <Column
+                        field="Address"
+                        header="Address"
+                        sortable
+                      ></Column>
+                      {role === "admin" && (
+                        <Column
+                          header="Actions"
+                          body={(rowData) => (
+                            <div className="d-flex gap-2">
+                              <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() =>
+                                  handleDeleteStudent(rowData.Email)
+                                }
+                              >
+                                Delete
+                              </button>
+                              <button
+                                className={`btn btn-sm ${
+                                  rowData.isDisabled
+                                    ? "btn-success"
+                                    : "btn-warning"
+                                }`}
+                                onClick={() =>
+                                  handleToggleStudent(rowData.Email)
+                                }
+                              >
+                                {rowData.isDisabled ? "Enable" : "Disable"}
+                              </button>
+                            </div>
+                          )}
+                        ></Column>
+                      )}
+                    </DataTable>
                   </Card.Body>
                 </Card>
               </Col>
@@ -560,14 +632,14 @@ const handleToggleStudent = async (email) => {
           </Container>
         </div>
       </div>
-      <style>{`
-  .blurred-row {
-    filter: blur(2px) grayscale(50%);
-    pointer-events: none;
-    opacity: 0.6;
-  }
-`}</style>
 
+      <style>{`
+        .blurred-row {
+          filter: blur(2px) grayscale(50%);
+          pointer-events: none;
+          opacity: 0.6;
+        }
+      `}</style>
     </>
   );
 }
