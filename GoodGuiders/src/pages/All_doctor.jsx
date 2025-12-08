@@ -972,6 +972,7 @@ export default function All_Mentor() {
   const assignTestClick = () => navigate("/assign-test");
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
   const role = loggedInUser.role; // "admin" | "mentor" | "student"
+  const canViewMentorDetails = role === "admin" || role === "student";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -993,69 +994,81 @@ export default function All_Mentor() {
   const [loading, setLoading] = useState(true);
 
   const [specializations, setSpecializations] = useState([]);
-const [selectedSpecialization, setSelectedSpecialization] = useState("All");
+  const [selectedSpecialization, setSelectedSpecialization] = useState("All");
+  const [selectedMentor, setSelectedMentor] = useState(null);
+  const [showMentorDetails, setShowMentorDetails] = useState(false);
 
-const fetchMentors = async (spec = "All") => {
-  try {
-    setLoading(true);
+  const fetchMentors = async (spec = "All") => {
+    try {
+      setLoading(true);
 
-    const url =
-      spec && spec !== "All"
-        ? `http://127.0.0.1:5000/api/stats/mentors?specialization=${encodeURIComponent(
-            spec
-          )}`
-        : "http://127.0.0.1:5000/api/stats/mentors";
+      const url =
+        spec && spec !== "All"
+          ? `http://127.0.0.1:5000/api/stats/mentors?specialization=${encodeURIComponent(
+              spec
+            )}`
+          : "http://127.0.0.1:5000/api/stats/mentors";
 
-    const res = await fetch(url);
-    const data = await res.json();
+      const res = await fetch(url);
+      const data = await res.json();
 
-    if (res.ok) {
-      const mappedMentors = data.mentors.map((m, idx) => ({
-        id: idx + 1,
-        image: `avtar/${(idx % 10) + 1}.jpg`,
-        title: m.name,
-        experience: m.experience || "-",
-        Specialization: (m.specializedIn || "").trim() || "-",
-        Degree: getLatestDegree(m.education),
-        Mobile: m.mobileNo,
-        Email: m.email,
-        mentorAbilities: m.mentorAbilities || [],
-        isDisabled: m.isDisabled,
-      }));
+      if (res.ok) {
+        const mappedMentors = data.mentors.map((m, idx) => ({
+          id: idx + 1,
+          image: `avtar/${(idx % 10) + 1}.jpg`,
+          title: m.name,
+          experience: m.experience || "-",
+          Specialization: (m.specializedIn || "").trim() || "-",
+          Degree: getLatestDegree(m.education),
+          Mobile: m.mobileNo,
+          Email: m.email,
+          mentorAbilities: m.mentorAbilities || [],
+          isDisabled: m.isDisabled,
+        }));
 
-      setMentors(mappedMentors);
+        setMentors(mappedMentors);
 
-      const uniqueSpecs = [
-        ...new Set(
-          mappedMentors
-            .map((m) => m.Specialization)
-            .filter((s) => s && s !== "-")
-        ),
-      ];
-      setSpecializations(uniqueSpecs);
-    } else {
-      console.error("Error fetching mentors:", data.message);
+        const uniqueSpecs = [
+          ...new Set(
+            mappedMentors
+              .map((m) => m.Specialization)
+              .filter((s) => s && s !== "-")
+          ),
+        ];
+        setSpecializations(uniqueSpecs);
+      } else {
+        console.error("Error fetching mentors:", data.message);
+      }
+    } catch (err) {
+      console.error("Server error:", err);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("Server error:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-useEffect(() => {
-  fetchMentors();
+  useEffect(() => {
+    fetchMentors();
+  }, []);
 
-}, []);
+  const handleSpecializationChange = (e) => {
+    const value = e.target.value;
+    setSelectedSpecialization(value);
+    fetchMentors(value);
+  };
 
-const handleSpecializationChange = (e) => {
-  const value = e.target.value;
-  setSelectedSpecialization(value);
-  fetchMentors(value);
-};
+  const openMentorDetails = (rowData) => {
+    if (!canViewMentorDetails) return;
+    setSelectedMentor(rowData);
+    setShowMentorDetails(true);
+  };
+
+  const closeMentorDetails = () => {
+    setShowMentorDetails(false);
+    setSelectedMentor(null);
+  };
 
   const imageBodyTemplate = (rowData) => {
-    return (
+    const content = (
       <div className="d-flex align-items-center">
         <img
           src={IMAGE_URLS[rowData.image]}
@@ -1065,6 +1078,22 @@ const handleSpecializationChange = (e) => {
         <span className="ml-10">{rowData.title}</span>
       </div>
     );
+
+    // Only admin can open the details popup
+    if (canViewMentorDetails) {
+      return (
+        <button
+          type="button"
+          className="btn btn-link p-0 text-start d-flex align-items-center"
+          onClick={() => openMentorDetails(rowData)}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          {content}
+        </button>
+      );
+    }
+
+    return content;
   };
 
   const rowClassName = (rowData) => {
@@ -1093,50 +1122,50 @@ const handleSpecializationChange = (e) => {
     filtersMap[filtersKey].callback(filters);
   };
 
-const renderHeader = (filtersKey) => {
-  const filters = filtersMap[filtersKey].value;
-  const value = filters.global ? filters.global.value : "";
+  const renderHeader = (filtersKey) => {
+    const filters = filtersMap[filtersKey].value;
+    const value = filters.global ? filters.global.value : "";
 
-  return (
-    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-      {/* 🔽 Left: Filter by specialization (admin + student only) */}
-      {(role === "admin" || role === "student") && (
+    return (
+      <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        {/* 🔽 Left: Filter by specialization (admin + student only) */}
+        {(role === "admin" || role === "student") && (
+          <Form.Group className="d-flex align-items-center mb-0">
+            <Form.Label className="pe-2 mb-0">
+              Filter by Specialization
+            </Form.Label>
+            <Form.Select
+              size="sm"
+              value={selectedSpecialization}
+              onChange={handleSpecializationChange}
+              style={{ minWidth: "220px" }}
+            >
+              <option value="All">All Specializations</option>
+              {specializations.map((spec) => (
+                <option key={spec} value={spec}>
+                  {spec}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        )}
+
+        {/* 🔽 Right: Global search */}
         <Form.Group className="d-flex align-items-center mb-0">
-          <Form.Label className="pe-2 mb-0">
-            Filter by Specialization
-          </Form.Label>
-          <Form.Select
-            size="sm"
-            value={selectedSpecialization}
-            onChange={handleSpecializationChange}
-            style={{ minWidth: "220px" }}
-          >
-            <option value="All">All Specializations</option>
-            {specializations.map((spec) => (
-              <option key={spec} value={spec}>
-                {spec}
-              </option>
-            ))}
-          </Form.Select>
+          <Form.Label className="pe-3 mb-0">Search</Form.Label>
+          <InputGroup className="px-2">
+            <Form.Control
+              type="search"
+              className="form-control px-2"
+              value={value || ""}
+              onChange={(e) => onGlobalFilterChange(e, filtersKey)}
+              placeholder="Global Search"
+            />
+          </InputGroup>
         </Form.Group>
-      )}
-
-      {/* 🔽 Right: Global search */}
-      <Form.Group className="d-flex align-items-center mb-0">
-        <Form.Label className="pe-3 mb-0">Search</Form.Label>
-        <InputGroup className="px-2">
-          <Form.Control
-            type="search"
-            className="form-control px-2"
-            value={value || ""}
-            onChange={(e) => onGlobalFilterChange(e, filtersKey)}
-            placeholder="Global Search"
-          />
-        </InputGroup>
-      </Form.Group>
-    </div>
-  );
-};
+      </div>
+    );
+  };
 
   const header1 = renderHeader("filters1");
 
@@ -1237,30 +1266,30 @@ const renderHeader = (filtersKey) => {
                 <Card>
                   <Card.Body>
                     <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
-  {(role === "mentor" || role === "admin") && (
-    <>
-      <Button
-        variant="primary"
-        size="lg"
-        className="px-4 rounded-pill shadow-sm"
-        onClick={handleTestClick}
-      >
-        <FeatherIcon icon="plus-circle" className="me-2" />
-        Create Mock Test
-      </Button>
+                      {(role === "mentor" || role === "admin") && (
+                        <>
+                          <Button
+                            variant="primary"
+                            size="lg"
+                            className="px-4 rounded-pill shadow-sm"
+                            onClick={handleTestClick}
+                          >
+                            <FeatherIcon icon="plus-circle" className="me-2" />
+                            Create Mock Test
+                          </Button>
 
-      <Button
-        variant="success"
-        size="lg"
-        className="px-4 rounded-pill shadow-sm"
-        onClick={assignTestClick}
-      >
-        <FeatherIcon icon="send" className="me-2" />
-        Assign Test
-      </Button>
-    </>
-  )}
-</div>
+                          <Button
+                            variant="success"
+                            size="lg"
+                            className="px-4 rounded-pill shadow-sm"
+                            onClick={assignTestClick}
+                          >
+                            <FeatherIcon icon="send" className="me-2" />
+                            Assign Test
+                          </Button>
+                        </>
+                      )}
+                    </div>
 
                     {role !== "mentor" && (
                       <DataTable
@@ -1303,16 +1332,16 @@ const renderHeader = (filtersKey) => {
                         )}
                         <Column field="Email" header="Email" sortable></Column>
                         {/* NEW: Abilities Column */}
-<Column
-  field="mentorAbilities"
-  header="Abilities"
-  body={(rowData) =>
-    Array.isArray(rowData.mentorAbilities)
-      ? rowData.mentorAbilities.join(", ")
-      : rowData.mentorAbilities || "-"
-  }
-  sortable
-></Column>
+                        <Column
+                          field="mentorAbilities"
+                          header="Abilities"
+                          body={(rowData) =>
+                            Array.isArray(rowData.mentorAbilities)
+                              ? rowData.mentorAbilities.join(", ")
+                              : rowData.mentorAbilities || "-"
+                          }
+                          sortable
+                        ></Column>
                         <Column
                           header="Action"
                           body={actionBodyTemplate}
@@ -1374,6 +1403,66 @@ const renderHeader = (filtersKey) => {
               Close
             </Button>
           </Modal.Footer>
+        </Modal>
+      )}
+
+      {canViewMentorDetails && (
+        <Modal
+          show={showMentorDetails}
+          onHide={closeMentorDetails}
+          centered
+          backdrop
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Mentor Details</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {selectedMentor && (
+              <>
+                <div className="d-flex align-items-center mb-3">
+                  <img
+                    src={IMAGE_URLS[selectedMentor.image]}
+                    alt={selectedMentor.image}
+                    className="product-image rounded-50 w-60 me-3"
+                    style={{ width: 60, height: 60, objectFit: "cover" }}
+                  />
+                  <div>
+                    <h5 className="mb-0">{selectedMentor.title}</h5>
+                    <small className="text-muted">
+                      {selectedMentor.Specialization || "No specialization"}
+                    </small>
+                  </div>
+                </div>
+
+                <p>
+                  <strong>Email:</strong> {selectedMentor.Email}
+                </p>
+                {role !== "student" && (
+                  <p>
+                    <strong>Mobile:</strong> {selectedMentor.Mobile || "-"}
+                  </p>
+                )}
+                <p>
+                  <strong>Experience:</strong>{" "}
+                  {selectedMentor.experience || "-"}
+                </p>
+                <p>
+                  <strong>Degree:</strong> {selectedMentor.Degree || "-"}
+                </p>
+                <p>
+                  <strong>Abilities:</strong>{" "}
+                  {Array.isArray(selectedMentor.mentorAbilities) &&
+                  selectedMentor.mentorAbilities.length > 0
+                    ? selectedMentor.mentorAbilities.join(", ")
+                    : "-"}
+                </p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {selectedMentor.isDisabled ? "Disabled" : "Active"}
+                </p>
+              </>
+            )}
+          </Modal.Body>
         </Modal>
       )}
 

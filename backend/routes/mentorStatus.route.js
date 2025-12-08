@@ -117,7 +117,6 @@ router.get("/pending", async (req, res) => {
   }
 });
 
-
 // Admin Approval
 // ✅ PATCH /api/mentor/mentor-status/:id
 

@@ -351,6 +351,7 @@ import {
   Card,
   Form,
   InputGroup,
+  Modal,
 } from "react-bootstrap";
 
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
@@ -360,11 +361,14 @@ export default function All_Student() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [classes, setClasses] = useState([]);          // ✅ list of unique classes
+  const [classes, setClasses] = useState([]); // ✅ list of unique classes
   const [selectedClass, setSelectedClass] = useState("All"); // ✅ current filter
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showStudentDetails, setShowStudentDetails] = useState(false);
 
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
   const role = loggedInUser.role; // "admin" | "mentor" | "student"
+  const canViewStudentDetails = role === "admin" || role === "mentor";
 
   // ✅ reusable fetch with optional class filter
   const fetchStudents = async (cls = "All") => {
@@ -399,9 +403,7 @@ export default function All_Student() {
         // build unique class list (for dropdown) only from non-empty classes
         const uniqueClasses = [
           ...new Set(
-            mappedStudents
-              .map((st) => st.Class)
-              .filter((c) => c && c !== "-")
+            mappedStudents.map((st) => st.Class).filter((c) => c && c !== "-")
           ),
         ];
         setClasses(uniqueClasses);
@@ -419,8 +421,19 @@ export default function All_Student() {
     fetchStudents();
   }, []);
 
+  const openStudentDetails = (rowData) => {
+    if (!canViewStudentDetails) return;
+    setSelectedStudent(rowData);
+    setShowStudentDetails(true);
+  };
+
+  const closeStudentDetails = () => {
+    setShowStudentDetails(false);
+    setSelectedStudent(null);
+  };
+
   const imageBodyTemplate = (rowData) => {
-    return (
+    const content = (
       <div className="d-flex align-items-center">
         <img
           src={IMAGE_URLS[rowData.image]}
@@ -430,6 +443,21 @@ export default function All_Student() {
         <span className="ml-10">{rowData.title}</span>
       </div>
     );
+
+    if (canViewStudentDetails) {
+      return (
+        <button
+          type="button"
+          className="btn btn-link p-0 text-start d-flex align-items-center"
+          onClick={() => openStudentDetails(rowData)}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          {content}
+        </button>
+      );
+    }
+
+    return content;
   };
 
   const rowClassName = (rowData) => {
@@ -458,61 +486,62 @@ export default function All_Student() {
     filtersMap[filtersKey].callback(filters);
   };
 
-    // ✅ handle class dropdown change
+  // ✅ handle class dropdown change
   const handleClassChange = (e) => {
     const value = e.target.value;
     setSelectedClass(value);
     fetchStudents(value);
   };
 
-const renderHeader = (filtersKey) => {
-  const filters = filtersMap[filtersKey].value;
-  const value = filters.global ? filters.global.value : "";
+  const renderHeader = (filtersKey) => {
+    const filters = filtersMap[filtersKey].value;
+    const value = filters.global ? filters.global.value : "";
 
-  return (
-    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-      {/* 🔽 Left: Class filter (only for admin & mentor) */}
-      {(role === "admin" || role === "mentor") && (
+    return (
+      <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        {/* 🔽 Left: Class filter (only for admin & mentor) */}
+        {(role === "admin" || role === "mentor") && (
+          <Form.Group className="d-flex align-items-center mb-0">
+            <Form.Label className="pe-2 mb-0">Filter by Class</Form.Label>
+            <Form.Select
+              size="sm"
+              value={selectedClass}
+              onChange={handleClassChange}
+              style={{ minWidth: "200px" }}
+            >
+              <option value="All">All Classes</option>
+              {classes.map((cls) => (
+                <option key={cls} value={cls}>
+                  {cls}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        )}
+
+        {/* 🔽 Right: Global search (everyone) */}
         <Form.Group className="d-flex align-items-center mb-0">
-          <Form.Label className="pe-2 mb-0">Filter by Class</Form.Label>
-          <Form.Select
-            size="sm"
-            value={selectedClass}
-            onChange={handleClassChange}
-            style={{ minWidth: "200px" }}
-          >
-            <option value="All">All Classes</option>
-            {classes.map((cls) => (
-              <option key={cls} value={cls}>
-                {cls}
-              </option>
-            ))}
-          </Form.Select>
+          <Form.Label className="pe-3 mb-0">Search</Form.Label>
+          <InputGroup className="px-2">
+            <Form.Control
+              type="search"
+              className="form-control px-2"
+              value={value || ""}
+              onChange={(e) => onGlobalFilterChange(e, filtersKey)}
+              placeholder="Global Search"
+            />
+          </InputGroup>
         </Form.Group>
-      )}
-
-      {/* 🔽 Right: Global search (everyone) */}
-      <Form.Group className="d-flex align-items-center mb-0">
-        <Form.Label className="pe-3 mb-0">Search</Form.Label>
-        <InputGroup className="px-2">
-          <Form.Control
-            type="search"
-            className="form-control px-2"
-            value={value || ""}
-            onChange={(e) => onGlobalFilterChange(e, filtersKey)}
-            placeholder="Global Search"
-          />
-        </InputGroup>
-      </Form.Group>
-    </div>
-  );
-};
+      </div>
+    );
+  };
 
   const header1 = renderHeader("filters1");
 
   // ✅ Delete Student
   const handleDeleteStudent = async (email) => {
-    if (!window.confirm("Are you sure you want to delete this student?")) return;
+    if (!window.confirm("Are you sure you want to delete this student?"))
+      return;
 
     try {
       const res = await fetch(
@@ -569,7 +598,6 @@ const renderHeader = (filtersKey) => {
               <Col>
                 <Card>
                   <Card.Body>
-
                     <DataTable
                       value={students}
                       rows={10}
@@ -633,6 +661,56 @@ const renderHeader = (filtersKey) => {
         </div>
       </div>
 
+      {canViewStudentDetails && (
+        <Modal
+          show={showStudentDetails}
+          onHide={closeStudentDetails}
+          centered
+          backdrop
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Student Details</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {selectedStudent && (
+              <>
+                <div className="d-flex align-items-center mb-3">
+                  <img
+                    src={IMAGE_URLS[selectedStudent.image]}
+                    alt={selectedStudent.image}
+                    className="product-image rounded-50 w-60 me-3"
+                    style={{ width: 60, height: 60, objectFit: "cover" }}
+                  />
+                  <div>
+                    <h5 className="mb-0">{selectedStudent.title}</h5>
+                    <small className="text-muted">
+                      {selectedStudent.Class || "No class info"}
+                    </small>
+                  </div>
+                </div>
+
+                <p>
+                  <strong>Email:</strong> {selectedStudent.Email}
+                </p>
+                <p>
+                  <strong>Mobile:</strong> {selectedStudent.Mobile || "-"}
+                </p>
+                <p>
+                  <strong>DOB:</strong> {selectedStudent.DOB || "-"}
+                </p>
+                <p>
+                  <strong>Address:</strong> {selectedStudent.Address || "-"}
+                </p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {selectedStudent.isDisabled ? "Disabled" : "Active"}
+                </p>
+              </>
+            )}
+          </Modal.Body>
+        </Modal>
+      )}
+
       <style>{`
         .blurred-row {
           filter: blur(2px) grayscale(50%);
@@ -643,5 +721,3 @@ const renderHeader = (filtersKey) => {
     </>
   );
 }
-
-
