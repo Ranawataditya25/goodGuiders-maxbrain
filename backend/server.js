@@ -31,6 +31,7 @@ import TestAssignment from "./models/TestAssignment.model.js";
 import tokenRoute from "./routes/twilio_token.route.js";
 import twilioConversationRoutes from "./routes/twilio_conversation.route.js";
 import videoRoutes from "./routes/videoRoutes.route.js";
+import interactionsRouter from "./routes/interactions.route.js";
 
 
 
@@ -154,6 +155,7 @@ app.use("/api/storage", storageRoutes);
 app.use("/api", tokenRoute);
 app.use("/api", twilioConversationRoutes);
 app.use("/api/video", videoRoutes);
+app.use("/api/interactions", interactionsRouter);
 
 // app.use("/api/tests", testsRouter);
 
