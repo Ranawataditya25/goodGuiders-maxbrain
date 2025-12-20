@@ -3,6 +3,7 @@ import express from "express";
 import User from "../models/User.model.js";
 import mongoose from "mongoose";
 import Submission from "../models/Submission.model.js";
+import MentorRating from "../models/MentorRating.model.js";
 
 const router = express.Router();
 
@@ -330,8 +331,6 @@ router.get("/student/:email/details", async (req, res) => {
   }
 });
 
-// Add this to routes/stats.route.js (after the /student/:email/details route)
-
 router.get("/mentor/:email/details", async (req, res) => {
   try {
     const { email } = req.params;
@@ -469,136 +468,59 @@ router.get("/mentor/:email/details", async (req, res) => {
   }
 });
 
+// ✅ POST — submit / update rating
+router.post("/mentor/:email/rate", async (req, res) => {
+  try {
+    const mentorEmail = req.params.email;
+    const { studentEmail, rating } = req.body;
 
-// /**
-//  * GET /api/stats/student/:email/overview
-//  * Returns:
-//  *  - basic student info
-//  *  - exams given (from submissions)
-//  *  - performance (simple rule-based label)
-//  *  - mentorsConnected (only if includeMentors=true => admin)
-//  */
-// router.get("/student/:email/overview", async (req, res) => {
-//   try {
-//     const { email } = req.params;
-//     const includeMentors = req.query.includeMentors === "true";
+    if (!studentEmail || !rating)
+      return res.status(400).json({ message: "studentEmail & rating required" });
 
-//     if (!email) {
-//       return res.status(400).json({ message: "Student email is required" });
-//     }
+    if (rating < 1 || rating > 5)
+      return res.status(400).json({ message: "Rating must be 1–5" });
 
-//     // 1️⃣ Find student
-//     const student = await User.findOne({ email, role: "student" })
-//       .select("name email mobileNo address dob className course enrolledCourses")
-//       .lean();
+    await MentorRating.findOneAndUpdate(
+      { mentorEmail, studentEmail },
+      { rating },
+      { upsert: true, new: true }
+    );
 
-//     if (!student) {
-//       return res.status(404).json({ message: "Student not found" });
-//     }
+    res.json({ success: true, message: "Rating submitted" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-//     // 2️⃣ Find exams (submissions)
-//     const submissions = await Submission.find({ userEmail: email })
-//       .select("class subjects type submittedAt score totalMarks")
-//       .sort({ submittedAt: -1 })
-//       .lean();
+// ✅ GET — average rating for mentor
+router.get("/mentor/:email/rating", async (req, res) => {
+  try {
+    const mentorEmail = req.params.email;
 
-//     const exams = submissions.map((sub) => ({
-//       id: sub._id.toString(),
-//       class: sub.class || "-",
-//       subjects: Array.isArray(sub.subjects) ? sub.subjects.join(", ") : "-",
-//       type: sub.type || "-",
-//       submittedAt: sub.submittedAt,
-//       score: sub.score ?? null,
-//       totalMarks: sub.totalMarks ?? null,
-//     }));
+    const result = await MentorRating.aggregate([
+      { $match: { mentorEmail } },
+      {
+        $group: {
+          _id: "$mentorEmail",
+          avgRating: { $avg: "$rating" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
 
-//     const totalExams = exams.length;
+    if (result.length === 0) {
+      return res.json({ avgRating: null, count: 0 });
+    }
 
-//     // 3️⃣ Simple performance logic (you can tweak thresholds/labels)
-//     let performanceLabel = "No Data";
-//     if (totalExams === 0) performanceLabel = "No Data";
-//     else if (totalExams <= 2) performanceLabel = "Below Average";
-//     else if (totalExams <= 5) performanceLabel = "Average";
-//     else if (totalExams <= 8) performanceLabel = "Above Average";
-//     else performanceLabel = "Intelligent";
-
-//     const performance = {
-//       label: performanceLabel,
-//       totalExams,
-//     };
-
-//     // 4️⃣ Mentors connected (via conversations) — only for admin
-//     let mentorsConnected = null;
-
-//     if (includeMentors) {
-//       const db = mongoose.connection.db;
-
-//       const mentorDocs = await db
-//         .collection("conversations")
-//         .aggregate([
-//           { $match: { participants: email } },
-//           { $project: { participants: 1 } },
-//           { $unwind: "$participants" },
-//           { $match: { participants: { $ne: email } } }, // other side
-//           { $group: { _id: "$participants" } }, // unique emails
-//           {
-//             $lookup: {
-//               from: "users",
-//               localField: "_id",
-//               foreignField: "email",
-//               as: "mentor",
-//             },
-//           },
-//           { $unwind: { path: "$mentor", preserveNullAndEmptyArrays: true } },
-//           { $match: { "mentor.role": "mentor" } },
-//           {
-//             $project: {
-//               _id: 0,
-//               id: "$mentor._id",
-//               name: "$mentor.name",
-//               email: "$mentor.email",
-//             },
-//           },
-//         ])
-//         .toArray();
-
-//       mentorsConnected = {
-//         count: mentorDocs.length,
-//         mentors: mentorDocs.map((m) => ({
-//           id: m.id?.toString?.() || null,
-//           name: m.name || m.email,
-//           email: m.email,
-//         })),
-//       };
-//     }
-
-//     return res.json({
-//       student: {
-//         id: student._id.toString(),
-//         name: student.name,
-//         email: student.email,
-//         mobileNo: student.mobileNo || "-",
-//         address: student.address || "-",
-//         dob: student.dob || "-",
-//         className: student.className || "-",
-//         course:
-//           student.course ||
-//           (Array.isArray(student.enrolledCourses) &&
-//             student.enrolledCourses.length > 0 &&
-//             student.enrolledCourses[0].title) ||
-//           "-",
-//       },
-//       exams,
-//       performance,
-//       mentorsConnected, // null for mentor / true object for admin
-//     });
-//   } catch (err) {
-//     console.error("Error in /student/:email/overview:", err);
-//     res
-//       .status(500)
-//       .json({ message: "Server error", details: err.message || String(err) });
-//   }
-// });
+    res.json({
+      avgRating: Number(result[0].avgRating.toFixed(1)),
+      count: result[0].count,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 
 export default router;

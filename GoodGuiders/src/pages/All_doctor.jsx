@@ -1012,6 +1012,14 @@ export default function All_Mentor() {
   const [messagesList, setMessagesList] = useState([]);
   const [activeChatTitle, setActiveChatTitle] = useState("");
 
+  // rating state
+const [avgRating, setAvgRating] = useState(null);
+const [ratingCount, setRatingCount] = useState(0);
+
+const [showRatingModal, setShowRatingModal] = useState(false);
+const [selectedRating, setSelectedRating] = useState(0);
+const [ratingSubmitting, setRatingSubmitting] = useState(false);
+
   // helper sanitize + uniqueName (same as your twilio route)
   const sanitize = (s = "") =>
     String(s || "")
@@ -1029,8 +1037,8 @@ export default function All_Mentor() {
       const url =
         spec && spec !== "All"
           ? `http://127.0.0.1:5000/api/stats/mentors?specialization=${encodeURIComponent(
-              spec
-            )}`
+            spec
+          )}`
           : "http://127.0.0.1:5000/api/stats/mentors";
 
       const res = await fetch(url);
@@ -1091,6 +1099,22 @@ export default function All_Mentor() {
     setMentorDetailsError(null);
     setMentorDetailsLoading(true);
 
+    // reset rating
+    setAvgRating(null);
+    setRatingCount(0);
+
+    // 🔹 FETCH AVG RATING (independent call)
+    fetch(`http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(rowData.Email)}/rating`)
+      .then((r) => r.json())
+      .then((d) => {
+        setAvgRating(d.avgRating);
+        setRatingCount(d.count);
+      })
+      .catch(() => {
+        setAvgRating(null);
+        setRatingCount(0);
+      });
+
     try {
       // call your API implemented earlier
       const res = await fetch(
@@ -1115,12 +1139,14 @@ export default function All_Mentor() {
     }
   };
 
-  const closeMentorDetails = () => {
-    setShowMentorDetails(false);
-    setSelectedMentor(null);
-    setMentorDetails(null);
-    setMentorDetailsError(null);
-  };
+const closeMentorDetails = () => {
+  setShowMentorDetails(false);
+  setSelectedMentor(null);
+  setMentorDetails(null);
+  setMentorDetailsError(null);
+  setAvgRating(null);
+  setRatingCount(0);
+};
 
   const imageBodyTemplate = (rowData) => {
     const content = (
@@ -1443,6 +1469,7 @@ export default function All_Mentor() {
           <Modal.Body>
             {selectedMentor && (
               <>
+
                 <div className="d-flex align-items-center mb-3">
                   <img
                     src={IMAGE_URLS[selectedMentor.image]}
@@ -1458,6 +1485,17 @@ export default function All_Mentor() {
 
                 <p>
                   <strong>Email:</strong> {selectedMentor.Email}
+                </p>
+                <p>
+                  <strong>Rating:</strong>{" "}
+                  {avgRating !== null ? (
+                    <>
+                      ⭐ {avgRating.toFixed(1)} / 5{" "}
+                      <small className="text-muted">({ratingCount} ratings)</small>
+                    </>
+                  ) : (
+                    <span className="text-muted">No ratings yet</span>
+                  )}
                 </p>
                 {role !== "student" && (
                   <p>
@@ -1539,6 +1577,16 @@ export default function All_Mentor() {
             )}
           </Modal.Body>
           <Modal.Footer>
+            {role === "student" && (
+              <div className="mt-3 text-center">
+                <Button
+                  variant="warning"
+                  onClick={() => setShowRatingModal(true)}
+                >
+                  ⭐ Rate this Mentor
+                </Button>
+              </div>
+            )}
             <Button variant="secondary" onClick={closeMentorDetails}>
               Close
             </Button>
@@ -1581,6 +1629,72 @@ export default function All_Mentor() {
           <Button variant="secondary" onClick={() => setShowMessagesModal(false)}>Close</Button>
         </Modal.Footer>
       </Modal>
+
+      <Modal show={showRatingModal} onHide={() => setShowRatingModal(false)} centered>
+  <Modal.Header closeButton>
+    <Modal.Title>Rate Mentor</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <div className="text-center mb-3">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span
+          key={star}
+          style={{
+            fontSize: 30,
+            cursor: "pointer",
+            color: star <= selectedRating ? "#ffc107" : "#ccc",
+          }}
+          onClick={() => setSelectedRating(star)}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button
+      variant="secondary"
+      onClick={() => setShowRatingModal(false)}
+    >
+      Cancel
+    </Button>
+    <Button
+      variant="primary"
+      disabled={!selectedRating || ratingSubmitting}
+      onClick={async () => {
+        try {
+          setRatingSubmitting(true);
+          await fetch(
+            `http://127.0.0.1:5000/api/stats/mentor/${selectedMentor.Email}/rate`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                studentEmail: loggedInUser.email,
+                rating: selectedRating,
+              }),
+            }
+          );
+
+          setShowRatingModal(false);
+          setSelectedRating(0);
+
+          // refresh avg rating
+          const r = await fetch(
+            `http://127.0.0.1:5000/api/stats/mentor/${selectedMentor.Email}/rating`
+          );
+          const d = await r.json();
+          setAvgRating(d.avgRating);
+          setRatingCount(d.count);
+        } finally {
+          setRatingSubmitting(false);
+        }
+      }}
+    >
+      Submit
+    </Button>
+  </Modal.Footer>
+</Modal>
 
       <style>{`
   .blurred-row {
