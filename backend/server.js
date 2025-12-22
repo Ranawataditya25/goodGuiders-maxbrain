@@ -32,6 +32,7 @@ import tokenRoute from "./routes/twilio_token.route.js";
 import twilioConversationRoutes from "./routes/twilio_conversation.route.js";
 import videoRoutes from "./routes/videoRoutes.route.js";
 import interactionsRouter from "./routes/interactions.route.js";
+import materialsRoutes from "./routes/material.route.js";
 
 
 
@@ -129,6 +130,10 @@ const __dirname = path.dirname(__filename);
 
 const uploadsDir = path.join(__dirname, "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
+
+const materialsDir = path.join(uploadsDir, "materials");
+fs.mkdirSync(materialsDir, { recursive: true });
+
 app.use("/uploads", express.static(uploadsDir));
 
 /* ---------------------- Health ----------------------- */
@@ -140,6 +145,7 @@ app.use("/api/uploads", uploadsRouter);
 app.use("/api/classes", classesRouter);
 
 app.use("/api/stats", statsRoutes);
+app.use("/api/materials", materialsRoutes);
 app.use("/api/auth", forgotPasswordRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/mentor", mentorRoutes);

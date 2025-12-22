@@ -103,6 +103,7 @@ import AllChatsPage from "./pages/AllChatsPage.jsx";
 import AdminMentorRequests from "./pages/AdminMentorRequests.jsx";
 import PurchaseTemp from "./pages/PurchaseTemp.jsx";
 import MentorSubmissions from "./pages/MentorSubmissions.jsx";
+import MentorMaterials from "./pages/MentorMaterials.jsx";
 
 const routesWithoutExtras = [
   "/",
@@ -170,6 +171,8 @@ function AppContent() {
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/chat/:mentorEmail" element={<ChatPage />} />
         <Route exact path="/all-chats" element={<AllChatsPage />} />
+        <Route exact path="/mentor/materials" element={<MentorMaterials />}/>
+        <Route path="/mentor/:email/materials" element={<MentorMaterials />} />
         <Route exact path="/admin-mentor-requests" element={<AdminMentorRequests />} />
         <Route exact path="/purchase-temp" element={<PurchaseTemp />} />
         <Route exact path="/mentor-submissions" element={<MentorSubmissions />} />

@@ -522,5 +522,4 @@ router.get("/mentor/:email/rating", async (req, res) => {
   }
 });
 
-
 export default router;

@@ -99,7 +99,16 @@ const navigate = useNavigate();
       <strong>Credits:</strong> {doctor?.credits}
     </p>
   </div>
-  <div>
+  <div className="d-flex gap-2">
+    {/* NEW BUTTON */}
+    <button
+      className="btn btn-success"
+      onClick={() => navigate("/mentor/materials")}
+    >
+      Upload Materials
+    </button>
+
+    {/* EXISTING */}
     <button
       className="btn btn-primary"
       onClick={() => navigate("/all-chats")}

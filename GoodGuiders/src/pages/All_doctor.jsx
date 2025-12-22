@@ -915,7 +915,6 @@
 //   );
 // }
 
-// src/pages/All_Mentor.jsx  (replace your existing file)
 import { useState, useEffect } from "react";
 import { FilterMatchMode, FilterOperator } from "primereact/api";
 import { DataTable } from "primereact/datatable";
@@ -1587,6 +1586,24 @@ const closeMentorDetails = () => {
                 </Button>
               </div>
             )}
+            {(role === "admin" || role === "student") && selectedMentor && (
+  <Button
+    variant="info"
+    onClick={() =>
+      navigate(
+  `/mentor/${encodeURIComponent(selectedMentor.Email)}/materials`,
+  {
+    state: {
+      mentorName: selectedMentor.title, // name
+    },
+  }
+)
+    }
+  >
+    📚 Study Materials
+  </Button>
+)}
+
             <Button variant="secondary" onClick={closeMentorDetails}>
               Close
             </Button>
