@@ -10,6 +10,11 @@ const AttemptSchema = new mongoose.Schema(
     // Store answers as a Map<string, string>, e.g. { "0": "2" }
     answers: { type: Map, of: String, default: {} },
 
+    answerPdfUrl: {
+      fileUrl: { type: String },
+      originalName: { type: String },
+    },
+
     status: {
       type: String,
       enum: ["in_progress", "submitted"],

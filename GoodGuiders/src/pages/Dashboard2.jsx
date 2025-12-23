@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
-import { Row, Col, Card, Table, Container, Spinner } from "react-bootstrap";
+import { Row, Col, Card, Table, Container, Spinner, Button, Badge } from "react-bootstrap";
+import axios from "axios";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import Chart from "react-apexcharts";
 import { doctskill, Gallerydata } from "./js/Dashboard2";
@@ -9,6 +10,8 @@ import { doctskill, Gallerydata } from "./js/Dashboard2";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 import { Fancybox } from "@fancyapps/ui";
 import "@fancyapps/ui/dist/fancybox/fancybox.css";
+
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function Dashboard2() {
   const [doctor, setDoctor] = useState(null);
@@ -18,6 +21,9 @@ export default function Dashboard2() {
 const [referEmail, setReferEmail] = useState(""); // For referral input
 const [referMobile, setReferMobile] = useState(""); 
 const navigate = useNavigate();
+
+const user = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const doctorData = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -45,6 +51,29 @@ const navigate = useNavigate();
       Fancybox.destroy();
     };
   }, []);
+
+useEffect(() => {
+  if (!user?._id || user.role !== "mentor") return;
+
+  const fetchCount = async () => {
+    try {
+      const res = await axios.get(
+        `${API}/pdf-evaluations/mentor/count`,
+        {
+          headers: {
+            "x-user-id": user._id,
+            "x-user-role": user.role,
+          },
+        }
+      );
+      setPendingCount(res.data.count || 0);
+    } catch (e) {
+      console.error("Failed to fetch evaluation count", e);
+    }
+  };
+
+  fetchCount();
+}, [user?._id]);
 
   const handleUseReferral = async () => {
     if (!referralInput.trim()) {
@@ -100,13 +129,32 @@ const navigate = useNavigate();
     </p>
   </div>
   <div className="d-flex gap-2">
-    {/* NEW BUTTON */}
+    {/* NEW BUTTON 1*/}
     <button
       className="btn btn-success"
       onClick={() => navigate("/mentor/materials")}
     >
       Upload Materials
     </button>
+
+    {/* NEW BUTTON 2*/}
+    <Button
+  variant="warning"
+  onClick={() => navigate("/mentor/pdf-evaluations")}
+  className="position-relative"
+>
+  PDF Evaluations
+
+  {pendingCount > 0 && (
+    <Badge
+      bg="danger"
+      pill
+      className="position-absolute top-0 start-100 translate-middle"
+    >
+      {pendingCount}
+    </Badge>
+  )}
+</Button>
 
     {/* EXISTING */}
     <button

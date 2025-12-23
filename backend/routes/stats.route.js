@@ -32,7 +32,7 @@ router.get("/mentors", async (req, res) => {
       role: "mentor",
       mentorStatus: "approved",
     }).select(
-      "name email mobileNo specializedIn experience education isDisabled mentorAbilities -_id"
+      "_id name email mobileNo specializedIn experience education isDisabled mentorAbilities"
     );
 
     if (!mentors.length) {

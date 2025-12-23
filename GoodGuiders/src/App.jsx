@@ -104,6 +104,8 @@ import AdminMentorRequests from "./pages/AdminMentorRequests.jsx";
 import PurchaseTemp from "./pages/PurchaseTemp.jsx";
 import MentorSubmissions from "./pages/MentorSubmissions.jsx";
 import MentorMaterials from "./pages/MentorMaterials.jsx";
+import AdminPdfSubmissions from "./pages/AdminPdfSubmissions.jsx";
+import MentorEvaluations from "./pages/MentorEvaluations.jsx";
 
 const routesWithoutExtras = [
   "/",
@@ -176,6 +178,8 @@ function AppContent() {
         <Route exact path="/admin-mentor-requests" element={<AdminMentorRequests />} />
         <Route exact path="/purchase-temp" element={<PurchaseTemp />} />
         <Route exact path="/mentor-submissions" element={<MentorSubmissions />} />
+        <Route exact path="/admin/pdf-submissions" element={<AdminPdfSubmissions /> } />
+        <Route exact path="/mentor/pdf-evaluations" element={<MentorEvaluations /> } />
 
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />

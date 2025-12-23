@@ -10,6 +10,8 @@ import {
   Badge,
   Button,
   Collapse,
+  Modal,
+  Form,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
@@ -134,6 +136,25 @@ function deriveStatus(a) {
   return (a?.status || "assigned").toLowerCase();
 }
 
+function isPdfSubjective(a) {
+  const t = pickTestObj(a) || {};
+  return pickType(t) === "subjective_pdf";
+}
+
+function getQuestionPdfUrl(a) {
+  const t = pickTestObj(a) || {};
+
+  // ✅ correct path based on your schema
+  const fileUrl = t?.questionPaper?.fileUrl;
+
+  if (!fileUrl) return null;
+
+  // backend serves /uploads statically
+  return fileUrl.startsWith("http")
+    ? fileUrl
+    : `http://localhost:5000${fileUrl}`;
+}
+
 export default function Dashboard3() {
   // ----- profile -----
   const [user, setUser] = useState(null);
@@ -158,6 +179,11 @@ export default function Dashboard3() {
   // ----- start button state -----
   const [startingId, setStartingId] = useState(null);
   const navigate = useNavigate();
+
+  const [showPdfModal, setShowPdfModal] = useState(false);
+const [activePdfAssignment, setActivePdfAssignment] = useState(null);
+const [answerPdf, setAnswerPdf] = useState(null);
+const [submittingPdf, setSubmittingPdf] = useState(false);
 
   // demo table content that was already in your page
   const visitData = useMemo(
@@ -825,7 +851,54 @@ export default function Dashboard3() {
                                 </Badge>
                               </td>
                               <td className="text-end">
-                                {stat === "completed" ? (
+                                {isPdfSubjective(a) ? (
+                                  <Button
+                                    size="sm"
+                                    variant={
+                                      stat === "completed"
+                                        ? "outline-secondary"
+                                        : stat === "in_progress"
+                                          ? "info"
+                                          : "primary"
+                                    }
+                                    onClick={() => {
+                                      const stat = deriveStatus(a);
+                                      if (stat === "completed") {
+                                        // later you can open a "view submitted PDF" modal
+                                        return;
+                                      }
+                                      setActivePdfAssignment(a);
+                                      setAnswerPdf(null);
+                                      setShowPdfModal(true);
+                                    }}
+                                  >
+                                    {stat === "completed" ? (
+                                      "Review"
+                                    ) : stat === "in_progress" ? (
+                                      <>
+                                        {startingId === a._id ? (
+                                          <>
+                                            <Spinner animation="border" size="sm" className="me-2" />
+                                            Opening…
+                                          </>
+                                        ) : (
+                                          "Continue"
+                                        )}
+                                      </>
+                                    ) : (
+                                      <>
+                                        {startingId === a._id ? (
+                                          <>
+                                            <Spinner animation="border" size="sm" className="me-2" />
+                                            Starting…
+                                          </>
+                                        ) : (
+                                          "Start"
+                                        )}
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : stat === "completed" ? (
                                   <Link
                                     className="btn btn-sm btn-outline-secondary"
                                     to={`/test-player/${a._id}`}
@@ -841,11 +914,7 @@ export default function Dashboard3() {
                                   >
                                     {startingId === a._id ? (
                                       <>
-                                        <Spinner
-                                          animation="border"
-                                          size="sm"
-                                          className="me-2"
-                                        />
+                                        <Spinner animation="border" size="sm" className="me-2" />
                                         Opening…
                                       </>
                                     ) : (
@@ -861,11 +930,7 @@ export default function Dashboard3() {
                                   >
                                     {startingId === a._id ? (
                                       <>
-                                        <Spinner
-                                          animation="border"
-                                          size="sm"
-                                          className="me-2"
-                                        />
+                                        <Spinner animation="border" size="sm" className="me-2" />
                                         Starting…
                                       </>
                                     ) : (
@@ -1072,6 +1137,81 @@ export default function Dashboard3() {
             </Col>
           </Row>
         </Container>
+        <Modal
+  show={showPdfModal}
+  onHide={() => setShowPdfModal(false)}
+  centered
+>
+  <Modal.Header closeButton>
+    <Modal.Title>Subjective Test (PDF)</Modal.Title>
+  </Modal.Header>
+
+  <Modal.Body>
+    {activePdfAssignment && (
+      <>
+        {/* Question PDF */}
+        <div className="mb-3">
+          <strong>Question Paper</strong>
+          <div className="mt-2">
+            <a
+              href={getQuestionPdfUrl(activePdfAssignment)}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-outline-primary btn-sm"
+            >
+              View PDF
+            </a>
+          </div>
+        </div>
+
+        {/* Answer Upload */}
+        <Form.Group>
+          <Form.Label>Upload Answer Sheet (PDF)</Form.Label>
+          <Form.Control
+            type="file"
+            accept=".pdf"
+            onChange={(e) => setAnswerPdf(e.target.files[0])}
+          />
+        </Form.Group>
+      </>
+    )}
+  </Modal.Body>
+
+  <Modal.Footer>
+    <Button
+      variant="secondary"
+      onClick={() => setShowPdfModal(false)}
+    >
+      Cancel
+    </Button>
+    <Button
+      variant="success"
+      disabled={!answerPdf || submittingPdf || deriveStatus(activePdfAssignment) === "completed"}
+      onClick={async () => {
+        try {
+          setSubmittingPdf(true);
+          const fd = new FormData();
+          fd.append("answerPdf", answerPdf);
+
+          await fetch(
+            `${API}/assignments/${activePdfAssignment._id}/submit-pdf`,
+            { method: "POST", body: fd }
+          );
+
+          setShowPdfModal(false);
+          fetchAssignments(); // refresh dashboard
+        } catch (e) {
+          alert("Submission failed");
+        } finally {
+          setSubmittingPdf(false);
+        }
+      }}
+    >
+      {submittingPdf ? "Submitting..." : "Submit"}
+    </Button>
+  </Modal.Footer>
+</Modal>
+
       </div>
     </div>
   );

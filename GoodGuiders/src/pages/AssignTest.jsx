@@ -35,6 +35,7 @@ export default function AssignTest() {
   const [customHours, setCustomHours] = useState("");
   const [customMinutes, setCustomMinutes] = useState("");
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
   const submissions = () => navigate("/mentor-submissions");
 
   useEffect(() => {
@@ -190,7 +191,14 @@ export default function AssignTest() {
                     </td>
                     <td>{(t.subjects || []).join(", ")}</td>
                     <td>
-                      <Badge bg="dark">{t.testType}</Badge>
+                      <Badge bg="dark">
+                        {t.testType ? t.testType.replace("_", " ") : "UNKNOWN"}
+                      </Badge>
+                      {t.testType === "subjective_pdf" && (
+                        <Badge bg="warning" text="dark" className="ms-2">
+                          PDF
+                        </Badge>
+                      )}
                     </td>
                     <td>
                       <Badge bg="info" text="dark">
@@ -401,6 +409,15 @@ export default function AssignTest() {
         >
           View Submissions
         </Button>
+        {user?.role === "admin" && (
+          <Button
+            size="sm"
+            variant="outline-warning"
+            onClick={() => navigate("/admin/pdf-submissions")}
+          >
+            PDF Submissions
+          </Button>
+        )}
       </Container>
     </div>
   );

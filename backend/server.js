@@ -33,13 +33,15 @@ import twilioConversationRoutes from "./routes/twilio_conversation.route.js";
 import videoRoutes from "./routes/videoRoutes.route.js";
 import interactionsRouter from "./routes/interactions.route.js";
 import materialsRoutes from "./routes/material.route.js";
+import pdfEvaluationRoutes from "./routes/pdfEvaluation.route.js";
+import { mentorExpiryCron } from "./cron/mentorExpiry.cron.js";
 
 
 
 dotenv.config();
 
 const app = express();
-
+mentorExpiryCron();
 /* ----------------------- CORS ----------------------- */
 const corsOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
@@ -61,6 +63,7 @@ const corsOptions = {
     "Content-Type",
     "Authorization",
     "x-user-id",
+    "x-user-role",
     "x-user-email",
   ],
   credentials: true,
@@ -134,6 +137,7 @@ fs.mkdirSync(uploadsDir, { recursive: true });
 const materialsDir = path.join(uploadsDir, "materials");
 fs.mkdirSync(materialsDir, { recursive: true });
 
+app.use("/bootstrapreact/medixo/uploads", express.static(uploadsDir));
 app.use("/uploads", express.static(uploadsDir));
 
 /* ---------------------- Health ----------------------- */
@@ -155,6 +159,7 @@ app.use("/api/pdf", purchasePdfRoutes);
 
 // some routers are internally scoped; "/api" here is fine
 app.use("/api", assignmentRoutes);
+app.use("/api/pdf-evaluations", pdfEvaluationRoutes);
 app.use("/api", attemptsRoutes);
 app.use("/api", answerRoutes);
 app.use("/api/storage", storageRoutes);

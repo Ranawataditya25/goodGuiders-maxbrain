@@ -5,6 +5,8 @@ import Questions from "../models/Question.model.js";
 import User from "../models/User.model.js";
 import TestAssignment from "../models/TestAssignment.model.js";
 import Attempt from "../models/Attempt.model.js";
+import { uploadAnswerPdf } from "../config/answersMulter.js";
+import PdfEvaluation from "../models/PdfEvaluation.model.js";
 
 const router = Router();
 
@@ -299,6 +301,7 @@ router.get("/assignments", async (req, res) => {
           "test.testType": "$test.testType",
           "test.difficulty": "$test.difficulty",
           "test.createdAt": "$test.createdAt",
+          "test.questionPaper": "$test.questionPaper",
 
           derivedStatus: 1,
           latestAttempt: {
@@ -539,5 +542,69 @@ router.get("/student/email/:email", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ---------------------------------------------
+// POST /api/assignments/:id/submit-pdf
+// Student submits subjective answer PDF
+// ---------------------------------------------
+router.post(
+  "/assignments/:id/submit-pdf",
+  uploadAnswerPdf.single("answerPdf"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ ok: false, message: "PDF required" });
+      }
+
+      const assignment = await TestAssignment.findById(req.params.id);
+      if (!assignment) {
+        return res.status(404).json({ ok: false, message: "Assignment not found" });
+      }
+
+      const userId = req.user?._id || assignment.studentIds?.[0];
+      if (!userId) {
+        return res.status(400).json({ ok: false, message: "Student not resolved" });
+      }
+
+      let attempt = await Attempt.findOne({ assignmentId: assignment._id, userId });
+
+      if (!attempt) {
+        attempt = await Attempt.create({
+          assignmentId: assignment._id,
+          userId,
+          testId: assignment.testId,
+        });
+      }
+
+      if (attempt.status === "submitted") {
+        return res.status(400).json({ ok: false, message: "Already submitted" });
+      }
+
+      attempt.answerPdfUrl = {
+        fileUrl: `/uploads/answers/${req.file.filename}`,
+        originalName: req.file.originalname,
+      };
+      attempt.status = "submitted";
+      attempt.submittedAt = new Date();
+      await attempt.save();
+
+      const test = await Questions.findById(assignment.testId).lean();
+
+      await PdfEvaluation.create({
+        assignmentId: assignment._id,
+        testId: assignment.testId,
+        studentId: userId,
+        questionPdfUrl: test?.questionPaper?.fileUrl,
+        answerPdfUrl: attempt.answerPdfUrl.fileUrl,
+        status: "pending_admin",
+      });
+
+      res.json({ ok: true, message: "PDF submitted successfully" });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ ok: false, message: "Submission failed" });
+    }
+  }
+);
 
 export default router;

@@ -2,6 +2,7 @@
 import { Router } from "express";
 import mongoose from "mongoose";
 import Question from "../models/Question.model.js";
+import { uploadQuestionPdf } from "../config/questionMulter.js";
 
 const router = Router();
 
@@ -69,6 +70,41 @@ router.post("/", async (req, res) => {
     res.status(400).json({ ok: false, message: err.message || "Invalid payload" });
   }
 });
+
+router.post(
+  "/pdf",
+  uploadQuestionPdf.single("questionPaper"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "Question PDF required" });
+      }
+
+      const createdBy = await resolveCreatorId(req);
+      if (!createdBy) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const doc = await Question.create({
+        class: req.body.class,
+        testType: "subjective_pdf",
+        difficulty: req.body.difficulty,
+        subjects: cleanSubjects(JSON.parse(req.body.subjects || "[]")),
+        createdBy,
+        questions: [],
+        questionPaper: {
+          fileUrl: `/uploads/questions/${req.file.filename}`,
+          originalName: req.file.originalname,
+        },
+      });
+
+      res.status(201).json({ ok: true, id: doc._id });
+    } catch (err) {
+      console.error(err);
+      res.status(400).json({ message: err.message });
+    }
+  }
+);
 
 /* ---------------------------------------------
  * GET /api/questions

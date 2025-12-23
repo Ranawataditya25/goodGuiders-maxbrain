@@ -28,13 +28,19 @@ const TestSchema = new mongoose.Schema(
     },
     testType: {
       type: String,
-      enum: ["mcq", "subjective", "mcq+subjective"],
+      enum: ["mcq", "subjective", "mcq+subjective", "subjective_pdf"],
       required: true,
     },
     difficulty: {
       type: String,
       enum: ["beginner", "intermediate", "advanced"],
       required: true,
+    },
+
+    questionPaper: {
+      fileUrl: { type: String },        // /uploads/question-papers/xyz.pdf
+      originalName: { type: String },   // actual uploaded filename
+      uploadedAt: { type: Date, default: Date.now },
     },
 
     // counts (support both single-type and mixed)

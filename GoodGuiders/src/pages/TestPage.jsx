@@ -98,6 +98,7 @@ export default function TestPage() {
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [questionPdf, setQuestionPdf] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -187,33 +188,61 @@ export default function TestPage() {
   const removeQuestion = (idx) => setQuestions((prev) => prev.filter((_, i) => i !== idx));
 
   /* ---------------- Validation ---------------- */
-  const validateForm = () => {
-    if (!formData.class) return "Please select a Class.";
-    if (subjectList.length === 0) return "Add at least one Subject.";
-    if (!["mcq", "subjective", "mcq+subjective"].includes(formData.testType)) return "Invalid test type.";
+const validateForm = () => {
+  // Basic fields
+  if (!formData.class) return "Please select a Class.";
+  if (subjectList.length === 0) return "Add at least one Subject.";
 
-    if (formData.testType === "mcq+subjective") {
-      const m = parseInt(formData.mcqCount || 0, 10) || 0;
-      const s = parseInt(formData.subjectiveCount || 0, 10) || 0;
-      if (m + s < 1) return "Total questions must be at least 1.";
-    } else {
-      const n = parseInt(formData.numberOfQuestion || 0, 10) || 0;
-      if (n < 1) return "Number of questions must be at least 1.";
+  // ✅ Allow subjective_pdf
+  if (
+    !["mcq", "subjective", "mcq+subjective", "subjective_pdf"].includes(
+      formData.testType
+    )
+  ) {
+    return "Invalid test type.";
+  }
+
+  // ✅ PDF Subjective: ONLY validate PDF and STOP
+  if (formData.testType === "subjective_pdf") {
+    if (!questionPdf) {
+      return "Question paper PDF is required for PDF Subjective test.";
     }
+    return ""; // 🚫 skip all question validations
+  }
 
-    if (questions.length === 0) return "Please add at least one question.";
-    for (let i = 0; i < questions.length; i++) {
-      const q = questions[i];
-      if (!q?.question?.trim()) return `Question ${i + 1} is empty.`;
-      if (q.type === "mcq") {
-        const opts = (q.options || []).map((x) => String(x || "").trim());
-        if (opts.length < 2 || opts.filter(Boolean).length < 2) return `Question ${i + 1}: add at least 2 options.`;
-        if (!q.correctAnswer) return `Question ${i + 1}: pick the correct answer.`;
+  // 🔽 Normal test validations
+  if (formData.testType === "mcq+subjective") {
+    const m = parseInt(formData.mcqCount || 0, 10) || 0;
+    const s = parseInt(formData.subjectiveCount || 0, 10) || 0;
+    if (m + s < 1) return "Total questions must be at least 1.";
+  } else {
+    const n = parseInt(formData.numberOfQuestion || 0, 10) || 0;
+    if (n < 1) return "Number of questions must be at least 1.";
+  }
+
+  if (questions.length === 0) return "Please add at least one question.";
+
+  for (let i = 0; i < questions.length; i++) {
+    const q = questions[i];
+    if (!q?.question?.trim()) return `Question ${i + 1} is empty.`;
+
+    if (q.type === "mcq") {
+      const opts = (q.options || []).map((x) => String(x || "").trim());
+      if (opts.length < 2 || opts.filter(Boolean).length < 2) {
+        return `Question ${i + 1}: add at least 2 options.`;
       }
-      if ((q.marks ?? 0) < 0) return `Question ${i + 1}: marks cannot be negative.`;
+      if (!q.correctAnswer) {
+        return `Question ${i + 1}: pick the correct answer.`;
+      }
     }
-    return "";
-  };
+
+    if ((q.marks ?? 0) < 0) {
+      return `Question ${i + 1}: marks cannot be negative.`;
+    }
+  }
+
+  return "";
+};
 
   /* ---------------- Submit ---------------- */
   const onSubmit = async (e) => {
@@ -228,29 +257,37 @@ export default function TestPage() {
       return;
     }
 
-    const payload = {
-      ...formData,
-      subjects: subjectList,
-      questions,
-      context, // { chapter, topic }
-    };
-
     try {
-      // 1) resolve current user (from /me or storage)
       const user = await resolveCurrentUser();
-
-      // 2) build identity headers
       const headers = buildIdentityHeaders(user);
 
-      // 3) send create request WITH headers (this is the key fix)
-      //    Keep withCredentials so cookie-based sessions still flow.
-      const res = await axios.post(`${API_URL}/questions`, payload, {
-        headers,
-        withCredentials: true,
-      });
+      let res;
 
-      // Optionally log once to verify you see x-user-id/email in Network tab
-      console.log("[create test] sent headers:", headers, "status:", res.status);
+      if (formData.testType === "subjective_pdf") {
+        const fd = new FormData();
+        fd.append("class", formData.class);
+        fd.append("testType", "subjective_pdf");
+        fd.append("difficulty", formData.difficulty);
+        fd.append("subjects", JSON.stringify(subjectList));
+        fd.append("educationBoard", formData.educationBoard || "");
+        fd.append("questionPaper", questionPdf);
+
+        res = await axios.post(`${API_URL}/questions/pdf`, fd, {
+          headers,
+          withCredentials: true,
+        });
+      } else {
+        // EXISTING FLOW (unchanged)
+        res = await axios.post(`${API_URL}/questions`, {
+          ...formData,
+          subjects: subjectList,
+          questions,
+          context,
+        }, {
+          headers,
+          withCredentials: true,
+        });
+      }
 
       navigate("/assign-test");
     } catch (err) {
@@ -384,6 +421,7 @@ export default function TestPage() {
                           { label: "MCQ", value: "mcq" },
                           { label: "Subjective", value: "subjective" },
                           { label: "Mixed", value: "mcq+subjective" },
+                          { label: "PDF Subjective", value: "subjective_pdf" },
                         ].map((opt, idx) => (
                           <ToggleButton
                             key={idx}
@@ -392,10 +430,10 @@ export default function TestPage() {
                             variant={formData.testType === opt.value ? "primary" : "outline-primary"}
                             checked={formData.testType === opt.value}
                             value={opt.value}
-                            onChange={(e) =>
+                            onChange={() =>
                               setFormData((prev) => ({
                                 ...prev,
-                                testType: e.currentTarget.value,
+                                testType: opt.value, // ✅ SAFE
                               }))
                             }
                           >
@@ -475,7 +513,26 @@ export default function TestPage() {
             </Card.Body>
           </Card>
 
+          {formData.testType === "subjective_pdf" && (
+            <Card className="mb-4">
+              <Card.Body>
+                <Form.Group>
+                  <Form.Label>Question Paper (PDF only)</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setQuestionPdf(e.target.files[0])}
+                  />
+                  <Form.Text className="text-muted">
+                    Upload the official question paper PDF.
+                  </Form.Text>
+                </Form.Group>
+              </Card.Body>
+            </Card>
+          )}
+
           {/* Questions Builder */}
+          {formData.testType !== "subjective_pdf" && (
           <Card className="mb-4">
             <Card.Header className="d-flex align-items-center justify-content-between">
               <div className="fw-semibold">Questions ({questions.length})</div>
@@ -628,9 +685,17 @@ export default function TestPage() {
               )}
             </Card.Body>
           </Card>
+          )}
 
           <div className="text-center mt-3">
-            <Button variant="success" type="submit" disabled={loading || questions.length === 0}>
+            <Button
+              variant="success"
+              type="submit"
+              disabled={
+                loading ||
+                (formData.testType !== "subjective_pdf" && questions.length === 0)
+              }
+            >
               {loading ? "Creating..." : "Create Test"}
             </Button>
           </div>
