@@ -2,7 +2,7 @@ import cron from "node-cron";
 import PdfEvaluation from "../models/PdfEvaluation.model.js";
 
 export const mentorExpiryCron = () => {
-  cron.schedule("*/5 * * * *", async () => {
+  cron.schedule("*/15 * * * *", async () => {
     try {
       const now = new Date();
 

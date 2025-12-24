@@ -81,6 +81,59 @@ router.get("/mentors", async (req, res) => {
   }
 });
 
+// ✅ NEW: GET /api/stats/mentors/top-rated
+router.get("/mentors/top-rated", async (req, res) => {
+  try {
+    // 1️⃣ Aggregate ratings (already sorted)
+    const ratings = await MentorRating.aggregate([
+      {
+        $group: {
+          _id: "$mentorEmail",
+          avgRating: { $avg: "$rating" },
+          ratingCount: { $sum: 1 },
+        },
+      },
+      { $sort: { avgRating: -1, ratingCount: -1 } },
+      { $limit: 8 },
+    ]);
+
+    const mentorEmails = ratings.map(r => r._id);
+
+    // 2️⃣ Fetch mentors
+    const mentors = await User.find({
+      email: { $in: mentorEmails },
+      role: "mentor",
+      isDisabled: { $ne: true },
+    })
+      .select("_id name profileImage specializedIn experience email")
+      .lean();
+
+    // 3️⃣ Create lookup map
+    const mentorMap = new Map(
+      mentors.map(m => [m.email, m])
+    );
+
+    // 4️⃣ REBUILD ARRAY IN RATING ORDER ✅
+    const orderedMentors = ratings
+      .map(r => {
+        const mentor = mentorMap.get(r._id);
+        if (!mentor) return null;
+
+        return {
+          ...mentor,
+          rating: Number(r.avgRating.toFixed(1)),
+          ratingCount: r.ratingCount,
+        };
+      })
+      .filter(Boolean);
+
+    res.json({ ok: true, data: orderedMentors });
+  } catch (err) {
+    console.error("Top mentors error:", err);
+    res.status(500).json({ ok: false });
+  }
+});
+
 // ✅ NEW: GET /api/stats/students
 router.get("/students", async (req, res) => {
   try {

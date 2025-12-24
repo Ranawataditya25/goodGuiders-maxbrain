@@ -1,101 +1,76 @@
-import * as React from 'react';
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Slider from "react-slick";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
-export default function Top_doctors() {
-    const Productdata = [
-        {
-            "imgsrc": "avtar/1.jpg",
-            "title": " Anna Mull",
-            "subtitle": "M.Tech",
-            "text": "20 Bowman St, South Windsor, Mt 39508",
-        },
-        {
-            "imgsrc": "avtar/2.jpg",
-            "title": " Anna Mull",
-            "subtitle": "Phd",
-            "text": "50 Bowman St, South Windsor, Mt 39508",
-        },
-        {
-            "imgsrc": "avtar/3.jpg",
-            "title": " Anna Mull",
-            "subtitle": "B.Tech",
-            "text": "30 Bowman St, South Windsor, Mt 39508",
-        },
-        {
-            "imgsrc": "avtar/4.jpg",
-            "title": " Anna Mull",
-            "subtitle": "M.Com",
-            "text": "30 Bowman St, South Windsor, Mt 39508",
-        },
-        {
-            "imgsrc": "avtar/5.jpg",
-            "title": " Anna Mull",
-            "subtitle": "B.sc",
-            "text": "30 Bowman St, South Windsor, Mt 39508",
-        },
-        {
-            "imgsrc": "avtar/6.jpg",
-            "title": " Anna Mull",
-            "subtitle": "M.Tech",
-            "text": "30 Bowman St, South Windsor, Mt 39508",
-        },
-      
-        
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-    ]
-    var settings_slider = {
-        infinite: true,
-        slidesToShow: 4,
-        slidesToScroll: 1,
-        dots: true,
-        arrows: false,
-        autoplay: true,
-        autoplaySpeed: 3000,
-        fadeSpeed: 1000,
-        responsive: [
-          {
-            breakpoint: 1600,
-            settings: {
-              slidesToShow: 3,
-              slidesToScroll: 1,
-            }
-          },
-          {
-            breakpoint: 1400,
-            settings: {
-              slidesToShow: 2,
-              slidesToScroll: 1,
-            }
-          }
-        ]
+export default function Top_doctors() {
+  const [mentors, setMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTopMentors = async () => {
+      try {
+        const res = await fetch(`${API}/stats/mentors/top-rated`);
+        const data = await res.json();
+        setMentors(data.data || []);
+      } catch (err) {
+        console.error("Failed to load mentors", err);
+      } finally {
+        setLoading(false);
+      }
     };
-    return (
-        <div>
-            <Slider {...settings_slider} className="ratedoctor-slide arrow-style1" >
-                {Productdata.map((item, index) => {
-                    const imgsrc = IMAGE_URLS[item.imgsrc];
-                    return (
-                        <div key={index}>
-                            <div className="hosdoct-grid">
-                                <div className="img-wrap">
-                                    <img className="img-fluid" src={imgsrc} alt="" />
-                                </div>
-                                <div className="doct-detail">
-                                    <h4>{item.title}</h4><span> {item.subtitle}</span>
-                                    <p>{item.text}</p>
-                                    <ul className="codex-soclist">
-                                        <li><Link href="javascript:void(0);"><i className="fa fa-facebook"></i></Link></li>
-                                        <li><Link href="javascript:void(0);"><i className="fa fa-twitter"></i></Link></li>
-                                        <li><Link href="javascript:void(0);"><i className="fa fa-instagram"></i></Link></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                })}
-            </Slider >
-        </div>
-    )
+
+    loadTopMentors();
+  }, []);
+
+  const settings_slider = {
+    infinite: true,
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    dots: true,
+    arrows: false,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    responsive: [
+      { breakpoint: 1600, settings: { slidesToShow: 3 } },
+      { breakpoint: 1400, settings: { slidesToShow: 2 } },
+    ],
+  };
+
+  if (loading) return null;
+
+  return (
+    <Slider {...settings_slider} className="ratedoctor-slide arrow-style1">
+      {mentors.map((mentor) => {
+        const imgSrc = mentor.profileImage
+          ? `http://localhost:5000${mentor.profileImage}`
+          : IMAGE_URLS["avtar/1.jpg"];
+
+        return (
+          <div key={mentor._id}>
+            <div className="hosdoct-grid">
+              <div className="img-wrap">
+                <img className="img-fluid" src={imgSrc} alt={mentor.name} />
+              </div>
+
+              <div className="doct-detail">
+                <h4>{mentor.name}</h4>
+                <span>
+                  {mentor.education?.length
+                    ? mentor.education[mentor.education.length - 1]?.degree
+                    : mentor.specializedIn || "Mentor"}
+                </span>
+                <p>{mentor.experience || "0"} years</p>
+                <p>
+                  ⭐ {mentor.rating || "0"} / 5
+                  <br />({mentor.ratingCount || 0} reviews)
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </Slider>
+  );
 }

@@ -158,15 +158,39 @@ export default function AssignTest() {
   return (
     <div style={{ marginTop: 120 }}>
       <Container>
-        <Row className="mb-3">
-          <Col>
-            <h3 className="mb-4">Assign Tests</h3>
-            <div className="text-muted">
-              Pick a test and assign it to students with a due date and a time
-              limit.
-            </div>
-          </Col>
-        </Row>
+        <Row className="mb-3 align-items-center">
+  {/* LEFT SIDE TEXT */}
+  <Col md={8}>
+    <h3 className="mb-1">Assign Tests</h3>
+    <div className="text-muted">
+      Pick a test and assign it to students with a due date and a time limit.
+    </div>
+  </Col>
+
+  {/* RIGHT SIDE BUTTONS */}
+  <Col
+    md={4}
+    className="d-flex justify-content-end gap-2 mt-3 mt-md-0"
+  >
+    <Button
+      variant="outline-primary"
+      size="sm"
+      onClick={submissions}
+    >
+      View Submissions
+    </Button>
+
+    {user?.role === "admin" && (
+      <Button
+        size="sm"
+        variant="outline-warning"
+        onClick={() => navigate("/admin/pdf-submissions")}
+      >
+        PDF Submissions
+      </Button>
+    )}
+  </Col>
+</Row>
 
         {error && <div className="alert alert-danger">{error}</div>}
 
@@ -401,23 +425,6 @@ export default function AssignTest() {
             </Button>
           </Modal.Footer>
         </Modal>
-        <Button
-          variant="outline-primary"
-          size="sm"
-          className="ms-2 mb-13 mt-13"
-          onClick={submissions}
-        >
-          View Submissions
-        </Button>
-        {user?.role === "admin" && (
-          <Button
-            size="sm"
-            variant="outline-warning"
-            onClick={() => navigate("/admin/pdf-submissions")}
-          >
-            PDF Submissions
-          </Button>
-        )}
       </Container>
     </div>
   );
