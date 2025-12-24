@@ -1,5 +1,12 @@
 import "animate.css";
-import { Routes, Route, BrowserRouter, useLocation, Navigate, useNavigate } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  BrowserRouter,
+  useLocation,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 
 import Index from "./pages/Index";
 import Dashboard2 from "./pages/Dashboard2";
@@ -39,11 +46,10 @@ import DoctorProfile from "./pages/DoctorProfile";
 import Status from "./pages/Status";
 
 import TestPage from "./pages/TestPage.jsx";
-import { TestStart } from './pages/TestStart';
-import TestEnd from './pages/TestEnd';
+import { TestStart } from "./pages/TestStart";
+import TestEnd from "./pages/TestEnd";
 
 import Forgot_password from "./pages/Forgot_password";
-import New_password from "./pages/New_password";
 import Verify_email from "./pages/Verify_email";
 import Verify_pin from "./pages/Verify_pin";
 
@@ -106,80 +112,99 @@ import MentorSubmissions from "./pages/MentorSubmissions.jsx";
 import MentorMaterials from "./pages/MentorMaterials.jsx";
 import AdminPdfSubmissions from "./pages/AdminPdfSubmissions.jsx";
 import MentorEvaluations from "./pages/MentorEvaluations.jsx";
+import ResetPassword from "./pages/ResetPassword";
 
 const routesWithoutExtras = [
   "/",
   "/login",
   "/register",
   "/forgot-password",
-  "/new-password",
   "/verify-email",
   "/verify-pin",
   "/landing",
-  "/error-page"
+  "/error-page",
+  "/mentor-registration",
 ];
-
-
 
 function AppContent() {
   const location = useLocation();
-   const navigate = useNavigate();
-  const isSpecialRoute = routesWithoutExtras.includes(location.pathname);
+  const navigate = useNavigate();
+  // const isSpecialRoute = hideExtras;
+
+  // 👇 dynamic route check
+  const isResetPasswordPage = location.pathname.startsWith("/reset-password");
+
+  const hideExtras =
+    routesWithoutExtras.includes(location.pathname) || isResetPasswordPage;
 
   const customizerEnabled = true;
-  const headerEnabled = true;
-  const sidebarEnabled = true;
+  // const headerEnabled = true;
+  // const sidebarEnabled = true;
 
   useEffect(() => {
-  const handler = (event) => {
-    // ✅ Security check — only accept messages from your landing page domain
-    // Replace "https://your-landing-domain.com" with your actual deployed domain
-    if (
-      event.origin !== "http://localhost:5173" &&
-      !event.origin.includes("https://landing-page-gg.onrender.com")
-    ) {
-      return;
-    }
+    const handler = (event) => {
+      // ✅ Security check — only accept messages from your landing page domain
+      // Replace "https://your-landing-domain.com" with your actual deployed domain
+      if (
+        event.origin !== "http://localhost:5173" &&
+        !event.origin.includes("https://landing-page-gg.onrender.com")
+      ) {
+        return;
+      }
 
-    if (event.data && event.data.action === "navigate") {
-      navigate(event.data.path);
-    }
-  };
+      if (event.data && event.data.action === "navigate") {
+        navigate(event.data.path);
+      }
+    };
 
-  window.addEventListener("message", handler);
-  return () => window.removeEventListener("message", handler);
-}, [navigate]);
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [navigate]);
 
   return (
     <>
-      {/* Conditionally render Header */}
-      {!isSpecialRoute && location.pathname !== "/error-page" && headerEnabled && <Header />}
-      {/* Conditionally render Sidebar */}
-      {!isSpecialRoute && location.pathname !== "/error-page" && sidebarEnabled && <Sidebar />}
-
+      {/* ✅ HEADER & SIDEBAR CONDITION */}
+      {!hideExtras && <Header />}
+      {!hideExtras && <Sidebar />}
       <Routes>
-          <Route
-    exact
-    path="/"
-    element={
-      <iframe
-      src="https://landing-page-gg.onrender.com"   // 👈 put your live landing URL here
-      style={{ width: "100%", height: "100vh", border: "none" }}
-      />
-    }
-    />    
+        <Route
+          exact
+          path="/"
+          element={
+            <iframe
+              src="https://landing-page-gg.onrender.com" // 👈 put your live landing URL here
+              style={{ width: "100%", height: "100vh", border: "none" }}
+            />
+          }
+        />
 
         <Route exact path="/admin-dashboard" element={<Index />} />
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/chat/:mentorEmail" element={<ChatPage />} />
         <Route exact path="/all-chats" element={<AllChatsPage />} />
-        <Route exact path="/mentor/materials" element={<MentorMaterials />}/>
+        <Route exact path="/mentor/materials" element={<MentorMaterials />} />
         <Route path="/mentor/:email/materials" element={<MentorMaterials />} />
-        <Route exact path="/admin-mentor-requests" element={<AdminMentorRequests />} />
+        <Route
+          exact
+          path="/admin-mentor-requests"
+          element={<AdminMentorRequests />}
+        />
         <Route exact path="/purchase-temp" element={<PurchaseTemp />} />
-        <Route exact path="/mentor-submissions" element={<MentorSubmissions />} />
-        <Route exact path="/admin/pdf-submissions" element={<AdminPdfSubmissions /> } />
-        <Route exact path="/mentor/pdf-evaluations" element={<MentorEvaluations /> } />
+        <Route
+          exact
+          path="/mentor-submissions"
+          element={<MentorSubmissions />}
+        />
+        <Route
+          exact
+          path="/admin/pdf-submissions"
+          element={<AdminPdfSubmissions />}
+        />
+        <Route
+          exact
+          path="/mentor/pdf-evaluations"
+          element={<MentorEvaluations />}
+        />
 
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
@@ -197,9 +222,16 @@ function AppContent() {
         <Route exact path="/assign-test" element={<AssignTest />} />
         <Route exact path="/assigned-tests" element={<AssignedTestsPage />} />
 
-        <Route path="/test-instructions/:assignmentId" element={<ExamInstructions />} />
-        
-        <Route exact path="/test-player/:assignmentId" element={<TestPlayer />} />
+        <Route
+          path="/test-instructions/:assignmentId"
+          element={<ExamInstructions />}
+        />
+
+        <Route
+          exact
+          path="/test-player/:assignmentId"
+          element={<TestPlayer />}
+        />
 
         <Route exact path="/test-result/:attemptId" element={<TestResult />} />
 
@@ -224,11 +256,15 @@ function AppContent() {
 
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />
-        <Route exact path="/mentor-registration" element={<MentorRegistrationProfile />} />
+        <Route
+          exact
+          path="/mentor-registration"
+          element={<MentorRegistrationProfile />}
+        />
         <Route exact path="/doctor-profile" element={<DoctorProfile />} />
         <Route exact path="/status" element={<Status />} />
         <Route exact path="/forgot-password" element={<Forgot_password />} />
-        <Route exact path="/new-password" element={<New_password />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route exact path="/verify-email" element={<Verify_email />} />
         <Route exact path="/verify-pin" element={<Verify_pin />} />
 
@@ -238,8 +274,16 @@ function AppContent() {
         <Route exact path="/data-table" element={<Datatable />} />
 
         <Route exact path="/element-input" element={<Element_Basic_form />} />
-        <Route exact path="/element-checkbox-radio" element={<Element_Checkbox_radio />} />
-        <Route exact path="/element-datepicker" element={<Element_Datetimepicker />} />
+        <Route
+          exact
+          path="/element-checkbox-radio"
+          element={<Element_Checkbox_radio />}
+        />
+        <Route
+          exact
+          path="/element-datepicker"
+          element={<Element_Datetimepicker />}
+        />
         <Route exact path="/chart-apex" element={<ApexChart />} />
         <Route exact path="/chart-echarts" element={<Echart />} />
         <Route exact path="/chart-morris" element={<Morrishchart />} />
@@ -250,25 +294,53 @@ function AppContent() {
         <Route exact path="/element-select2" element={<Element_Select2 />} />
         <Route exact path="/element-switch" element={<Element_Switch />} />
         <Route exact path="/element-dropzone" element={<Element_Dropzone />} />
-        <Route exact path="/element-sweetalert2" element={<Element_Sweetalert />} />
+        <Route
+          exact
+          path="/element-sweetalert2"
+          element={<Element_Sweetalert />}
+        />
         <Route exact path="/element-lightbox" element={<Element_Lightbox />} />
-        <Route exact path="/element-typography" element={<Element_Typography />} />
+        <Route
+          exact
+          path="/element-typography"
+          element={<Element_Typography />}
+        />
         <Route exact path="/element-color" element={<Element_Colors />} />
-        <Route exact path="/element-themeclass" element={<Element_HelperClass />} />
+        <Route
+          exact
+          path="/element-themeclass"
+          element={<Element_HelperClass />}
+        />
         <Route exact path="/element-alert" element={<Element_Alerts />} />
         <Route exact path="/element-avtar" element={<Element_Avtar />} />
         <Route exact path="/element-button" element={<Element_Buttons />} />
         <Route exact path="/element-grid" element={<Element_Grids />} />
         <Route exact path="/element-dropdown" element={<Element_Dropdowns />} />
-        <Route exact path="/element-breadcrumb" element={<Element_breadcrumb />} />
-        <Route exact path="/element-accordion" element={<Element_Accordions />} />
+        <Route
+          exact
+          path="/element-breadcrumb"
+          element={<Element_breadcrumb />}
+        />
+        <Route
+          exact
+          path="/element-accordion"
+          element={<Element_Accordions />}
+        />
         <Route exact path="/element-badge" element={<Element_Badges />} />
         <Route exact path="/element-modal" element={<Element_Modals />} />
         <Route exact path="/element-tab" element={<Element_Tabs_content />} />
         <Route exact path="/element-tooltip" element={<Element_Tooltips />} />
         <Route exact path="/element-card" element={<Element_Cards />} />
-        <Route exact path="/element-progressbar" element={<Element_Progressbar />} />
-        <Route exact path="/element-pagination" element={<Element_Paginations />} />
+        <Route
+          exact
+          path="/element-progressbar"
+          element={<Element_Progressbar />}
+        />
+        <Route
+          exact
+          path="/element-pagination"
+          element={<Element_Paginations />}
+        />
         <Route exact path="/landing" element={<Landing />} />
 
         <Route path="*" element={<Navigate to="/error-page" replace />} />
@@ -279,7 +351,9 @@ function AppContent() {
       <Taptotop />
 
       {/* Customizer */}
-      {!isSpecialRoute && location.pathname !== "/error-page" && customizerEnabled && <Customizer />}
+      {!hideExtras && location.pathname !== "/error-page" && customizerEnabled && (
+  <Customizer />
+)}
     </>
   );
 }

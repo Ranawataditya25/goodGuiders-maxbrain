@@ -2981,6 +2981,7 @@ export default function Sidebar() {
           </li>
 
           {/* Student */}
+          {isMentor || isStudent &&(
           <li
             onClick={() => handleMenuClick(8)}
             className={`menu-item ${activeIndex === 8 ? "active" : ""}`}
@@ -2990,18 +2991,12 @@ export default function Sidebar() {
                 <i className="fa fa-wheelchair" aria-hidden="true"></i>
               </div>
               {/* <span>Student</span> */}
-              {isAdmin && <span>Assigned Test</span>}
               {isMentor && <span>Test Assigned To Students</span>}
               {isStudent && <span>My Tests</span>}
 
               <i className="fa fa-angle-down"></i>
             </Link>
             <ul className="submenu-list">
-              {isAdmin && (
-                <li>
-                  <Link to="/all-patients">All Student</Link>
-                </li>
-              )}
               {isMentor && (
                 <li>
                   <Link to="/all-patients">Profile</Link>
@@ -3023,19 +3018,9 @@ export default function Sidebar() {
                   <Link to="/edit-doctor">Edit Profile</Link>
                 </li>
               )}
-              {isAdmin && (
-                <>
-                  <li>
-                    <Link to="/add-patient">Add Student</Link>
-                  </li>
-
-                  <li>
-                    <Link to="/edit-patient">Edit Student</Link>
-                  </li>
-                </>
-              )}
             </ul>
           </li>
+          )}
 
           {/* Appointments */}
           <li

@@ -846,8 +846,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import logo from "/src/assets/images/logo/icon-logo.png";
-import facebook from "/src/assets/images/auth/1.png";
-import google from "/src/assets/images/auth/2.png";
+// import facebook from "/src/assets/images/auth/1.png";
+// import google from "/src/assets/images/auth/2.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -1013,7 +1013,7 @@ const handleSubmit = async (e) => {
         </Form>
 
         {/* Footer */}
-        <div className="auth-footer">
+        {/* <div className="auth-footer">
           <h6 className="auth-with">Or login with</h6>
           <ul className="login-list">
             <li>
@@ -1029,7 +1029,7 @@ const handleSubmit = async (e) => {
               </Link>
             </li>
           </ul>
-        </div>
+        </div> */}
       </div>
     </div>
   );

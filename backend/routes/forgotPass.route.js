@@ -1,6 +1,7 @@
 // routes/forgotPass.route.js
 import express from "express";
 import crypto from "crypto";
+
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import rateLimit from "express-rate-limit";
@@ -46,7 +47,7 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
     await user.save();
 
     // Reset URL
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL}/bootstrapreact/medixo/reset-password/${resetToken}`;
 
     // Mail transporter
     const transporter = nodemailer.createTransport({

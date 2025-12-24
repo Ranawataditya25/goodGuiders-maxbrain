@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { Row, Col, Card, Form, Container, Button } from "react-bootstrap";
-import SimpleBar from "simplebar-react";
-import PageBreadcrumb from "../componets/PageBreadcrumb";
 import { useNavigate } from "react-router-dom";   // ✅ import navigate hook
 import "./css/ProfilePage.css";
 
@@ -99,10 +97,7 @@ export default function MentorRegistrationProfile() {
   };
 
   return (
-    <div className="themebody-wrap">
-      <PageBreadcrumb pagename="Mentor Profile Setup" />
-
-      <SimpleBar className="theme-body common-dash">
+    <section className="p-60 py-100">
         <Container fluid>
           <Row>
             <Col md={12}>
@@ -343,7 +338,6 @@ export default function MentorRegistrationProfile() {
             </Col>
           </Row>
         </Container>
-      </SimpleBar>
-    </div>
+      </section>
   );
 }

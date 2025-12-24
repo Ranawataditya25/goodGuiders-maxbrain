@@ -120,8 +120,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Form, InputGroup, Button, Row, Col, Container } from "react-bootstrap";
 import logo from "/src/assets/images/logo/icon-logo.png";
-import facebook from "/src/assets/images/auth/1.png";
-import google from "/src/assets/images/auth/2.png";
+// import facebook from "/src/assets/images/auth/1.png";
+// import google from "/src/assets/images/auth/2.png";
 import { useNavigate } from "react-router-dom";
 
 export default function Register() {
@@ -329,7 +329,7 @@ const handleSubmit = async (e) => {
                   </Button>
                 </Form.Group>
 
-                <div className="auth-footer">
+                {/* <div className="auth-footer">
                   <h6 className="auth-with">Or login in with </h6>
                   <ul className="login-list">
                     <li>
@@ -349,7 +349,7 @@ const handleSubmit = async (e) => {
                       </Link>
                     </li>
                   </ul>
-                </div>
+                </div> */}
               </Form>
             </div>
           </Col>
