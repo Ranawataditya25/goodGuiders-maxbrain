@@ -30,53 +30,138 @@ export default function AllChatsPage() {
   }, [userEmail]);
 
   const openChat = (conv) => {
-    const otherEmail = conv.participants.find((p) => p !== userEmail);
+    const otherParticipant = conv.participantsDetailed.find(
+      (p) => p.email !== userEmail
+    );
 
-    // Pass the uniqueName of the conversation via state
-    navigate(`/chat/${encodeURIComponent(otherEmail)}`, {
-      state: { conversationUniqueName: conv.uniqueName },
+    navigate(`/chat/${encodeURIComponent(otherParticipant.email)}`, {
+      state: {
+        conversationUniqueName: conv.uniqueName,
+        mentorName: otherParticipant.name, // ✅ PASS NAME
+      },
     });
   };
 
+  const formatDateTime = (timestamp) => {
+  if (!timestamp) return "";
+
+  const date = new Date(timestamp);
+  const now = new Date();
+
+  const isToday =
+    date.toDateString() === now.toDateString();
+
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    date.toDateString() === yesterday.toDateString();
+
+  const time = date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  if (isToday) return time;
+  if (isYesterday) return `Yesterday, ${time}`;
+
+  return `${date.toLocaleDateString([], {
+    day: "2-digit",
+    month: "short",
+  })}, ${time}`;
+};
+
   return (
-    <Container className="mt-95">
+    <Container style={{ marginTop: 120, maxWidth: 720 }}>
       <Button variant="secondary" className="mb-4" onClick={() => navigate(-1)}>
-        &larr; Back
+        ← Back
       </Button>
-      <h1 className="mb-4 text-center">All Chats</h1>
+
+      <h2 className="mb-4 text-center fw-bold">Chats</h2>
 
       {loading ? (
         <div className="d-flex justify-content-center mt-5">
           <Spinner animation="border" />
         </div>
       ) : conversations.length === 0 ? (
-        <p className="text-center">No conversations yet.</p>
+        <p className="text-center text-muted">No conversations yet.</p>
       ) : (
-        <div className="d-flex flex-column gap-3">
+        <div className="d-flex flex-column gap-2">
           {conversations.map((conv, idx) => {
-            const otherEmail = conv.participants.find((p) => p !== userEmail);
+            const otherParticipant = conv.participantsDetailed?.find(
+              (p) => p.email !== userEmail
+            );
+
+            const initial =
+              otherParticipant?.name?.charAt(0).toUpperCase() ||
+              otherParticipant?.email?.charAt(0).toUpperCase();
+
             return (
               <Card
                 key={idx}
                 onClick={() => openChat(conv)}
-                style={{ cursor: "pointer", minHeight: "80px" }}
-                className="shadow-sm"
+                className="shadow-sm chat-card"
+                style={{ cursor: "pointer", borderRadius: 12 }}
               >
-                <Card.Body className="d-flex flex-column justify-content-center">
-                  <h5 className="mb-2">{otherEmail}</h5>
-                  <small className="text-muted">
-                    {conv.lastMessage
-                      ? `${
-                          conv.lastMessage.author === userEmail ? "You: " : ""
-                        }${conv.lastMessage.body}`
-                      : "No messages yet"}
-                  </small>
+                <Card.Body className="d-flex align-items-center gap-3">
+                  {/* Avatar */}
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: "50%",
+                      backgroundColor: "#0d6efd",
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {initial}
+                  </div>
+
+                  {/* Chat info */}
+                  <div className="flex-grow-1">
+                    <div className="d-flex justify-content-between">
+                      <h6 className="mb-1 fw-semibold">
+                        {otherParticipant?.name || otherParticipant?.email}
+                      </h6>
+
+                      {conv.lastMessage?.timestamp && (
+  <small className="text-muted">
+    {formatDateTime(conv.lastMessage.timestamp)}
+  </small>
+)}
+                    </div>
+
+                    <small className="text-muted">
+                      {conv.lastMessage ? (
+                        <>
+                          {conv.lastMessage.author === userEmail && (
+                            <strong>You: </strong>
+                          )}
+                          {conv.lastMessage.body}
+                        </>
+                      ) : (
+                        "No messages yet"
+                      )}
+                    </small>
+                  </div>
                 </Card.Body>
               </Card>
             );
           })}
         </div>
       )}
+
+      {/* Hover effect */}
+      <style>{`
+        .chat-card:hover {
+          background-color: #f8f9fa;
+        }
+      `}</style>
     </Container>
   );
 }

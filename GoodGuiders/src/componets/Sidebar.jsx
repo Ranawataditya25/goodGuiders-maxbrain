@@ -3023,7 +3023,7 @@ export default function Sidebar() {
           )}
 
           {/* Appointments */}
-          <li
+          {/* <li
             onClick={() => handleMenuClick(3)}
             className={`menu-item ${activeIndex === 3 ? "active" : ""}`}
           >
@@ -3062,7 +3062,7 @@ export default function Sidebar() {
                 </li>
               )}
             </ul>
-          </li>
+          </li> */}
 
           {/* Billing */}
           <li
@@ -3103,7 +3103,7 @@ export default function Sidebar() {
           </li>
 
           {/* Event Management */}
-          <li
+          {/* <li
             onClick={() => handleMenuClick(5)}
             className={`menu-item ${activeIndex === 5 ? "active" : ""}`}
           >
@@ -3113,7 +3113,7 @@ export default function Sidebar() {
               </div>
               <span>Event Management</span>
             </Link>
-          </li>
+          </li> */}
 
           {/* Support */}
           <li

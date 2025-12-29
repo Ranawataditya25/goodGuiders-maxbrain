@@ -1292,6 +1292,8 @@ export default function Index() {
   const [totalMentors, setTotalMentors] = useState(0);
   const [totalStudents, setTotalStudents] = useState(0);
   const [pendingMentors, setPendingMentors] = useState(0);
+  const [recentStudents, setRecentStudents] = useState([]);
+const [recentLoading, setRecentLoading] = useState(true);
 
   const navigate = useNavigate(); // ✅ hook for navigation
 
@@ -1314,6 +1316,15 @@ export default function Index() {
         setPendingMentors(count);
       })
       .catch((err) => console.error("Error fetching pending mentors:", err));
+
+    //10 recent students
+    fetch("http://127.0.0.1:5000/api/stats/students/recent")
+  .then(res => res.json())
+  .then(data => {
+    setRecentStudents(data.students || []);
+  })
+  .catch(err => console.error("Recent students error:", err))
+  .finally(() => setRecentLoading(false));
   }, []);
 
   const handleInputChange = (event) => {
@@ -1541,124 +1552,63 @@ export default function Index() {
             <Col lg={6}></Col>
 
             {/* <Col xxl={8} lg={6}> */}
-              <Card className=" patientvisits-tbl">
-                <Card.Header>
-                  <h4>Student Visits</h4>
-                </Card.Header>
-                <Card.Body>
-                  <Table bordered responsive className="transaction-tbl">
-                    <thead>
-                      <tr>
-                        <th>Mentor Name</th>
-                        <th>visit Date</th>
-                        <th>visit Time </th>
-                        <th>Invoice</th>
-                        <th>Charges</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td> Tiger Nixon</td>
-                        <td>10/05/2023</td>
-                        <td>09:30 Am</td>
-                        <td>Operation</td>
-                        <td>$80</td>
-                        <td>Resheduled</td>
-                        <td>
-                          <Link className="text-success" to="#">
-                            <FeatherIcon className="w-18" icon="edit" />
-                          </Link>
-                          <Link className="text-danger ml-8" to="#">
-                            <FeatherIcon className="w-18" icon="trash-2" />
-                          </Link>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td> Hal Appeno</td>
-                        <td>05/06/2023</td>
-                        <td>08:00 Am</td>
-                        <td>Check up</td>
-                        <td>$50</td>
-                        <td>Fever</td>
-                        <td>
-                          <Link className="text-success" to="#">
-                            <FeatherIcon className="w-18" icon="edit" />
-                          </Link>
-                          <Link className="text-danger ml-8" to="#">
-                            <FeatherIcon className="w-18" icon="trash-2" />
-                          </Link>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td> Pat Agonia</td>
-                        <td>20/02/2023</td>
-                        <td>10:30 Am</td>
-                        <td>Admit</td>
-                        <td>$75</td>
-                        <td>Ortho</td>
-                        <td>
-                          <Link className="text-success" to="#">
-                            <FeatherIcon className="w-18" icon="edit" />
-                          </Link>
-                          <Link className="text-danger ml-8" to="#">
-                            <FeatherIcon className="w-18" icon="trash-2" />
-                          </Link>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td> Paul Molive</td>
-                        <td>15/08/2023</td>
-                        <td>03:00 Pm</td>
-                        <td> Blood Test</td>
-                        <td>$60</td>
-                        <td>General Check-up</td>
-                        <td>
-                          <Link className="text-success" to="#">
-                            <FeatherIcon className="w-18" icon="edit" />
-                          </Link>
-                          <Link className="text-danger ml-8" to="#">
-                            <FeatherIcon className="w-18" icon="trash-2" />
-                          </Link>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td> Polly Tech</td>
-                        <td>12/07/2023</td>
-                        <td>12:00 Pm</td>
-                        <td>Discharge</td>
-                        <td>$40</td>
-                        <td>Injury</td>
-                        <td>
-                          <Link className="text-success" to="#">
-                            <FeatherIcon className="w-18" icon="edit" />
-                          </Link>
-                          <Link className="text-danger ml-8" to="#">
-                            <FeatherIcon className="w-18" icon="trash-2" />
-                          </Link>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td> Hal Appeno</td>
-                        <td>05/06/2023</td>
-                        <td>08:00 Am</td>
-                        <td>Check up</td>
-                        <td>$50</td>
-                        <td>Fever</td>
-                        <td>
-                          <Link className="text-success" to="#">
-                            <FeatherIcon className="w-18" icon="edit" />
-                          </Link>
-                          <Link className="text-danger ml-8" to="#">
-                            <FeatherIcon className="w-18" icon="trash-2" />
-                          </Link>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </Table>
-                </Card.Body>
-              </Card>
+              <Card className="patientvisits-tbl">
+  <Card.Header className="d-flex justify-content-between align-items-center">
+  <h4 className="mb-0">Recently Registered Students</h4>
+
+  <Link to="/all-patients" className="btn btn-sm btn-outline-primary">
+    View All
+  </Link>
+</Card.Header>
+
+  <Card.Body>
+    <Table bordered responsive className="transaction-tbl">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Class</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {recentLoading ? (
+          <tr>
+            <td colSpan="5" className="text-center">
+              Loading...
+            </td>
+          </tr>
+        ) : recentStudents.length === 0 ? (
+          <tr>
+            <td colSpan="5" className="text-center">
+              No students found
+            </td>
+          </tr>
+        ) : (
+          recentStudents.map((s, index) => (
+            <tr key={s.email}>
+              <td>{index + 1}</td>
+              <td>{s.name}</td>
+              <td>{s.email}</td>
+              <td>{s.className || "-"}</td>
+              <td>
+                <span
+                  className={`badge ${
+                    s.isDisabled ? "bg-danger" : "bg-primary"
+                  }`}
+                >
+                  {s.isDisabled ? "Disabled" : "Enabled"}
+                </span>
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </Table>
+  </Card.Body>
+</Card>
             {/* </Col> */}
 
            

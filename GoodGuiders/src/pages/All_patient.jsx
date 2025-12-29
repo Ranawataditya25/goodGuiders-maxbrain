@@ -363,6 +363,7 @@ import PageBreadcrumb from "../componets/PageBreadcrumb";
 export default function All_Student() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [allStudents, setAllStudents] = useState([]);
 
   const [classes, setClasses] = useState([]); // unique classes
   const [selectedClass, setSelectedClass] = useState("All");
@@ -414,6 +415,7 @@ export default function All_Student() {
           Class: (s.className || "").trim() || "-",
           isDisabled: s.isDisabled,
         }));
+        setAllStudents(mapped);
         setStudents(mapped);
         const uniqueClasses = [...new Set(mapped.map((m) => m.Class).filter((c) => c && c !== "-"))];
         setClasses(uniqueClasses);
@@ -523,10 +525,18 @@ export default function All_Student() {
     filtersMap[filtersKey].callback(filters);
   };
   const handleClassChange = (e) => {
-    const value = e.target.value;
-    setSelectedClass(value);
-    fetchStudents(value);
-  };
+  const value = e.target.value;
+  setSelectedClass(value);
+
+  if (value === "All") {
+    setStudents(allStudents); // ✅ restore all
+  } else {
+    const filtered = allStudents.filter(
+      (s) => s.Class === value
+    );
+    setStudents(filtered); // ✅ ONLY selected class
+  }
+};
 
   const renderHeader = (filtersKey) => {
     const filters = filtersMap[filtersKey].value;

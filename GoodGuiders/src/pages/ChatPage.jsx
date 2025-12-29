@@ -32,6 +32,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef(null);
   const location = useLocation();
   const uniqueNameFromState = location.state?.conversationUniqueName;
+const mentorNameFromState = location.state?.mentorName;
 
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -217,7 +218,7 @@ const handleRejectCall = async () => {
 
   return (
     <div className="themebody-wrap">
-      <PageBreadcrumb pagename={`Chat with ${mentorEmail}`} />
+      <PageBreadcrumb pagename={`Chat with ${mentorNameFromState || mentorEmail}`} />
       <div className="theme-body">
         <Container fluid>
           <Row>

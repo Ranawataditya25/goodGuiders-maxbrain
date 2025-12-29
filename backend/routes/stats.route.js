@@ -212,6 +212,38 @@ router.get("/students", async (req, res) => {
   }
 });
 
+// ✅ GET — 10 most recently registered students
+router.get("/students/recent", async (req, res) => {
+  try {
+    const students = await User.find({ role: "student" })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select("name email education isDisabled createdAt")
+      .lean();
+
+    const mapped = students.map(s => {
+      // 🔥 pick class from education
+      const studentClass =
+        Array.isArray(s.education) && s.education.length > 0
+          ? s.education[0].className
+          : "-";
+
+      return {
+        name: s.name,
+        email: s.email,
+        className: studentClass,
+        isDisabled: s.isDisabled,
+        createdAt: s.createdAt,
+      };
+    });
+
+    res.json({ ok: true, students: mapped });
+  } catch (err) {
+    console.error("Recent students error:", err);
+    res.status(500).json({ ok: false });
+  }
+});
+
 // DELETE a user (mentor/student)
 router.delete("/:role/:email", async (req, res) => {
   try {
@@ -546,31 +578,56 @@ router.post("/mentor/:email/rate", async (req, res) => {
   }
 });
 
-// ✅ GET — average rating for mentor
+// ✅ GET — average + breakdown rating for mentor
 router.get("/mentor/:email/rating", async (req, res) => {
   try {
     const mentorEmail = req.params.email;
 
     const result = await MentorRating.aggregate([
       { $match: { mentorEmail } },
+
+      // group by rating value
       {
         $group: {
-          _id: "$mentorEmail",
-          avgRating: { $avg: "$rating" },
+          _id: "$rating",
           count: { $sum: 1 },
         },
       },
     ]);
 
-    if (result.length === 0) {
-      return res.json({ avgRating: null, count: 0 });
+    // initialize breakdown
+    const breakdown = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    };
+
+    let totalCount = 0;
+    let totalRatingSum = 0;
+
+    result.forEach((r) => {
+      breakdown[r._id] = r.count;
+      totalCount += r.count;
+      totalRatingSum += r._id * r.count;
+    });
+
+    if (totalCount === 0) {
+      return res.json({
+        avgRating: null,
+        count: 0,
+        breakdown,
+      });
     }
 
     res.json({
-      avgRating: Number(result[0].avgRating.toFixed(1)),
-      count: result[0].count,
+      avgRating: Number((totalRatingSum / totalCount).toFixed(1)),
+      count: totalCount,
+      breakdown,
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });

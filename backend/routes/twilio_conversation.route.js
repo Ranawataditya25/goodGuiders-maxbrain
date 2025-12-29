@@ -240,13 +240,25 @@ router.get("/conversations", async (req, res) => {
           );
         }
 
-        return {
-          uniqueName: conv.uniqueName,
-          conversationSid: conv.conversationSid,
-          participants: conv.participants,
-          createdAt: conv.createdAt,
-          lastMessage,
-        };
+        // helper to resolve name by email
+const resolveName = async (email) => {
+  const user = await User.findOne({ email }).select("name email");
+  return user?.name || email; // fallback to email
+};
+
+return {
+  uniqueName: conv.uniqueName,
+  conversationSid: conv.conversationSid,
+  participants: conv.participants,
+  participantsDetailed: await Promise.all(
+    conv.participants.map(async (email) => ({
+      email,
+      name: await resolveName(email),
+    }))
+  ),
+  createdAt: conv.createdAt,
+  lastMessage,
+};
       })
     );
 

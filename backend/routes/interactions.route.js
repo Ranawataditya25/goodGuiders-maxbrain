@@ -178,7 +178,7 @@ router.get("/mentor/:mentorId/students", async (req, res) => {
             $cond: [{ $ifNull: ["$studentUser._id", false] }, { $toString: "$studentUser._id" }, "$_id"]
           },
           Name: { $ifNull: ["$studentUser.name", "$_id"] },
-          Course: { $ifNull: ["$studentUser.course", null] },
+          Grade: { $ifNull: ["$studentUser.grade", null] },
           LastInteraction: "$lastInteraction"
         }
       },

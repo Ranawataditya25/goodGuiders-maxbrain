@@ -2351,13 +2351,18 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
         {/* Action */}
         <td>
           <Button
-            size="sm"
-            variant="outline-primary"
-            as={Link}
-            to={`/chat/${mentor.email}`}
-          >
-            Chat
-          </Button>
+  size="sm"
+  variant="outline-primary"
+  onClick={() =>
+    navigate(`/chat/${mentor.email}`, {
+      state: {
+        mentorName: mentor.name, // ✅ PASS NAME
+      },
+    })
+  }
+>
+  Chat
+</Button>
         </td>
       </tr>
     ))

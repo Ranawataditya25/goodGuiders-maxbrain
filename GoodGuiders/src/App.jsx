@@ -113,6 +113,7 @@ import MentorMaterials from "./pages/MentorMaterials.jsx";
 import AdminPdfSubmissions from "./pages/AdminPdfSubmissions.jsx";
 import MentorEvaluations from "./pages/MentorEvaluations.jsx";
 import ResetPassword from "./pages/ResetPassword";
+import MentorProfileInfo from "./pages/MentorProfileInfo.jsx";
 
 const routesWithoutExtras = [
   "/",
@@ -210,6 +211,7 @@ function AppContent() {
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
 
         <Route exact path="/all-doctors" element={<All_doctor />} />
+        <Route exact path="/doctor-info/:email" element={<MentorProfileInfo /> } />
         {/* <Route exact path="/add-doctor" element={<Add_doctor />} /> */}
         <Route exact path="/edit-doctor" element={<Edit_doctor />} />
 

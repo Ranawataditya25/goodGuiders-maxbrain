@@ -1012,12 +1012,12 @@ export default function All_Mentor() {
   const [activeChatTitle, setActiveChatTitle] = useState("");
 
   // rating state
-const [avgRating, setAvgRating] = useState(null);
-const [ratingCount, setRatingCount] = useState(0);
+  const [avgRating, setAvgRating] = useState(null);
+  const [ratingCount, setRatingCount] = useState(0);
 
-const [showRatingModal, setShowRatingModal] = useState(false);
-const [selectedRating, setSelectedRating] = useState(0);
-const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   // helper sanitize + uniqueName (same as your twilio route)
   const sanitize = (s = "") =>
@@ -1036,8 +1036,8 @@ const [ratingSubmitting, setRatingSubmitting] = useState(false);
       const url =
         spec && spec !== "All"
           ? `http://127.0.0.1:5000/api/stats/mentors?specialization=${encodeURIComponent(
-            spec
-          )}`
+              spec
+            )}`
           : "http://127.0.0.1:5000/api/stats/mentors";
 
       const res = await fetch(url);
@@ -1103,7 +1103,11 @@ const [ratingSubmitting, setRatingSubmitting] = useState(false);
     setRatingCount(0);
 
     // 🔹 FETCH AVG RATING (independent call)
-    fetch(`http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(rowData.Email)}/rating`)
+    fetch(
+      `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        rowData.Email
+      )}/rating`
+    )
       .then((r) => r.json())
       .then((d) => {
         setAvgRating(d.avgRating);
@@ -1138,43 +1142,33 @@ const [ratingSubmitting, setRatingSubmitting] = useState(false);
     }
   };
 
-const closeMentorDetails = () => {
-  setShowMentorDetails(false);
-  setSelectedMentor(null);
-  setMentorDetails(null);
-  setMentorDetailsError(null);
-  setAvgRating(null);
-  setRatingCount(0);
-};
-
-  const imageBodyTemplate = (rowData) => {
-    const content = (
-      <div className="d-flex align-items-center">
-        <img
-          src={IMAGE_URLS[rowData.image]}
-          alt={rowData.image}
-          className="product-image rounded-50 w-40"
-        />
-        <span className="ml-10">{rowData.title}</span>
-      </div>
-    );
-
-    // preserve your previous clickable behavior (admin & student)
-    if (canViewMentorDetails) {
-      return (
-        <button
-          type="button"
-          className="btn btn-link p-0 text-start d-flex align-items-center"
-          onClick={() => openMentorDetails(rowData)}
-          style={{ textDecoration: "none", color: "inherit" }}
-        >
-          {content}
-        </button>
-      );
-    }
-
-    return content;
+  const closeMentorDetails = () => {
+    setShowMentorDetails(false);
+    setSelectedMentor(null);
+    setMentorDetails(null);
+    setMentorDetailsError(null);
+    setAvgRating(null);
+    setRatingCount(0);
   };
+
+const imageBodyTemplate = (rowData) => {
+  return (
+    <button
+      type="button"
+      className="btn btn-link p-0 d-flex align-items-center"
+      style={{ textDecoration: "none", color: "inherit" }}
+      onClick={() =>
+        navigate(`/doctor-info/${encodeURIComponent(rowData.Email)}`)
+      }
+    >
+      <img
+        src={IMAGE_URLS[rowData.image]}
+        className="product-image rounded-50 w-40"
+      />
+      <span className="ms-2">{rowData.title}</span>
+    </button>
+  );
+};
 
   const rowClassName = (rowData) => {
     if (rowData.isDisabled && role !== "admin") {
@@ -1211,7 +1205,9 @@ const closeMentorDetails = () => {
     const mentorEmail = selectedMentor.Email;
     const uniqueName = makeUniqueName(mentorEmail, studentEmail);
 
-    setActiveChatTitle(`${selectedMentor.title} ↔ ${studentName || studentEmail}`);
+    setActiveChatTitle(
+      `${selectedMentor.title} ↔ ${studentName || studentEmail}`
+    );
     setShowMessagesModal(true);
     setMessagesLoading(true);
     setMessagesError(null);
@@ -1219,14 +1215,18 @@ const closeMentorDetails = () => {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/conversation/${encodeURIComponent(uniqueName)}/messages`
+        `http://127.0.0.1:5000/api/conversation/${encodeURIComponent(
+          uniqueName
+        )}/messages`
       );
       const data = await res.json();
       if (!res.ok) {
         setMessagesError(data.error || "Failed to fetch messages");
       } else {
         // Twilio returns newest first — reverse to show oldest → newest
-        const msgs = Array.isArray(data.messages) ? data.messages.slice().reverse() : [];
+        const msgs = Array.isArray(data.messages)
+          ? data.messages.slice().reverse()
+          : [];
         setMessagesList(msgs);
       }
     } catch (err) {
@@ -1246,7 +1246,9 @@ const closeMentorDetails = () => {
         {/* 🔽 Left: Filter by specialization (admin + student only) */}
         {(role === "admin" || role === "student") && (
           <Form.Group className="d-flex align-items-center mb-0">
-            <Form.Label className="pe-2 mb-0">Filter by Specialization</Form.Label>
+            <Form.Label className="pe-2 mb-0">
+              Filter by Specialization
+            </Form.Label>
             <Form.Select
               size="sm"
               value={selectedSpecialization}
@@ -1316,9 +1318,13 @@ const closeMentorDetails = () => {
       );
       const data = await res.json();
       if (res.ok) {
-        alert(`✅ Mentor ${data.isDisabled ? "disabled" : "enabled"} successfully`);
+        alert(
+          `✅ Mentor ${data.isDisabled ? "disabled" : "enabled"} successfully`
+        );
         setMentors((prev) =>
-          prev.map((m) => (m.Email === email ? { ...m, isDisabled: data.isDisabled } : m))
+          prev.map((m) =>
+            m.Email === email ? { ...m, isDisabled: data.isDisabled } : m
+          )
         );
       } else {
         alert(`❌ ${data.message}`);
@@ -1333,7 +1339,11 @@ const closeMentorDetails = () => {
       <div className="cart-action d-flex gap-2">
         {role === "admin" ? (
           <>
-            <Button size="sm" variant="danger" onClick={() => handleDeleteMentor(rowData.Email)}>
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={() => handleDeleteMentor(rowData.Email)}
+            >
               Delete
             </Button>
             <Button
@@ -1345,7 +1355,17 @@ const closeMentorDetails = () => {
             </Button>
           </>
         ) : (
-          <Button size="sm" variant="primary" onClick={() => navigate(`/chat/${rowData.Email}`)}>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={() =>
+              navigate(`/chat/${rowData.Email}`, {
+                state: {
+                  mentorName: rowData.title, // ✅ mentor name
+                },
+              })
+            }
+          >
             Chat
           </Button>
         )}
@@ -1366,12 +1386,22 @@ const closeMentorDetails = () => {
                     <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
                       {(role === "mentor" || role === "admin") && (
                         <>
-                          <Button variant="primary" size="lg" className="px-4 rounded-pill shadow-sm" onClick={handleTestClick}>
+                          <Button
+                            variant="primary"
+                            size="lg"
+                            className="px-4 rounded-pill shadow-sm"
+                            onClick={handleTestClick}
+                          >
                             <FeatherIcon icon="plus-circle" className="me-2" />
                             Create Mock Test
                           </Button>
 
-                          <Button variant="success" size="lg" className="px-4 rounded-pill shadow-sm" onClick={assignTestClick}>
+                          <Button
+                            variant="success"
+                            size="lg"
+                            className="px-4 rounded-pill shadow-sm"
+                            onClick={assignTestClick}
+                          >
                             <FeatherIcon icon="send" className="me-2" />
                             Assign Test
                           </Button>
@@ -1391,22 +1421,49 @@ const closeMentorDetails = () => {
                         loading={loading}
                         rowClassName={rowClassName} // ✅ blur entire row
                       >
-                        <Column header="Name" sortable body={imageBodyTemplate}></Column>
-                        <Column field="experience" header="Experience" sortable></Column>
-                        <Column field="Specialization" header="Specialization" sortable></Column>
-                        <Column field="Degree" header="Degree" sortable></Column>
-                        {role !== "student" && <Column field="Mobile" header="Mobile" sortable></Column>}
+                        <Column
+                          header="Name"
+                          sortable
+                          body={imageBodyTemplate}
+                        ></Column>
+                        <Column
+                          field="experience"
+                          header="Experience"
+                          sortable
+                        ></Column>
+                        <Column
+                          field="Specialization"
+                          header="Specialization"
+                          sortable
+                        ></Column>
+                        <Column
+                          field="Degree"
+                          header="Degree"
+                          sortable
+                        ></Column>
+                        {role !== "student" && (
+                          <Column
+                            field="Mobile"
+                            header="Mobile"
+                            sortable
+                          ></Column>
+                        )}
                         <Column field="Email" header="Email" sortable></Column>
                         {/* NEW: Abilities Column */}
                         <Column
                           field="mentorAbilities"
                           header="Abilities"
                           body={(rowData) =>
-                            Array.isArray(rowData.mentorAbilities) ? rowData.mentorAbilities.join(", ") : rowData.mentorAbilities || "-"
+                            Array.isArray(rowData.mentorAbilities)
+                              ? rowData.mentorAbilities.join(", ")
+                              : rowData.mentorAbilities || "-"
                           }
                           sortable
                         ></Column>
-                        <Column header="Action" body={actionBodyTemplate}></Column>
+                        <Column
+                          header="Action"
+                          body={actionBodyTemplate}
+                        ></Column>
                       </DataTable>
                     )}
                   </Card.Body>
@@ -1417,7 +1474,7 @@ const closeMentorDetails = () => {
         </div>
       </div>
 
-      {role === "admin" && (
+      {/* {role === "admin" && (
         <Modal show={show} onHide={Close_btn}>
           <Modal.Header>
             <Modal.Title>
@@ -1430,11 +1487,19 @@ const closeMentorDetails = () => {
           <Modal.Body className="modal-body">
             <Form>
               <Row>
-                {["name", "experience", "specialization", "degree", "mobile", "email"].map((field) => (
+                {[
+                  "name",
+                  "experience",
+                  "specialization",
+                  "degree",
+                  "mobile",
+                  "email",
+                ].map((field) => (
                   <Col md={6} key={field}>
                     <Form.Group className="mb-20">
                       <Form.Label>
-                        {field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, " $1")}
+                        {field.charAt(0).toUpperCase() +
+                          field.slice(1).replace(/([A-Z])/g, " $1")}
                       </Form.Label>
                       <Form.Control
                         type={field === "email" ? "email" : "text"}
@@ -1457,18 +1522,22 @@ const closeMentorDetails = () => {
             </Button>
           </Modal.Footer>
         </Modal>
-      )}
+      )} */}
 
       {/* Mentor Details Modal (shows connected students + chat for admin) */}
       {canViewMentorDetails && (
-        <Modal show={showMentorDetails} onHide={closeMentorDetails} centered backdrop>
+        <Modal
+          show={showMentorDetails}
+          onHide={closeMentorDetails}
+          centered
+          backdrop
+        >
           <Modal.Header closeButton>
             <Modal.Title>Mentor Details</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             {selectedMentor && (
               <>
-
                 <div className="d-flex align-items-center mb-3">
                   <img
                     src={IMAGE_URLS[selectedMentor.image]}
@@ -1478,7 +1547,9 @@ const closeMentorDetails = () => {
                   />
                   <div>
                     <h5 className="mb-0">{selectedMentor.title}</h5>
-                    <small className="text-muted">{selectedMentor.Specialization || "No specialization"}</small>
+                    <small className="text-muted">
+                      {selectedMentor.Specialization || "No specialization"}
+                    </small>
                   </div>
                 </div>
 
@@ -1490,7 +1561,9 @@ const closeMentorDetails = () => {
                   {avgRating !== null ? (
                     <>
                       ⭐ {avgRating.toFixed(1)} / 5{" "}
-                      <small className="text-muted">({ratingCount} ratings)</small>
+                      <small className="text-muted">
+                        ({ratingCount} ratings)
+                      </small>
                     </>
                   ) : (
                     <span className="text-muted">No ratings yet</span>
@@ -1502,46 +1575,73 @@ const closeMentorDetails = () => {
                   </p>
                 )}
                 <p>
-                  <strong>Experience:</strong> {selectedMentor.experience || "-"}
+                  <strong>Experience:</strong>{" "}
+                  {selectedMentor.experience || "-"}
                 </p>
                 <p>
                   <strong>Degree:</strong> {selectedMentor.Degree || "-"}
                 </p>
                 <p>
                   <strong>Abilities:</strong>{" "}
-                  {Array.isArray(selectedMentor.mentorAbilities) && selectedMentor.mentorAbilities.length > 0
+                  {Array.isArray(selectedMentor.mentorAbilities) &&
+                  selectedMentor.mentorAbilities.length > 0
                     ? selectedMentor.mentorAbilities.join(", ")
                     : "-"}
                 </p>
                 <p>
-                  <strong>Status:</strong> {selectedMentor.isDisabled ? "Disabled" : "Active"}
+                  <strong>Status:</strong>{" "}
+                  {selectedMentor.isDisabled ? "Disabled" : "Active"}
                 </p>
               </>
             )}
 
             {/* mentor details fetched from API */}
             {mentorDetailsLoading && <p>Loading connected students...</p>}
-            {mentorDetailsError && <p className="text-danger">{mentorDetailsError}</p>}
+            {mentorDetailsError && (
+              <p className="text-danger">{mentorDetailsError}</p>
+            )}
 
             {mentorDetails && !mentorDetailsLoading && (
               <>
                 <div className="mb-3">
                   <h5>Connected Students</h5>
-                  {(!mentorDetails.students || mentorDetails.students.count === 0) ? (
-                    <p className="text-muted">No students connected to this mentor.</p>
+                  {!mentorDetails.students ||
+                  mentorDetails.students.count === 0 ? (
+                    <p className="text-muted">
+                      No students connected to this mentor.
+                    </p>
                   ) : (
                     <ListGroup>
                       {mentorDetails.students.items.map((s) => (
-                        <ListGroup.Item key={s.email} className="d-flex justify-content-between align-items-center">
+                        <ListGroup.Item
+                          key={s.email}
+                          className="d-flex justify-content-between align-items-center"
+                        >
                           <div>
-                            <strong>{s.name}</strong> — {s.email} {s.class && <span className="text-muted">({s.class})</span>}
-                            <div><small className="text-muted">Last interaction: {s.lastInteraction ? new Date(s.lastInteraction).toLocaleString() : "N/A"}</small></div>
+                            <strong>{s.name}</strong> — {s.email}{" "}
+                            {s.class && (
+                              <span className="text-muted">({s.class})</span>
+                            )}
+                            <div>
+                              <small className="text-muted">
+                                Last interaction:{" "}
+                                {s.lastInteraction
+                                  ? new Date(s.lastInteraction).toLocaleString()
+                                  : "N/A"}
+                              </small>
+                            </div>
                           </div>
 
                           {/* admin-only view chat button */}
                           {role === "admin" && (
                             <div>
-                              <Button size="sm" variant="outline-primary" onClick={() => handleViewMessages(s.email, s.name)}>
+                              <Button
+                                size="sm"
+                                variant="outline-primary"
+                                onClick={() =>
+                                  handleViewMessages(s.email, s.name)
+                                }
+                              >
                                 View Chat
                               </Button>
                             </div>
@@ -1553,25 +1653,31 @@ const closeMentorDetails = () => {
                 </div>
 
                 {/* optional relatedExams (if your API returned any) */}
-                {Array.isArray(mentorDetails.relatedExams) && mentorDetails.relatedExams.length > 0 && (
-                  <div className="mb-2">
-                    <h5>Related Exams</h5>
-                    <ListGroup>
-                      {mentorDetails.relatedExams.slice(0, 6).map((ex) => (
-                        <ListGroup.Item key={ex.id}>
-                          <div className="d-flex justify-content-between">
-                            <div>
-                              <strong>{ex.studentEmail}</strong> — {ex.class} / {ex.type}
+                {Array.isArray(mentorDetails.relatedExams) &&
+                  mentorDetails.relatedExams.length > 0 && (
+                    <div className="mb-2">
+                      <h5>Related Exams</h5>
+                      <ListGroup>
+                        {mentorDetails.relatedExams.slice(0, 6).map((ex) => (
+                          <ListGroup.Item key={ex.id}>
+                            <div className="d-flex justify-content-between">
+                              <div>
+                                <strong>{ex.studentEmail}</strong> — {ex.class}{" "}
+                                / {ex.type}
+                              </div>
+                              <div>
+                                <small>
+                                  {ex.submittedAt
+                                    ? new Date(ex.submittedAt).toLocaleString()
+                                    : ""}
+                                </small>
+                              </div>
                             </div>
-                            <div>
-                              <small>{ex.submittedAt ? new Date(ex.submittedAt).toLocaleString() : ""}</small>
-                            </div>
-                          </div>
-                        </ListGroup.Item>
-                      ))}
-                    </ListGroup>
-                  </div>
-                )}
+                          </ListGroup.Item>
+                        ))}
+                      </ListGroup>
+                    </div>
+                  )}
               </>
             )}
           </Modal.Body>
@@ -1587,22 +1693,24 @@ const closeMentorDetails = () => {
               </div>
             )}
             {(role === "admin" || role === "student") && selectedMentor && (
-  <Button
-    variant="info"
-    onClick={() =>
-      navigate(
-  `/mentor/${encodeURIComponent(selectedMentor.Email)}/materials`,
-  {
-    state: {
-      mentorName: selectedMentor.title, // name
-    },
-  }
-)
-    }
-  >
-    📚 Study Materials
-  </Button>
-)}
+              <Button
+                variant="info"
+                onClick={() =>
+                  navigate(
+                    `/mentor/${encodeURIComponent(
+                      selectedMentor.Email
+                    )}/materials`,
+                    {
+                      state: {
+                        mentorName: selectedMentor.title, // name
+                      },
+                    }
+                  )
+                }
+              >
+                📚 Study Materials
+              </Button>
+            )}
 
             <Button variant="secondary" onClick={closeMentorDetails}>
               Close
@@ -1612,29 +1720,67 @@ const closeMentorDetails = () => {
       )}
 
       {/* Messages Modal (admin-only) */}
-      <Modal show={showMessagesModal} onHide={() => setShowMessagesModal(false)} size="lg" centered>
+      <Modal
+        show={showMessagesModal}
+        onHide={() => setShowMessagesModal(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Chat — {activeChatTitle}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {messagesLoading && <p>Loading messages...</p>}
           {messagesError && <p className="text-danger">{messagesError}</p>}
-          {!messagesLoading && !messagesError && messagesList.length === 0 && <p className="text-muted">No messages found in this conversation.</p>}
+          {!messagesLoading && !messagesError && messagesList.length === 0 && (
+            <p className="text-muted">
+              No messages found in this conversation.
+            </p>
+          )}
 
           {!messagesLoading && messagesList.length > 0 && (
-            <div style={{ maxHeight: "60vh", overflowY: "auto", padding: "8px" }}>
+            <div
+              style={{ maxHeight: "60vh", overflowY: "auto", padding: "8px" }}
+            >
               {messagesList.map((m, idx) => {
-                const isFromMentor = selectedMentor && String(m.author).toLowerCase() === String(selectedMentor.Email).toLowerCase();
+                const isFromMentor =
+                  selectedMentor &&
+                  String(m.author).toLowerCase() ===
+                    String(selectedMentor.Email).toLowerCase();
                 const align = isFromMentor ? "flex-end" : "flex-start";
                 const bg = isFromMentor ? "#d9edf7" : "#f1f3f5";
                 return (
-                  <div key={idx} style={{ display: "flex", justifyContent: isFromMentor ? "flex-end" : "flex-start", marginBottom: 8 }}>
-                    <div style={{ maxWidth: "78%", background: bg, padding: "8px 12px", borderRadius: 8 }}>
-                      <div style={{ fontSize: 13, marginBottom: 6, color: "#333" }}>
+                  <div
+                    key={idx}
+                    style={{
+                      display: "flex",
+                      justifyContent: isFromMentor ? "flex-end" : "flex-start",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        maxWidth: "78%",
+                        background: bg,
+                        padding: "8px 12px",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div
+                        style={{ fontSize: 13, marginBottom: 6, color: "#333" }}
+                      >
                         <strong>{m.author}</strong>
-                        <span style={{ marginLeft: 8, fontSize: 11, color: "#666" }}>{m.dateCreated ? new Date(m.dateCreated).toLocaleString() : ""}</span>
+                        <span
+                          style={{ marginLeft: 8, fontSize: 11, color: "#666" }}
+                        >
+                          {m.dateCreated
+                            ? new Date(m.dateCreated).toLocaleString()
+                            : ""}
+                        </span>
                       </div>
-                      <div style={{ whiteSpace: "pre-wrap", fontSize: 15 }}>{m.body}</div>
+                      <div style={{ whiteSpace: "pre-wrap", fontSize: 15 }}>
+                        {m.body}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1643,75 +1789,81 @@ const closeMentorDetails = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowMessagesModal(false)}>Close</Button>
+          <Button
+            variant="secondary"
+            onClick={() => setShowMessagesModal(false)}
+          >
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showRatingModal} onHide={() => setShowRatingModal(false)} centered>
-  <Modal.Header closeButton>
-    <Modal.Title>Rate Mentor</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    <div className="text-center mb-3">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span
-          key={star}
-          style={{
-            fontSize: 30,
-            cursor: "pointer",
-            color: star <= selectedRating ? "#ffc107" : "#ccc",
-          }}
-          onClick={() => setSelectedRating(star)}
-        >
-          ★
-        </span>
-      ))}
-    </div>
-  </Modal.Body>
-  <Modal.Footer>
-    <Button
-      variant="secondary"
-      onClick={() => setShowRatingModal(false)}
-    >
-      Cancel
-    </Button>
-    <Button
-      variant="primary"
-      disabled={!selectedRating || ratingSubmitting}
-      onClick={async () => {
-        try {
-          setRatingSubmitting(true);
-          await fetch(
-            `http://127.0.0.1:5000/api/stats/mentor/${selectedMentor.Email}/rate`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                studentEmail: loggedInUser.email,
-                rating: selectedRating,
-              }),
-            }
-          );
+      <Modal
+        show={showRatingModal}
+        onHide={() => setShowRatingModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Rate Mentor</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="text-center mb-3">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                style={{
+                  fontSize: 30,
+                  cursor: "pointer",
+                  color: star <= selectedRating ? "#ffc107" : "#ccc",
+                }}
+                onClick={() => setSelectedRating(star)}
+              >
+                ★
+              </span>
+            ))}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRatingModal(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            disabled={!selectedRating || ratingSubmitting}
+            onClick={async () => {
+              try {
+                setRatingSubmitting(true);
+                await fetch(
+                  `http://127.0.0.1:5000/api/stats/mentor/${selectedMentor.Email}/rate`,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      studentEmail: loggedInUser.email,
+                      rating: selectedRating,
+                    }),
+                  }
+                );
 
-          setShowRatingModal(false);
-          setSelectedRating(0);
+                setShowRatingModal(false);
+                setSelectedRating(0);
 
-          // refresh avg rating
-          const r = await fetch(
-            `http://127.0.0.1:5000/api/stats/mentor/${selectedMentor.Email}/rating`
-          );
-          const d = await r.json();
-          setAvgRating(d.avgRating);
-          setRatingCount(d.count);
-        } finally {
-          setRatingSubmitting(false);
-        }
-      }}
-    >
-      Submit
-    </Button>
-  </Modal.Footer>
-</Modal>
+                // refresh avg rating
+                const r = await fetch(
+                  `http://127.0.0.1:5000/api/stats/mentor/${selectedMentor.Email}/rating`
+                );
+                const d = await r.json();
+                setAvgRating(d.avgRating);
+                setRatingCount(d.count);
+              } finally {
+                setRatingSubmitting(false);
+              }
+            }}
+          >
+            Submit
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <style>{`
   .blurred-row {
