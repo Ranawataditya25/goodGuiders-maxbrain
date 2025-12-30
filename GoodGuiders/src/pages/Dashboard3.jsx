@@ -553,7 +553,6 @@
 //   </div>
 // </Card.Header>
 
-
 //                 <Card.Body>
 //                   {loadingUser ? (
 //                     <div className="text-center">
@@ -1217,8 +1216,6 @@
 //   );
 // }
 
-
-
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -1345,11 +1342,7 @@ function deriveStatus(a) {
       ? Object.keys(la.answers).length
       : 0;
 
-  if (
-    la?.status === "in_progress" ||
-    la?.startedAt ||
-    answersCount > 0
-  ) {
+  if (la?.status === "in_progress" || la?.startedAt || answersCount > 0) {
     return "in_progress";
   }
 
@@ -1377,54 +1370,37 @@ function getQuestionPdfUrl(a) {
 }
 
 export default function Dashboard3() {
-  
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
- 
   const [activeTab, setActiveTab] = useState("avail");
   const [referralInput, setReferralInput] = useState("");
   const [referName, setReferName] = useState("");
   const [referEmail, setReferEmail] = useState("");
   const [referMobile, setReferMobile] = useState("");
 
-
   const [assignLoading, setAssignLoading] = useState(true);
   const [assignments, setAssignments] = useState([]);
   const [assignErr, setAssignErr] = useState("");
-
 
   const [showDebug, setShowDebug] = useState(false);
   const [rawSample, setRawSample] = useState(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
 
- 
   const [startingId, setStartingId] = useState(null);
   const navigate = useNavigate();
 
   const [showPdfModal, setShowPdfModal] = useState(false);
-const [activePdfAssignment, setActivePdfAssignment] = useState(null);
-const [answerPdf, setAnswerPdf] = useState(null);
-const [submittingPdf, setSubmittingPdf] = useState(false);
-
-
-
-
-
-
-
-
-
-
-
+  const [activePdfAssignment, setActivePdfAssignment] = useState(null);
+  const [answerPdf, setAnswerPdf] = useState(null);
+  const [submittingPdf, setSubmittingPdf] = useState(false);
+  const [resultCount, setResultCount] = useState(0);
 
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [mentorVisits, setMentorVisits] = useState([]);
-const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
-
-
+  const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
 
   const visitData = useMemo(
     () => [
@@ -1469,10 +1445,7 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
 
         // lock a usable _id no matter how payload looks
         const resolvedId =
-          backendUser?._id ||
-          backendUser?.user?._id ||
-          loggedIn?._id ||
-          null;
+          backendUser?._id || backendUser?.user?._id || loggedIn?._id || null;
 
         setUser({ ...loggedIn, ...backendUser, _id: resolvedId });
       } catch (err) {
@@ -1484,30 +1457,30 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
   }, []);
 
   useEffect(() => {
-  if (!user?.email) return;
+    if (!user?.email) return;
 
-  const loadMentorVisits = async () => {
-    try {
-      const res = await fetch(
-        `${API}/stats/student/${encodeURIComponent(user.email)}/details`
-      );
-      const data = await res.json();
+    const loadMentorVisits = async () => {
+      try {
+        const res = await fetch(
+          `${API}/stats/student/${encodeURIComponent(user.email)}/details`
+        );
+        const data = await res.json();
 
-      if (data?.mentors?.items) {
-        setMentorVisits(data.mentors.items);
-      } else {
+        if (data?.mentors?.items) {
+          setMentorVisits(data.mentors.items);
+        } else {
+          setMentorVisits([]);
+        }
+      } catch (err) {
+        console.error("Failed to load mentor visits", err);
         setMentorVisits([]);
+      } finally {
+        setLoadingMentorVisits(false);
       }
-    } catch (err) {
-      console.error("Failed to load mentor visits", err);
-      setMentorVisits([]);
-    } finally {
-      setLoadingMentorVisits(false);
-    }
-  };
+    };
 
-  loadMentorVisits();
-}, [user?.email]);
+    loadMentorVisits();
+  }, [user?.email]);
 
   /** Helper: render display values safely */
   const renderSubjects = (a, test) => {
@@ -1522,23 +1495,18 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
     return list.length ? list.join(", ") : "—";
   };
   const renderType = (a, test) =>
-    pickType(test) ||
-    a?.testType ||
-    a?.type ||
-    a?.mode ||
-    a?.format ||
-    "—";
+    pickType(test) || a?.testType || a?.type || a?.mode || a?.format || "—";
 
   const renderClass = (a, test) => {
     const val =
       pickClass(test) !== "—"
         ? pickClass(test)
-        : (a?.class ??
-            a?.className ??
-            a?.klass ??
-            a?.grade ??
-            a?.standard ??
-            "—");
+        : a?.class ??
+          a?.className ??
+          a?.klass ??
+          a?.grade ??
+          a?.standard ??
+          "—";
     const cls = val === "—" ? "—" : typeof val === "string" ? val : String(val);
     return cls === "—" ? cls : `Class ${cls}`;
   };
@@ -1571,7 +1539,9 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
       setRawSample(payload[0] || null); // save one sample for the debug viewer
       if (!res.ok || json?.ok === false) {
         // still show what we got but warn
-        setAssignErr(json?.message || "Server error while fetching assignments");
+        setAssignErr(
+          json?.message || "Server error while fetching assignments"
+        );
       }
     } catch (err) {
       console.error("[Assignments] Error:", err);
@@ -1703,12 +1673,17 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
       const stat = deriveStatus(a);
 
       // resolve test id just like before
-      let paperId = getPaperIdFromRow(a) || (await fetchPaperIdFromDetail(a._id));
+      let paperId =
+        getPaperIdFromRow(a) || (await fetchPaperIdFromDetail(a._id));
 
       if (stat === "assigned") {
         // route to instructions gate (no alerts)
         const qs = new URLSearchParams(
-          Object.fromEntries(Object.entries({ testId: paperId || undefined }).filter(([, v]) => !!v))
+          Object.fromEntries(
+            Object.entries({ testId: paperId || undefined }).filter(
+              ([, v]) => !!v
+            )
+          )
         ).toString();
         navigate(`/test-instructions/${a._id}${qs ? `?${qs}` : ""}`);
         return;
@@ -1724,15 +1699,25 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
         });
         if (res.ok) {
           const data = await res.json();
-          attemptId = data?.attemptId || data?.data?._id || data?.attempt?._id || null;
+          attemptId =
+            data?.attemptId || data?.data?._id || data?.attempt?._id || null;
           paperId =
             paperId ||
-            (data?.test || data?.testId || data?.exam || data?.paper || data?.data?.test || data?.data?.testId);
+            data?.test ||
+            data?.testId ||
+            data?.exam ||
+            data?.paper ||
+            data?.data?.test ||
+            data?.data?.testId;
         }
       } catch {}
 
       const qs = new URLSearchParams(
-        Object.fromEntries(Object.entries({ testId: extractId(paperId), attemptId }).filter(([, v]) => !!v))
+        Object.fromEntries(
+          Object.entries({ testId: extractId(paperId), attemptId }).filter(
+            ([, v]) => !!v
+          )
+        )
       ).toString();
       navigate(`/test-player/${a._id}${qs ? `?${qs}` : ""}`);
     } finally {
@@ -1771,66 +1756,98 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
     }
   };
 
+useEffect(() => {
+  const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+  if (!loggedInUser?._id) return;
+
+  fetch("http://127.0.0.1:5000/api/pdf-evaluations/student", {
+    credentials: "include",
+    headers: {
+      "x-user-role": "student",
+      "x-user-id": loggedInUser._id,
+    },
+  })
+    .then((r) => r.json())
+    .then((d) => setResultCount(d.count || 0))
+    .catch(() => {});
+}, []);
+
   return (
     <div className="themebody-wrap">
       <PageBreadcrumb pagename="Student Dashboard" />
       <div className="theme-body">
         <Container fluid className="cdxuser-profile">
-        
           <Row className="mb-4">
             <Col xl={12}>
               <Card>
                 <Card.Header className="d-flex align-items-center justify-content-between">
-  {/* <div>
+                  {/* <div>
     <h4 className="mb-0">Your Profile & Referral</h4>
     <small className="text-muted">
       <strong>Credits:</strong> {user?.credits ?? "—"}
     </small>
   </div> */}
 
-  <button
+                  <button
                     className="btn btn-primary"
                     onClick={() => setShowCreditsModal(true)}
                   >
                     View Credits
                   </button>
-  {/* ///////Adjust code//
+                  {/* ///////Adjust code//
 
 
 
   //////////aaa/// */}
-  <div className="d-flex gap-2">
-    <Button
-      size="sm"
-      variant="outline-primary"
-      as={Link}
-      to="/my-assignments"
-    >
-      <FeatherIcon icon="list" className="me-2" />
-      My Assignments
-    </Button>
-    <Button
-      size="sm"
-      variant="outline-success"
-      as={Link}
-      to="/assign-test"
-    >
-      <FeatherIcon icon="send" className="me-2" />
-      Assignments Hub
-    </Button>
-    {/* New Chat Button for Student */}
-    <Button
-      size="sm"
-      variant="outline-info"
-      as={Link}
-      to="/all-chats"
-    >
-      <FeatherIcon icon="message-square" className="me-2" />
-      Chat
-    </Button>
-  </div>
-</Card.Header>
-
+                  <div className="d-flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline-primary"
+                      as={Link}
+                      to="/my-assignments"
+                    >
+                      <FeatherIcon icon="list" className="me-2" />
+                      My Assignments
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline-success"
+                      as={Link}
+                      to="/assign-test"
+                    >
+                      <FeatherIcon icon="send" className="me-2" />
+                      Assignments Hub
+                    </Button>
+                    <Button
+                      variant="outline-success"
+                      className="position-relative"
+                      onClick={() => navigate("/student/results")}
+                    >
+                      📄 Evaluation Results
+                      {resultCount > 0 && (
+                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                          {resultCount}
+                        </span>
+                      )}
+                    </Button>
+                    <Button
+  variant="outline-primary"
+  onClick={() => navigate("/student/classes")}
+>
+  📚 Study Materials
+</Button>
+                    {/* New Chat Button for Student */}
+                    <Button
+                      size="sm"
+                      variant="outline-info"
+                      as={Link}
+                      to="/all-chats"
+                    >
+                      <FeatherIcon icon="message-square" className="me-2" />
+                      Chat
+                    </Button>
+                  </div>
+                </Card.Header>
 
                 {/* <Card.Body>
                   {loadingUser ? (
@@ -1848,162 +1865,158 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                   )}
                 </Card.Body> */}
 
-                  <Modal
-                        show={showCreditsModal}
-                        onHide={() => setShowCreditsModal(false)}
-                        size="lg"
-                        centered
+                <Modal
+                  show={showCreditsModal}
+                  onHide={() => setShowCreditsModal(false)}
+                  size="lg"
+                  centered
+                >
+                  <Modal.Header closeButton>
+                    <Modal.Title className="mb-0">
+                      Referral & Benefits
+                      <span style={{ marginLeft: "420px" }}>
+                        Credits: {doctor?.credits}
+                      </span>
+                    </Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body>
+                    <div
+                      className="d-flex justify-content-center gap-3 mb-3"
+                      style={{
+                        backgroundColor: "rgba(102, 151, 159, 0.2)",
+                        padding: "10px",
+                        borderRadius: "5px",
+                      }}
+                    >
+                      <h5
+                        style={{
+                          backgroundColor:
+                            activeTab === "avail" ? "#F1FCFE" : "transparent",
+                          cursor: "pointer",
+                          width: "300px",
+                          textAlign: "center",
+                          padding: "10px 20px",
+                          borderRadius: "5px",
+                        }}
+                        onClick={() => setActiveTab("avail")}
                       >
-                        <Modal.Header closeButton>
-                          <Modal.Title className="mb-0">
-                            Referral & Benefits
-                            <span style={{ marginLeft: "420px" }}>
-                              Credits: {doctor?.credits}
-                            </span>
-                          </Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                          <div
-                            className="d-flex justify-content-center gap-3 mb-3"
-                            style={{
-                              backgroundColor: "rgba(102, 151, 159, 0.2)",
-                              padding: "10px",
-                              borderRadius: "5px",
+                        Avail Benefits
+                      </h5>
+                      <h5
+                        style={{
+                          backgroundColor:
+                            activeTab === "refer" ? "#F1FCFE" : "transparent",
+                          cursor: "pointer",
+                          width: "300px",
+                          textAlign: "center",
+                          padding: "10px 20px",
+                          borderRadius: "5px",
+                        }}
+                        onClick={() => setActiveTab("refer")}
+                      >
+                        Refer & Earn
+                      </h5>
+                    </div>
+
+                    {activeTab === "avail" && (
+                      <>
+                        <div className="d-flex align-items-center gap-2 justify-content-center">
+                          <span className="badge bg-primary fs-15">
+                            {doctor?.yourReferralCode || doctor?.referralCode}
+                          </span>
+                          <button
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                doctor?.yourReferralCode || doctor?.referralCode
+                              );
+                              alert("Referral code copied!");
                             }}
                           >
-                            <h5
-                              style={{
-                                backgroundColor:
-                                  activeTab === "avail" ? "#F1FCFE" : "transparent",
-                                cursor: "pointer",
-                                width: "300px",
-                                textAlign: "center",
-                                padding: "10px 20px",
-                                borderRadius: "5px",
-                              }}
-                              onClick={() => setActiveTab("avail")}
-                            >
-                              Avail Benefits
-                            </h5>
-                            <h5
-                              style={{
-                                backgroundColor:
-                                  activeTab === "refer" ? "#F1FCFE" : "transparent",
-                                cursor: "pointer",
-                                width: "300px",
-                                textAlign: "center",
-                                padding: "10px 20px",
-                                borderRadius: "5px",
-                              }}
-                              onClick={() => setActiveTab("refer")}
-                            >
-                              Refer & Earn
-                            </h5>
+                            Copy Code
+                          </button>
+                        </div>
+                        <div className="mt-4 text-center">
+                          <p>Enter your friend’s referral code:</p>
+                          <div className="d-flex justify-content-center">
+                            <input
+                              type="text"
+                              className="form-control"
+                              placeholder="Enter Referral Code"
+                              value={referralInput}
+                              onChange={(e) => setReferralInput(e.target.value)}
+                              style={{ width: "350px" }}
+                            />
                           </div>
+                          <div style={{ marginTop: 15 }}>
+                            <button
+                              className="btn btn-success"
+                              style={{ width: "200px", marginTop: 15 }}
+                              onClick={handleUseReferral}
+                            >
+                              Apply
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
 
-                          {activeTab === "avail" && (
-                            <>
-                              <div className="d-flex align-items-center gap-2 justify-content-center">
-                                <span className="badge bg-primary fs-15">
-                                  {doctor?.yourReferralCode ||
-                                    doctor?.referralCode}
-                                </span>
-                                <button
-                                  className="btn btn-outline-primary btn-sm"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(
-                                      doctor?.yourReferralCode ||
-                                        doctor?.referralCode
-                                    );
-                                    alert("Referral code copied!");
-                                  }}
-                                >
-                                  Copy Code
-                                </button>
-                              </div>
-                              <div className="mt-4 text-center">
-                                <p>Enter your friend’s referral code:</p>
-                                <div className="d-flex justify-content-center">
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="Enter Referral Code"
-                                    value={referralInput}
-                                    onChange={(e) =>
-                                      setReferralInput(e.target.value)
-                                    }
-                                    style={{ width: "350px" }}
-                                  />
-                                </div>
-                                <div style={{ marginTop: 15 }}>
-                                  <button
-                                    className="btn btn-success"
-                                    style={{ width: "200px", marginTop: 15 }}
-                                    onClick={handleUseReferral}
-                                  >
-                                    Apply
-                                  </button>
-                                </div>
-                              </div>
-                            </>
-                          )}
-
-                          {activeTab === "refer" && (
-                            <div className="mt-3">
-                              <div className="d-flex align-items-center gap-3 mt-3">
-                                <label style={{ width: "250px" }}>
-                                  <strong>Name:</strong>
-                                </label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  placeholder="Enter Name"
-                                  value={referEmail}
-                                  onChange={(e) => setReferEmail(e.target.value)}
-                                  style={{ width: "350px" }}
-                                />
-                              </div>
-                              <div className="d-flex align-items-center gap-3 mt-3">
-                                <label style={{ width: "250px" }}>
-                                  <strong>Friend's Email ID:</strong>
-                                </label>
-                                <input
-                                  type="email"
-                                  className="form-control"
-                                  placeholder="Enter Email ID"
-                                  value={referEmail}
-                                  onChange={(e) => setReferEmail(e.target.value)}
-                                  style={{ width: "350px" }}
-                                />
-                              </div>
-                              <div className="d-flex align-items-center gap-3 mt-3">
-                                <label style={{ width: "250px" }}>
-                                  <strong>Friend's Mobile Number:</strong>
-                                </label>
-                                <input
-                                  type="tel"
-                                  className="form-control"
-                                  placeholder="Enter Mobile Number"
-                                  value={referMobile}
-                                  onChange={(e) => setReferMobile(e.target.value)}
-                                  style={{ width: "350px" }}
-                                />
-                              </div>
-                              <div className="d-flex justify-content-center">
-                                <button
-                                  className="btn btn-success"
-                                  style={{ width: "200px", marginTop: "25px" }}
-                                  onClick={() =>
-                                    alert(`Refer to ${referEmail}, ${referMobile}`)
-                                  }
-                                >
-                                  Refer
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </Modal.Body>
-                      </Modal>
+                    {activeTab === "refer" && (
+                      <div className="mt-3">
+                        <div className="d-flex align-items-center gap-3 mt-3">
+                          <label style={{ width: "250px" }}>
+                            <strong>Name:</strong>
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Enter Name"
+                            value={referEmail}
+                            onChange={(e) => setReferEmail(e.target.value)}
+                            style={{ width: "350px" }}
+                          />
+                        </div>
+                        <div className="d-flex align-items-center gap-3 mt-3">
+                          <label style={{ width: "250px" }}>
+                            <strong>Friend's Email ID:</strong>
+                          </label>
+                          <input
+                            type="email"
+                            className="form-control"
+                            placeholder="Enter Email ID"
+                            value={referEmail}
+                            onChange={(e) => setReferEmail(e.target.value)}
+                            style={{ width: "350px" }}
+                          />
+                        </div>
+                        <div className="d-flex align-items-center gap-3 mt-3">
+                          <label style={{ width: "250px" }}>
+                            <strong>Friend's Mobile Number:</strong>
+                          </label>
+                          <input
+                            type="tel"
+                            className="form-control"
+                            placeholder="Enter Mobile Number"
+                            value={referMobile}
+                            onChange={(e) => setReferMobile(e.target.value)}
+                            style={{ width: "350px" }}
+                          />
+                        </div>
+                        <div className="d-flex justify-content-center">
+                          <button
+                            className="btn btn-success"
+                            style={{ width: "200px", marginTop: "25px" }}
+                            onClick={() =>
+                              alert(`Refer to ${referEmail}, ${referMobile}`)
+                            }
+                          >
+                            Refer
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </Modal.Body>
+                </Modal>
               </Card>
             </Col>
           </Row>
@@ -2021,7 +2034,8 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
               <div className="d-flex align-items-center gap-2">
                 <h4 className="mb-0">Assigned Tests</h4>
                 <Badge bg={assignments.length ? "primary" : "secondary"}>
-                  {assignments.length} {assignments.length === 1 ? "Test" : "Tests"}
+                  {assignments.length}{" "}
+                  {assignments.length === 1 ? "Test" : "Tests"}
                 </Badge>
               </div>
               <div className="d-flex align-items-center gap-2">
@@ -2033,7 +2047,7 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                   <FeatherIcon icon="refresh-cw" className="me-2" />
                   Refresh
                 </Button>
-              
+
                 <Button
                   as={Link}
                   to="/bootstrapreact/medixo/my-assignments"
@@ -2090,7 +2104,9 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                                 <Badge bg="dark">{renderType(a, t)}</Badge>
                               </td>
                               <td>
-                                <Badge bg="secondary">{renderClass(a, t)}</Badge>
+                                <Badge bg="secondary">
+                                  {renderClass(a, t)}
+                                </Badge>
                               </td>
                               <td>{due}</td>
                               <td>
@@ -2110,8 +2126,8 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                                       stat === "completed"
                                         ? "outline-secondary"
                                         : stat === "in_progress"
-                                          ? "info"
-                                          : "primary"
+                                        ? "info"
+                                        : "primary"
                                     }
                                     onClick={() => {
                                       const stat = deriveStatus(a);
@@ -2130,7 +2146,11 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                                       <>
                                         {startingId === a._id ? (
                                           <>
-                                            <Spinner animation="border" size="sm" className="me-2" />
+                                            <Spinner
+                                              animation="border"
+                                              size="sm"
+                                              className="me-2"
+                                            />
                                             Opening…
                                           </>
                                         ) : (
@@ -2141,7 +2161,11 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                                       <>
                                         {startingId === a._id ? (
                                           <>
-                                            <Spinner animation="border" size="sm" className="me-2" />
+                                            <Spinner
+                                              animation="border"
+                                              size="sm"
+                                              className="me-2"
+                                            />
                                             Starting…
                                           </>
                                         ) : (
@@ -2166,7 +2190,11 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                                   >
                                     {startingId === a._id ? (
                                       <>
-                                        <Spinner animation="border" size="sm" className="me-2" />
+                                        <Spinner
+                                          animation="border"
+                                          size="sm"
+                                          className="me-2"
+                                        />
                                         Opening…
                                       </>
                                     ) : (
@@ -2182,7 +2210,11 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                                   >
                                     {startingId === a._id ? (
                                       <>
-                                        <Spinner animation="border" size="sm" className="me-2" />
+                                        <Spinner
+                                          animation="border"
+                                          size="sm"
+                                          className="me-2"
+                                        />
                                         Starting…
                                       </>
                                     ) : (
@@ -2229,30 +2261,39 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                     <div className="mt-2 text-muted" style={{ fontSize: 12 }}>
                       <div>
                         Detected test path:{" "}
-                        <code>assignment.test || assignment.testId || assignment.exam</code>
+                        <code>
+                          assignment.test || assignment.testId ||
+                          assignment.exam
+                        </code>
                       </div>
                       <div>
                         Detected subjects path (fallbacks too):{" "}
                         <code>
-                          test.subjects | test.subjectNames | test.tags | assignment.subjects | assignment.subjectNames | assignment.subject | assignment.tags
+                          test.subjects | test.subjectNames | test.tags |
+                          assignment.subjects | assignment.subjectNames |
+                          assignment.subject | assignment.tags
                         </code>
                       </div>
                       <div>
                         Detected class path (fallbacks too):{" "}
                         <code>
-                          test.class | className | klass | grade | standard (and same on assignment)
+                          test.class | className | klass | grade | standard (and
+                          same on assignment)
                         </code>
                       </div>
                       <div>
                         Detected type path (fallbacks too):{" "}
                         <code>
-                          test.testType | type | mode | format (and same on assignment)
+                          test.testType | type | mode | format (and same on
+                          assignment)
                         </code>
                       </div>
                       <div>
                         On Start/Continue: resolve <code>testId</code> → POST{" "}
                         <code>/assignments/:id/start</code> → navigate to{" "}
-                        <code>/test-player/:assignmentId?testId=&amp;attemptId=</code>
+                        <code>
+                          /test-player/:assignmentId?testId=&amp;attemptId=
+                        </code>
                       </div>
                     </div>
                   </Card>
@@ -2278,28 +2319,28 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                                     "/profilePhotoUploads"
                                   )
                                   ? `http://localhost:5000${user.profileImage}`
-                                  : `${import.meta.env.BASE_URL}default-avatar.png`
-                                : `${import.meta.env.BASE_URL}default-avatar.png`
+                                  : `${
+                                      import.meta.env.BASE_URL
+                                    }default-avatar.png`
+                                : `${
+                                    import.meta.env.BASE_URL
+                                  }default-avatar.png`
                             }
                             alt="Profile"
                             className="profile-pic"
                           />
                         </div>
-                            <h4>{user?.name || "—"}</h4>
+                        <h4>{user?.name || "—"}</h4>
                         <span>{user?.role || "—"}</span>
-                  <h6 className="mb-0 ms-2">
-                                  <a href={`mailto:${user?.email || ""}`}>
-                                    {user?.email || "—"}
-                                  </a>
-                                </h6>
-                     
+                        <h6 className="mb-0 ms-2">
+                          <a href={`mailto:${user?.email || ""}`}>
+                            {user?.email || "—"}
+                          </a>
+                        </h6>
                       </div>
                     </Card.Body>
-                 
                   </Card>
                 </Col>
-
-              
               </Row>
             </Col>
 
@@ -2314,60 +2355,59 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
                       <div className="table-responsive">
                         <Table className="table table-bordered">
                           <thead>
-  <tr>
-    <th>Mentor</th>
-    <th>Email</th>
-    <th>Specialization</th>
-    <th>Action</th>
-  </tr>
-</thead>
-                  <tbody>
-  {loadingMentorVisits ? (
-    <tr>
-      <td colSpan={6} className="text-center">
-        <Spinner animation="border" size="sm" />
-      </td>
-    </tr>
-  ) : mentorVisits.length === 0 ? (
-    <tr>
-      <td colSpan={6} className="text-center text-muted">
-        No mentor interactions yet
-      </td>
-    </tr>
-  ) : (
-    mentorVisits.map((mentor, index) => (
-      <tr key={index}>
-        {/* Mentor */}
-        <td>
-          {mentor.name}
-        </td>
-        <td>
-          {mentor.email}
-        </td>
+                            <tr>
+                              <th>Mentor</th>
+                              <th>Email</th>
+                              <th>Specialization</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {loadingMentorVisits ? (
+                              <tr>
+                                <td colSpan={6} className="text-center">
+                                  <Spinner animation="border" size="sm" />
+                                </td>
+                              </tr>
+                            ) : mentorVisits.length === 0 ? (
+                              <tr>
+                                <td
+                                  colSpan={6}
+                                  className="text-center text-muted"
+                                >
+                                  No mentor interactions yet
+                                </td>
+                              </tr>
+                            ) : (
+                              mentorVisits.map((mentor, index) => (
+                                <tr key={index}>
+                                  {/* Mentor */}
+                                  <td>{mentor.name}</td>
+                                  <td>{mentor.email}</td>
 
-        {/* Specialization */}
-        <td>{mentor.specialization || "—"}</td>
+                                  {/* Specialization */}
+                                  <td>{mentor.specialization || "—"}</td>
 
-        {/* Action */}
-        <td>
-          <Button
-  size="sm"
-  variant="outline-primary"
-  onClick={() =>
-    navigate(`/chat/${mentor.email}`, {
-      state: {
-        mentorName: mentor.name, // ✅ PASS NAME
-      },
-    })
-  }
->
-  Chat
-</Button>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
+                                  {/* Action */}
+                                  <td>
+                                    <Button
+                                      size="sm"
+                                      variant="outline-primary"
+                                      onClick={() =>
+                                        navigate(`/chat/${mentor.email}`, {
+                                          state: {
+                                            mentorName: mentor.name, // ✅ PASS NAME
+                                          },
+                                        })
+                                      }
+                                    >
+                                      Chat
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
                         </Table>
                       </div>
                     </Card.Body>
@@ -2378,80 +2418,80 @@ const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
           </Row>
         </Container>
         <Modal
-  show={showPdfModal}
-  onHide={() => setShowPdfModal(false)}
-  centered
->
-  <Modal.Header closeButton>
-    <Modal.Title>Subjective Test (PDF)</Modal.Title>
-  </Modal.Header>
+          show={showPdfModal}
+          onHide={() => setShowPdfModal(false)}
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Subjective Test (PDF)</Modal.Title>
+          </Modal.Header>
 
-  <Modal.Body>
-    {activePdfAssignment && (
-      <>
-        {/* Question PDF */}
-        <div className="mb-3">
-          <strong>Question Paper</strong>
-          <div className="mt-2">
-            <a
-              href={getQuestionPdfUrl(activePdfAssignment)}
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-outline-primary btn-sm"
+          <Modal.Body>
+            {activePdfAssignment && (
+              <>
+                {/* Question PDF */}
+                <div className="mb-3">
+                  <strong>Question Paper</strong>
+                  <div className="mt-2">
+                    <a
+                      href={getQuestionPdfUrl(activePdfAssignment)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn btn-outline-primary btn-sm"
+                    >
+                      View PDF
+                    </a>
+                  </div>
+                </div>
+
+                {/* Answer Upload */}
+                <Form.Group>
+                  <Form.Label>Upload Answer Sheet (PDF)</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setAnswerPdf(e.target.files[0])}
+                  />
+                </Form.Group>
+              </>
+            )}
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowPdfModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="success"
+              disabled={
+                !answerPdf ||
+                submittingPdf ||
+                deriveStatus(activePdfAssignment) === "completed"
+              }
+              onClick={async () => {
+                try {
+                  setSubmittingPdf(true);
+                  const fd = new FormData();
+                  fd.append("answerPdf", answerPdf);
+
+                  await fetch(
+                    `${API}/assignments/${activePdfAssignment._id}/submit-pdf`,
+                    { method: "POST", body: fd }
+                  );
+
+                  setShowPdfModal(false);
+                  fetchAssignments(); // refresh dashboard
+                } catch (e) {
+                  alert("Submission failed");
+                } finally {
+                  setSubmittingPdf(false);
+                }
+              }}
             >
-              View PDF
-            </a>
-          </div>
-        </div>
-
-        {/* Answer Upload */}
-        <Form.Group>
-          <Form.Label>Upload Answer Sheet (PDF)</Form.Label>
-          <Form.Control
-            type="file"
-            accept=".pdf"
-            onChange={(e) => setAnswerPdf(e.target.files[0])}
-          />
-        </Form.Group>
-      </>
-    )}
-  </Modal.Body>
-
-  <Modal.Footer>
-    <Button
-      variant="secondary"
-      onClick={() => setShowPdfModal(false)}
-    >
-      Cancel
-    </Button>
-    <Button
-      variant="success"
-      disabled={!answerPdf || submittingPdf || deriveStatus(activePdfAssignment) === "completed"}
-      onClick={async () => {
-        try {
-          setSubmittingPdf(true);
-          const fd = new FormData();
-          fd.append("answerPdf", answerPdf);
-
-          await fetch(
-            `${API}/assignments/${activePdfAssignment._id}/submit-pdf`,
-            { method: "POST", body: fd }
-          );
-
-          setShowPdfModal(false);
-          fetchAssignments(); // refresh dashboard
-        } catch (e) {
-          alert("Submission failed");
-        } finally {
-          setSubmittingPdf(false);
-        }
-      }}
-    >
-      {submittingPdf ? "Submitting..." : "Submit"}
-    </Button>
-  </Modal.Footer>
-</Modal>
-
+              {submittingPdf ? "Submitting..." : "Submit"}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </div>
   );

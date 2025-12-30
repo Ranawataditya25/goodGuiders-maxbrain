@@ -10,7 +10,12 @@ const isValidObjectId = (id) => mongoose.isValidObjectId(id);
    Middleware
 ================================ */
 const requireRole = (role) => (req, res, next) => {
-  const userRole = req.user?.role || req.header("x-user-role");
+  const userRole =
+    req.user?.role ||
+    req.header("x-user-role") ||
+    req.cookies?.role ||      // ✅ ADD THIS
+    req.query?.role;          // (optional dev)
+
   if (userRole !== role) {
     return res.status(403).json({
       ok: false,
@@ -240,6 +245,103 @@ router.post("/:id/evaluate", requireRole("mentor"), async (req, res) => {
     res.status(500).json({ ok: false });
   }
 });
+
+/* =========================================================
+   STUDENT: View evaluated result
+   GET /api/pdf-evaluations/student/:id
+========================================================= */
+router.get(
+  "/student/:id",
+  requireRole("student"),
+  async (req, res) => {
+    try {
+      const doc = await PdfEvaluation.findById(req.params.id)
+        .populate("mentorId", "name email");
+
+      if (!doc) {
+        return res.status(404).json({ ok: false, message: "Not found" });
+      }
+
+      // 🔐 ensure student owns this submission
+      if (!doc.studentId.equals(req.user._id)) {
+        return res.status(403).json({ ok: false, message: "Access denied" });
+      }
+
+      // ⏳ not evaluated yet
+      if (doc.status !== "evaluated") {
+        return res.json({
+          ok: true,
+          status: doc.status,
+          evaluated: false,
+        });
+      }
+
+      // ✅ send only safe fields
+      res.json({
+        ok: true,
+        evaluated: true,
+        data: {
+          title: doc.title,
+          marks: doc.evaluation.marks,
+          feedback: doc.evaluation.feedback,
+          evaluatedAt: doc.evaluation.evaluatedAt,
+          mentor: doc.mentorId
+            ? {
+                name: doc.mentorId.name,
+                email: doc.mentorId.email,
+              }
+            : null,
+        },
+      });
+    } catch (err) {
+      console.error("[student view evaluation]", err);
+      res.status(500).json({ ok: false });
+    }
+  }
+);
+
+/* =========================================================
+   STUDENT: List all evaluated submissions
+   GET /api/pdf-evaluations/student
+========================================================= */
+router.get(
+  "/student",
+  requireRole("student"),
+  async (req, res) => {
+    try {
+      const studentId =
+        req.user?._id ||
+        req.header("x-user-id"); // 👈 TEMP fallback
+
+      if (!studentId) {
+        return res.status(401).json({
+          ok: false,
+          message: "User not identified",
+        });
+      }
+
+      const docs = await PdfEvaluation.find({
+        studentId,
+        status: "evaluated",
+      })
+        .select("title evaluation.evaluatedAt")
+        .sort({ "evaluation.evaluatedAt": -1 });
+
+      res.json({
+        ok: true,
+        count: docs.length,
+        items: docs.map((d) => ({
+          id: d._id,
+          title: d.title,
+          evaluatedAt: d.evaluation?.evaluatedAt,
+        })),
+      });
+    } catch (err) {
+      console.error("[student list evaluations]", err);
+      res.status(500).json({ ok: false });
+    }
+  }
+);
 
 // GET /api/pdf-evaluations/mentor/count
 router.get("/mentor/count", requireRole("mentor"), async (req, res) => {

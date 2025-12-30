@@ -993,6 +993,7 @@ export default function All_Mentor() {
   // ✅ NEW: State for dynamic mentor data
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [allMentors, setAllMentors] = useState([]);
 
   const [specializations, setSpecializations] = useState([]);
   const [selectedSpecialization, setSelectedSpecialization] = useState("All");
@@ -1057,6 +1058,7 @@ export default function All_Mentor() {
           isDisabled: m.isDisabled,
         }));
 
+        setAllMentors(mappedMentors);
         setMentors(mappedMentors);
 
         const uniqueSpecs = [
@@ -1081,11 +1083,19 @@ export default function All_Mentor() {
     fetchMentors();
   }, []);
 
-  const handleSpecializationChange = (e) => {
-    const value = e.target.value;
-    setSelectedSpecialization(value);
-    fetchMentors(value);
-  };
+const handleSpecializationChange = (e) => {
+  const value = e.target.value;
+  setSelectedSpecialization(value);
+
+  if (value === "All") {
+    setMentors(allMentors); // ✅ restore full list
+  } else {
+    const filtered = allMentors.filter(
+      (m) => m.Specialization === value
+    );
+    setMentors(filtered); // ✅ ONLY matching mentors
+  }
+};
 
   // --- NEW: open mentor details and fetch connected students + optional related exams
   const openMentorDetails = async (rowData) => {

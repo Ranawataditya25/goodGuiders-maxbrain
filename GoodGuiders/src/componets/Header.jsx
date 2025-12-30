@@ -241,13 +241,13 @@
 
 import { useState, useEffect } from 'react';
 import FeatherIcon from 'feather-icons-react';
-import SimpleBar from 'simplebar-react';
+// import SimpleBar from 'simplebar-react';
 import { Link,useNavigate } from 'react-router-dom';
 import { Form } from 'react-bootstrap';
 import { useSidebarContext } from '../pages/api/useSidebarContext';
 import 'font-awesome/css/font-awesome.min.css';
 import adminimg from '/src/assets/images/avtar/admin.jpg';
-import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
+// import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
 export default function Header() {
     const [theme, setTheme] = useState('light');
@@ -304,7 +304,7 @@ export default function Header() {
                                 </div>
                             </li>
 
-                            <li>
+                            {/* <li>
                                 <div className="action-toggle navicon-wrap">
                                     <FeatherIcon icon="bell" />
                                     <div className="noti-count"></div>
@@ -358,7 +358,7 @@ export default function Header() {
                                         <Link to="#">See All Messages</Link>
                                     </div>
                                 </div>
-                            </li>
+                            </li> */}
 
                             <li className="nav-profile">
                                 <Link className="action-toggle" to="#">

@@ -1,7 +1,12 @@
 import express from "express";
 import ClassModel from "../models/class.model.js";
+import User from "../models/user.model.js";
 
 const router = express.Router();
+
+function extractClassNumber(value = "") {
+  return String(value).match(/\d+/)?.[0] || null;
+}
 
 const validate = (body) => {
   const { educationBoard, name, subjects } = body || {};
@@ -80,6 +85,43 @@ router.get("/grouped", async (req, res) => {
     res.json({ ok: true, data: grouped });
   } catch (err) {
     console.error("Error grouping classes:", err);
+    res.status(500).json({ ok: false, message: "Server error" });
+  }
+});
+
+router.get("/student", async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({
+        ok: false,
+        message: "Student email required",
+      });
+    }
+
+    const user = await User.findOne({ email }).lean();
+    if (!user) {
+      return res.status(404).json({
+        ok: false,
+        message: "Student not found",
+      });
+    }
+
+    const rawClass = user.education?.[0]?.className;
+    const classNumber = extractClassNumber(rawClass); // ✅ USE HERE
+
+    if (!classNumber) {
+      return res.json({ ok: true, items: [] });
+    }
+
+    const classes = await ClassModel.find({
+      name: new RegExp(`\\b${classNumber}\\b`, "i"),
+    }).lean();
+
+    res.json({ ok: true, items: classes });
+  } catch (e) {
+    console.error("[GET /classes/student]", e);
     res.status(500).json({ ok: false, message: "Server error" });
   }
 });

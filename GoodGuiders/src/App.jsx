@@ -114,6 +114,8 @@ import AdminPdfSubmissions from "./pages/AdminPdfSubmissions.jsx";
 import MentorEvaluations from "./pages/MentorEvaluations.jsx";
 import ResetPassword from "./pages/ResetPassword";
 import MentorProfileInfo from "./pages/MentorProfileInfo.jsx";
+import StudentEvaluationResult from "./pages/StudentEvaluationResult.jsx";
+import StudentClasses from "./pages/Classes.jsx";
 
 const routesWithoutExtras = [
   "/",
@@ -219,10 +221,13 @@ function AppContent() {
         <Route path="/classes" element={<ClassesList />} />
         <Route path="/classes/new" element={<NewClass />} />
         <Route path="/classes/:id/edit" element={<EditClass />} />
+        <Route path="/student/classes" element={<StudentClasses />} />
+
 
         {/* Mentor assigning test */}
         <Route exact path="/assign-test" element={<AssignTest />} />
         <Route exact path="/assigned-tests" element={<AssignedTestsPage />} />
+        <Route exact path="/student/results" element={<StudentEvaluationResult />} />
 
         <Route
           path="/test-instructions/:assignmentId"
