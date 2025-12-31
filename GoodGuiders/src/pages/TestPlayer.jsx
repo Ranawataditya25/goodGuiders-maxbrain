@@ -751,6 +751,7 @@ export default function TestPlayer() {
 
   return (
     <Container fluid className="py-3 test-player">
+      <div className="themebody-wrap" style={{ marginTop: 120 }}>
       <div className="tp-sticky pt-2 pb-2" style={{ borderBottom: "1px solid #eef1f5" }}>
         <Row className="align-items-center g-2">
           <Col md="auto">
@@ -1150,6 +1151,7 @@ export default function TestPlayer() {
           </Card>
         </Col>
       </Row>
+    </div>
     </Container>
   );
 }

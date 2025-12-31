@@ -1,12 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Modal,
-  ListGroup,
-  Spinner,
-  Badge,
-} from "react-bootstrap";
+import { Button, Modal, ListGroup, Spinner, Badge } from "react-bootstrap";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
 /* ---------- avatar helper (same pattern as students) ---------- */
@@ -45,7 +39,10 @@ export default function MentorProfileInfo() {
 
   /* ---------- helpers ---------- */
   const sanitize = (s = "") =>
-    String(s).trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
+    String(s)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "_");
 
   const makeUniqueName = (a = "", b = "") =>
     [sanitize(a), sanitize(b)].sort().join("_");
@@ -130,181 +127,213 @@ export default function MentorProfileInfo() {
   /* ================= UI ================= */
   return (
     <>
-    <div className="themebody-wrap" style={{ marginTop: 120 }}>
-      {/* COVER */}
-      <div style={{
-          height: 220,
-          background:
-            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        }}
-      />
+      <div className="themebody-wrap" style={{ marginTop: 120 }}>
+        {/* COVER */}
+        <div
+          style={{
+            height: 220,
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          }}
+        />
 
-      <div className="container" style={{ marginTop: -90 }}>
-        <div className="row g-4 align-items-start">
-          {/* ================= LEFT (STICKY) ================= */}
-          <div className="col-md-4">
-            <div
-              className="card text-center p-3"
-              style={{
-                borderRadius: 14,
-                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                position: "sticky",
-                top: 110,
-              }}
-            >
-              <img
-                src={getMentorAvatar(mentor.email)}
-                className="rounded-circle mx-auto"
+        <div className="container" style={{ marginTop: -90 }}>
+          <div className="row g-4 align-items-start">
+            {/* ================= LEFT (STICKY) ================= */}
+            <div className="col-md-4">
+              <div
+                className="card text-center p-3"
                 style={{
-                  width: 120,
-                  height: 120,
-                  objectFit: "cover",
-                  border: "4px solid white",
+                  borderRadius: 14,
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                  position: "sticky",
+                  top: 110,
                 }}
-                alt="mentor"
-              />
+              >
+                <img
+                  src={getMentorAvatar(mentor.email)}
+                  className="rounded-circle mx-auto"
+                  style={{
+                    width: 120,
+                    height: 120,
+                    objectFit: "cover",
+                    border: "4px solid white",
+                  }}
+                  alt="mentor"
+                />
 
-              <h5 className="mt-3 mb-0 fw-bold">{mentor.name}</h5>
+                <h5 className="mt-3 mb-0 fw-bold">{mentor.name}</h5>
 
-              <div className="text-warning small">
-                ⭐ {avgRating.toFixed(1)}{" "}
-                <span className="text-muted">({ratingCount})</span>
-              </div>
-
-              <p className="small text-muted">
-                {mentor.specialization || "—"}
-              </p>
-
-              <div className="d-grid gap-2 mt-3">
-                {role === "student" && (
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      navigate(`/chat/${mentor.email}`, {
-                        state: { mentorName: mentor.name },
-                      })
-                    }
-                  >
-                    💬 Chat
-                  </Button>
-                )}
-
-                {role === "student" && (
-                  <Button
-                    size="sm"
-                    variant="outline-warning"
-                    onClick={() => setShowRatingModal(true)}
-                  >
-                    ⭐ Rate
-                  </Button>
-                )}
-
-                {(role === "admin" || role === "student") && (
-                  <Button
-                    size="sm"
-                    variant="outline-secondary"
-                    onClick={() =>
-                      navigate(`/mentor/${email}/materials`, {
-                        state: { mentorName: mentor.name },
-                      })
-                    }
-                  >
-                    📚 Materials
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ================= RIGHT (SPLIT CARDS) ================= */}
-          <div className="col-md-8">
-            {/* ABOUT */}
-            <div className="card shadow-sm p-4 mb-3">
-              <h5 className="fw-bold mb-3">About Mentor</h5>
-              <p className="text-muted">{mentor.bio || "No bio available"}</p>
-
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <p><strong>Email:</strong> {mentor.email}</p>
-                  <p><strong>Experience:</strong> {mentor.experience || "-"} yrs</p>
-                  <p><strong>Degree:</strong> {mentor.degree || "-"}</p>
+                <div className="text-warning small">
+                  ⭐ {avgRating.toFixed(1)}{" "}
+                  <span className="text-muted">({ratingCount})</span>
                 </div>
-                <div className="col-md-6">
-                  <p><strong>Specialization:</strong> {mentor.specialization || "-"}</p>
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    <span
-                      className={`badge ${
-                        mentor.isDisabled ? "bg-danger" : "bg-success"
-                      }`}
+
+                <p className="small text-muted">
+                  {mentor.specialization || "—"}
+                </p>
+
+                <div className="d-grid gap-2 mt-3">
+                  {role === "student" && (
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        navigate(`/chat/${mentor.email}`, {
+                          state: { mentorName: mentor.name },
+                        })
+                      }
                     >
-                      {mentor.isDisabled ? "Disabled" : "Active"}
-                    </span>
-                  </p>
-                  {role !== "student" && (
-                    <p><strong>Mobile:</strong> {mentor.mobileNo || "-"}</p>
+                      💬 Chat
+                    </Button>
+                  )}
+
+                  {role === "student" && (
+                    <Button
+                      size="sm"
+                      variant="outline-warning"
+                      onClick={() => setShowRatingModal(true)}
+                    >
+                      ⭐ Rate
+                    </Button>
+                  )}
+
+                  {(role === "admin" || role === "student") && (
+                    <Button
+                      size="sm"
+                      variant="outline-secondary"
+                      onClick={() =>
+                        navigate(`/mentor/${email}/materials`, {
+                          state: { mentorName: mentor.name },
+                        })
+                      }
+                    >
+                      📚 Materials
+                    </Button>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* CONNECTED STUDENTS */}
-            <div className="card shadow-sm p-4">
-              <h5 className="fw-bold mb-3">👨‍🎓 Connected Students</h5>
-              {students.count === 0 ? (
-                <p className="text-muted">No students connected</p>
-              ) : (
-                <ListGroup>
-                  {students.items.map((s) => (
-                    <ListGroup.Item
-  key={s.email}
-  className="d-flex justify-content-between align-items-center"
->
-  {/* 👇 CLICKABLE STUDENT PROFILE */}
-  <div
-    className="d-flex align-items-center gap-2"
-    style={{ cursor: "pointer" }}
-    onClick={() =>
-      navigate(`/patient-info/${encodeURIComponent(s.email)}`)
-    }
-  >
-    <img
-      src={getMentorAvatar(s.email)}
-      alt={s.name}
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: "50%",
-        objectFit: "cover",
-      }}
-    />
+            {/* ================= RIGHT (SPLIT CARDS) ================= */}
+            <div className="col-md-8">
+              {/* ABOUT */}
+              <div className="card shadow-sm p-4 mb-3">
+                <h5 className="fw-bold mb-3">About Mentor</h5>
+                <p className="text-muted">{mentor.bio || "No bio available"}</p>
 
-    <div>
-      <strong>{s.name}</strong>
-      <div className="small text-muted">
-        {s.class || "-"}
-      </div>
-    </div>
-  </div>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <p>
+                      <strong>Email:</strong> {mentor.email}
+                    </p>
+                    <p>
+                      <strong>Experience:</strong> {mentor.experience || "-"}{" "}
+                      yrs
+                    </p>
+                    <p>
+                      <strong>Degree:</strong> {mentor.degree || "-"}
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <p>
+                      <strong>Specialization:</strong>{" "}
+                      {mentor.specialization || "-"}
+                    </p>
+                    <p>
+                      <strong>Status:</strong>{" "}
+                      <span
+                        className={`badge ${
+                          mentor.isDisabled ? "bg-danger" : "bg-success"
+                        }`}
+                      >
+                        {mentor.isDisabled ? "Disabled" : "Active"}
+                      </span>
+                    </p>
+                    {role !== "student" && (
+                      <p>
+                        <strong>Mobile:</strong> {mentor.mobileNo || "-"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-  {/* 👇 ADMIN CHAT BUTTON (unchanged) */}
-  {role === "admin" && (
-    <Button
-      size="sm"
-      variant="outline-primary"
-      onClick={() => handleViewMessages(s.email, s.name)}
-    >
-      View Chat
-    </Button>
-  )}
-</ListGroup.Item>
-                  ))}
-                </ListGroup>
+              {/* CONNECTED STUDENTS */}
+              {role === "admin" && (
+                <div className="card shadow-sm p-4">
+                  <h5 className="fw-bold mb-3">👨‍🎓 Connected Students</h5>
+                  {students.count === 0 ? (
+                    <p className="text-muted">No students connected</p>
+                  ) : (
+                    <ListGroup>
+                      {students.items.map((s) => (
+                        <ListGroup.Item
+                          key={s.email}
+                          className="d-flex justify-content-between align-items-center"
+                        >
+                          {/* 👇 CLICKABLE STUDENT PROFILE */}
+                          <div
+                            className="d-flex align-items-center gap-2"
+                            style={{ cursor: "pointer" }}
+                            onClick={() =>
+                              navigate(
+                                `/patient-info/${encodeURIComponent(s.email)}`
+                              )
+                            }
+                          >
+                            <img
+                              src={getMentorAvatar(s.email)}
+                              alt={s.name}
+                              style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                              }}
+                            />
+
+                            <div>
+                              <strong>{s.name}</strong>
+                              <div className="small text-muted">
+                                {s.class || "-"}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* RIGHT: buttons */}
+                          <div className="d-flex gap-2">
+                            {/* ✅ VIEW PROFILE BUTTON */}
+                            <Button
+                              size="sm"
+                              variant="outline-secondary"
+                              onClick={() =>
+                                navigate(
+                                  `/patient-info/${encodeURIComponent(s.email)}`
+                                )
+                              }
+                            >
+                              View Profile
+                            </Button>
+
+                            {/* ADMIN CHAT */}
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              onClick={() =>
+                                handleViewMessages(s.email, s.name)
+                              }
+                            >
+                              View Chat
+                            </Button>
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
+                  )}
+                </div>
               )}
             </div>
           </div>
         </div>
-      </div>
       </div>
 
       {/* ================= RATING MODAL ================= */}
