@@ -1,12 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Modal,
-  ListGroup,
-  Spinner,
-  Badge,
-} from "react-bootstrap";
+import { Button, Modal, ListGroup, Spinner, Badge } from "react-bootstrap";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
 /* ---------- avatar helper (same as All_Student) ---------- */
@@ -38,7 +32,10 @@ export default function StudentProfileInfo() {
 
   /* ---------- helpers ---------- */
   const sanitize = (s = "") =>
-    String(s).trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
+    String(s)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "_");
 
   const makeUniqueName = (a = "", b = "") =>
     [sanitize(a), sanitize(b)].sort().join("_");
@@ -94,12 +91,12 @@ export default function StudentProfileInfo() {
   /* ================= UI ================= */
   return (
     <>
+    <div className="themebody-wrap" style={{ marginTop: 120 }}>
       {/* COVER */}
       <div
         style={{
           height: 220,
-          background:
-            "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+          background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
         }}
       />
 
@@ -156,12 +153,20 @@ export default function StudentProfileInfo() {
               <h5 className="fw-bold mb-3">About Student</h5>
               <div className="row g-3">
                 <div className="col-md-6">
-                  <p><strong>Email:</strong> {student.email}</p>
-                  <p><strong>DOB:</strong> {student.dob || "-"}</p>
-                  <p><strong>Address:</strong> {student.address || "-"}</p>
+                  <p>
+                    <strong>Email:</strong> {student.email}
+                  </p>
+                  <p>
+                    <strong>DOB:</strong> {student.dob || "-"}
+                  </p>
+                  <p>
+                    <strong>Address:</strong> {student.address || "-"}
+                  </p>
                 </div>
                 <div className="col-md-6">
-                  <p><strong>Mobile:</strong> {student.mobileNo || "-"}</p>
+                  <p>
+                    <strong>Mobile:</strong> {student.mobileNo || "-"}
+                  </p>
                   <p>
                     <strong>Status:</strong>{" "}
                     <span
@@ -220,57 +225,60 @@ export default function StudentProfileInfo() {
                 {mentors.count === 0 ? (
                   <p className="text-muted">No mentors connected</p>
                 ) : (
-                 <ListGroup>
-  {mentors.items.map((m) => (
-    <ListGroup.Item
-      key={m.email}
-      className="d-flex justify-content-between align-items-center"
-    >
-      {/* 👇 CLICKABLE MENTOR PROFILE */}
-      <div
-        className="d-flex align-items-center gap-2"
-        style={{ cursor: "pointer" }}
-        onClick={() =>
-          navigate(`/doctor-info/${encodeURIComponent(m.email)}`)
-        }
-      >
-        <img
-          src={getStudentAvatar(m.email)}
-          alt={m.name}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            objectFit: "cover",
-          }}
-        />
+                  <ListGroup>
+                    {mentors.items.map((m) => (
+                      <ListGroup.Item
+                        key={m.email}
+                        className="d-flex justify-content-between align-items-center"
+                      >
+                        {/* 👇 CLICKABLE MENTOR PROFILE */}
+                        <div
+                          className="d-flex align-items-center gap-2"
+                          style={{ cursor: "pointer" }}
+                          onClick={() =>
+                            navigate(
+                              `/doctor-info/${encodeURIComponent(m.email)}`
+                            )
+                          }
+                        >
+                          <img
+                            src={getStudentAvatar(m.email)}
+                            alt={m.name}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                            }}
+                          />
 
-        <div>
-          <strong>{m.name}</strong>
-          <div className="small text-muted">
-            {m.specialization || "-"}
-          </div>
-        </div>
-      </div>
+                          <div>
+                            <strong>{m.name}</strong>
+                            <div className="small text-muted">
+                              {m.specialization || "-"}
+                            </div>
+                          </div>
+                        </div>
 
-      {/* 👇 ADMIN CHAT BUTTON (unchanged) */}
-      {role === "admin" && (
-        <Button
-          size="sm"
-          variant="outline-primary"
-          onClick={() => handleViewMessages(m.email, m.name)}
-        >
-          View Chat
-        </Button>
-      )}
-    </ListGroup.Item>
-  ))}
-</ListGroup>
+                        {/* 👇 ADMIN CHAT BUTTON (unchanged) */}
+                        {role === "admin" && (
+                          <Button
+                            size="sm"
+                            variant="outline-primary"
+                            onClick={() => handleViewMessages(m.email, m.name)}
+                          >
+                            View Chat
+                          </Button>
+                        )}
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
                 )}
               </div>
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* ================= CHAT MODAL ================= */}

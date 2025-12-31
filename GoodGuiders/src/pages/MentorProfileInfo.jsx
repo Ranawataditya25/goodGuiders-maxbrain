@@ -130,9 +130,9 @@ export default function MentorProfileInfo() {
   /* ================= UI ================= */
   return (
     <>
+    <div className="themebody-wrap" style={{ marginTop: 120 }}>
       {/* COVER */}
-      <div
-        style={{
+      <div style={{
           height: 220,
           background:
             "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -304,6 +304,7 @@ export default function MentorProfileInfo() {
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       {/* ================= RATING MODAL ================= */}

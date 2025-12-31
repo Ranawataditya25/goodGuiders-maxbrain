@@ -63,6 +63,10 @@ const userSchema = new mongoose.Schema(
       type: String, // Store the relative path like "/uploads/abc.jpg"
       default: "/default-avatar.png",
     },
+    profileCompleted: {
+      type: Boolean,
+      default: false,
+    },
 
     // ✅ Mentor-specific fields
     specializedIn: String,

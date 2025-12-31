@@ -4,6 +4,7 @@ import { Row, Col, Card, Form, Container, Button } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import "./css/ProfilePage.css";
+import { useNavigate } from "react-router-dom";
 
 // ✅ Allowed classes (6 to 12)
 const SELECTABLE_CLASSES = ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
@@ -12,6 +13,49 @@ const SELECTABLE_CLASSES = ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
 const DEFAULT_EDUCATION = [
   { className: "", passout: "", board: "", subject: "", grade: "" },
 ];
+
+const RequiredStar = () => (
+  <span className="text-danger ms-1">*</span>
+);
+
+const REQUIRED_FIELDS = [
+  "name",
+  "dob",
+  "gender",
+  "mobileNo",
+  "city",
+  "state",
+  "country",
+  "postalCode",
+  "address",
+];
+
+function isProfileComplete(formData) {
+  // basic fields
+  for (const field of REQUIRED_FIELDS) {
+    if (!formData[field] || !String(formData[field]).trim()) {
+      return false;
+    }
+  }
+
+  // education validation (at least one row fully filled)
+  if (!Array.isArray(formData.education) || formData.education.length === 0) {
+    return false;
+  }
+
+  const edu = formData.education[0];
+  if (
+    !edu.className ||
+    !edu.passout ||
+    !edu.board ||
+    !edu.subject ||
+    !edu.grade
+  ) {
+    return false;
+  }
+
+  return true;
+}
 
 export default function Edit_patient() {
   const [formData, setFormData] = useState({
@@ -27,6 +71,7 @@ export default function Edit_patient() {
     profileImage: null,
     education: DEFAULT_EDUCATION,
   });
+  const navigate = useNavigate();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedUser, setSavedUser] = useState(null);
@@ -99,16 +144,24 @@ export default function Edit_patient() {
 
       const result = await res.json();
       if (res.ok) {
+        if (!isProfileComplete(formData)) {
+          alert("⚠️ Please fill all compulsory (*) fields before submitting your profile.");
+          setIsSubmitting(false);
+          return; // ⛔ STOP REDIRECT
+        }
+
         alert("Profile updated successfully!");
-        // update localStorage with server response user object (without password)
+
         if (result.user) {
-          localStorage.setItem("loggedInUser", JSON.stringify(result.user));
-          setSavedUser(result.user);
-          // reflect updated user in form (keep file object as null)
-          setFormData((prev) => ({
-            ...prev,
-            profileImage: result.user.profileImage || prev.profileImage,
-          }));
+          const updatedUser = {
+            ...result.user,
+            profileCompleted: true, // ✅ ONLY SET WHEN COMPLETE
+          };
+
+          localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
+          setSavedUser(updatedUser);
+
+          navigate("/patient-dashboard", { replace: true });
         }
       } else {
         alert("Error: " + (result.msg || result.error || "Update failed"));
@@ -192,6 +245,9 @@ export default function Edit_patient() {
                   <h4> Student Information</h4>
                 </Card.Header>
                 <Card.Body>
+                  <p className="text-danger mb-3">
+  <strong>*</strong> Compulsory fields
+</p>
                   <Form onSubmit={handleSubmit}>
                     <Row className="mb-24">
                       <Col md={12} className="text-center">
@@ -231,7 +287,7 @@ export default function Edit_patient() {
                     <Row>
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Name</Form.Label>
+                          <Form.Label>Name <RequiredStar /></Form.Label>
                           <Form.Control
                             type="text"
                             name="name"
@@ -244,7 +300,7 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Date of Birth</Form.Label>
+                          <Form.Label>Date of Birth <RequiredStar /></Form.Label>
                           <input
                             className="datepicker-here form-control"
                             type="date"
@@ -257,7 +313,7 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mt-0 mb-3">
-                          <Form.Label>Gender</Form.Label>
+                          <Form.Label>Gender <RequiredStar /></Form.Label>
                           <Form.Control
                             as="select"
                             name="gender"
@@ -274,7 +330,7 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Phone</Form.Label>
+                          <Form.Label>Phone <RequiredStar /></Form.Label>
                           <Form.Control
                             type="text"
                             name="mobileNo"
@@ -287,7 +343,7 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>City</Form.Label>
+                          <Form.Label>City <RequiredStar /></Form.Label>
                           <Form.Control
                             type="text"
                             name="city"
@@ -300,7 +356,7 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>State</Form.Label>
+                          <Form.Label>State <RequiredStar /></Form.Label>
                           <Form.Control
                             type="text"
                             name="state"
@@ -313,7 +369,7 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Country</Form.Label>
+                          <Form.Label>Country <RequiredStar /></Form.Label>
                           <Form.Control
                             type="text"
                             name="country"
@@ -326,7 +382,7 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Postal/zip Code</Form.Label>
+                          <Form.Label>Postal/zip Code <RequiredStar /></Form.Label>
                           <Form.Control
                             type="text"
                             placeholder="Enter Postal/zip Code"
@@ -339,7 +395,7 @@ export default function Edit_patient() {
 
                       <Col md={6}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Address</Form.Label>
+                          <Form.Label>Address <RequiredStar /></Form.Label>
                           <Form.Control
                             as="textarea"
                             placeholder="Enter address"
@@ -359,72 +415,93 @@ export default function Edit_patient() {
                                   <table className="table table-bordered">
                                     <thead>
                                       <tr>
-                                        <th>Class</th>
-                                        <th>Passout</th>
-                                        <th>University/Board</th>
-                                        <th>Subject</th>
-                                        <th>Per/CGPA</th>
+                                        <th>Class <RequiredStar /></th>
+                                        <th>Passout <RequiredStar /></th>
+                                        <th>University/Board <RequiredStar /></th>
+                                        <th>Subject <RequiredStar /></th>
+                                        <th>Per/CGPA <RequiredStar /></th>
                                       </tr>
                                     </thead>
-                                  <tbody>
-  {formData.education.map((edu, index) => (
-    <tr key={index}>
-      <td>
-        <Form.Control
-          as="select"
-          value={edu.className}
-          onChange={(e) =>
-            handleEducationChange(index, "className", e.target.value)
-          }
-        >
-          <option value="">Select Class</option>
-          {SELECTABLE_CLASSES.map((cls) => (
-            <option key={cls} value={cls}>
-              {cls}
-            </option>
-          ))}
-        </Form.Control>
-      </td>
-      <td>
-        <Form.Control
-          type="text"
-          value={edu.passout}
-          onChange={(e) =>
-            handleEducationChange(index, "passout", e.target.value)
-          }
-        />
-      </td>
-      <td>
-        <Form.Control
-          type="text"
-          value={edu.board}
-          onChange={(e) =>
-            handleEducationChange(index, "board", e.target.value)
-          }
-        />
-      </td>
-      <td>
-        <Form.Control
-          type="text"
-          value={edu.subject}
-          onChange={(e) =>
-            handleEducationChange(index, "subject", e.target.value)
-          }
-        />
-      </td>
-      <td>
-        <Form.Control
-          type="text"
-          value={edu.grade}
-          onChange={(e) =>
-            handleEducationChange(index, "grade", e.target.value)
-          }
-        />
-      </td>
-    </tr>
-  ))}
-</tbody>
-
+                                    <tbody>
+                                      {formData.education.map((edu, index) => (
+                                        <tr key={index}>
+                                          <td>
+                                            <Form.Control
+                                              as="select"
+                                              value={edu.className}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "className",
+                                                  e.target.value
+                                                )
+                                              }
+                                            >
+                                              <option value="">
+                                                Select Class
+                                              </option>
+                                              {SELECTABLE_CLASSES.map((cls) => (
+                                                <option key={cls} value={cls}>
+                                                  {cls}
+                                                </option>
+                                              ))}
+                                            </Form.Control>
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.passout}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "passout",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.board}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "board",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.subject}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "subject",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                          <td>
+                                            <Form.Control
+                                              type="text"
+                                              value={edu.grade}
+                                              onChange={(e) =>
+                                                handleEducationChange(
+                                                  index,
+                                                  "grade",
+                                                  e.target.value
+                                                )
+                                              }
+                                            />
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
                                   </table>
                                 </div>
                               </div>

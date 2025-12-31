@@ -73,6 +73,8 @@ router.put("/", upload.single("profileImage"), async (req, res) => {
     // prevent updating email
     delete updateFields.email;
 
+    updateFields.profileCompleted = true;
+
     const updatedUser = await User.findOneAndUpdate(
       { email },
       { $set: updateFields },

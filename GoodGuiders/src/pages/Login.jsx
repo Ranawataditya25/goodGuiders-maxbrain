@@ -920,7 +920,11 @@ const handleSubmit = async (e) => {
       if (user.role === "admin") {
         navigate("/admin-dashboard");
       } else if (user.role === "student") {
-        navigate("/patient-dashboard");
+        if (!user.profileCompleted) {
+          navigate("/edit-patient"); // 👈 your Edit_patient page
+        } else {
+          navigate("/patient-dashboard");
+        }
       } else {
         navigate("/");
       }
