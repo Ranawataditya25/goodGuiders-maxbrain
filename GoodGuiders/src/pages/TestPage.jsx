@@ -298,7 +298,7 @@ const validateForm = () => {
   };
 
   return (
-    <div style={{ marginTop: "120px" }}>
+    <div className="themebody-wrap" style={{ marginTop: 120 }}>
       <Container>
         {/* Header / Summary */}
         <Card className="mb-4">

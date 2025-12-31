@@ -1,6 +1,23 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Button, Modal, ListGroup, Spinner } from "react-bootstrap";
+import {
+  Button,
+  Modal,
+  ListGroup,
+  Spinner,
+  Badge,
+} from "react-bootstrap";
+import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
+
+/* ---------- avatar helper (same pattern as students) ---------- */
+function getMentorAvatar(email = "") {
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = email.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const avatarIndex = Math.abs(hash % 10) + 1;
+  return IMAGE_URLS[`avtar/${avatarIndex}.jpg`];
+}
 
 export default function MentorProfileInfo() {
   const { email } = useParams();
@@ -8,7 +25,6 @@ export default function MentorProfileInfo() {
 
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
   const role = loggedInUser.role; // admin | student | mentor
-
   const canView = role === "admin" || role === "student";
 
   const [mentorDetails, setMentorDetails] = useState(null);
@@ -20,7 +36,6 @@ export default function MentorProfileInfo() {
   /* ---------- rating modal ---------- */
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
-  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   /* ---------- messages modal (admin) ---------- */
   const [showMessagesModal, setShowMessagesModal] = useState(false);
@@ -66,7 +81,7 @@ export default function MentorProfileInfo() {
   /* ---------- admin: view messages ---------- */
   const handleViewMessages = async (studentEmail, studentName) => {
     const uniqueName = makeUniqueName(email, studentEmail);
-    setActiveChatTitle(`${mentorDetails.mentor.name} ↔ ${studentName}`);
+    setActiveChatTitle(`${mentor.name} ↔ ${studentName}`);
     setShowMessagesModal(true);
     setMessagesLoading(true);
 
@@ -82,8 +97,6 @@ export default function MentorProfileInfo() {
 
   /* ---------- submit rating ---------- */
   const submitRating = async () => {
-    setRatingSubmitting(true);
-
     await fetch(
       `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
         email
@@ -97,10 +110,8 @@ export default function MentorProfileInfo() {
         }),
       }
     );
-
     setShowRatingModal(false);
     setSelectedRating(0);
-    setRatingSubmitting(false);
   };
 
   if (loading)
@@ -112,7 +123,9 @@ export default function MentorProfileInfo() {
 
   if (!canView) return <p className="text-center mt-5">Access denied</p>;
 
-  const mentor = mentorDetails.mentor;
+  /* ---------- safe destructuring ---------- */
+  const mentor = mentorDetails?.mentor || {};
+  const students = mentorDetails?.students || { count: 0, items: [] };
 
   /* ================= UI ================= */
   return (
@@ -127,22 +140,20 @@ export default function MentorProfileInfo() {
       />
 
       <div className="container" style={{ marginTop: -90 }}>
-        <div className="row g-4">
-          {/* LEFT CARD */}
+        <div className="row g-4 align-items-start">
+          {/* ================= LEFT (STICKY) ================= */}
           <div className="col-md-4">
             <div
-  className="card text-center p-3"
-  style={{
-    borderRadius: 14,
-    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-  }}
->
+              className="card text-center p-3"
+              style={{
+                borderRadius: 14,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                position: "sticky",
+                top: 110,
+              }}
+            >
               <img
-                src={
-                  mentor.profileImage
-                    ? `http://127.0.0.1:5000${mentor.profileImage}`
-                    : "https://i.pravatar.cc/200"
-                }
+                src={getMentorAvatar(mentor.email)}
                 className="rounded-circle mx-auto"
                 style={{
                   width: 120,
@@ -150,133 +161,143 @@ export default function MentorProfileInfo() {
                   objectFit: "cover",
                   border: "4px solid white",
                 }}
+                alt="mentor"
               />
 
               <h5 className="mt-3 mb-0 fw-bold">{mentor.name}</h5>
-<div className="text-warning small">
-  ⭐ {avgRating.toFixed(1)}{" "}
-  <span className="text-muted">({ratingCount})</span>
-</div>
+
+              <div className="text-warning small">
+                ⭐ {avgRating.toFixed(1)}{" "}
+                <span className="text-muted">({ratingCount})</span>
+              </div>
 
               <p className="small text-muted">
                 {mentor.specialization || "—"}
               </p>
 
-             <div className="d-grid gap-2 mt-3">
-  {role === "student" && (
-    <Button
-      size="sm"
-      variant="primary"
-      className="fw-semibold"
-      onClick={() =>
-        navigate(`/chat/${mentor.email}`, {
-          state: { mentorName: mentor.name },
-        })
-      }
-    >
-      💬 Chat
-    </Button>
-  )}
+              <div className="d-grid gap-2 mt-3">
+                {role === "student" && (
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      navigate(`/chat/${mentor.email}`, {
+                        state: { mentorName: mentor.name },
+                      })
+                    }
+                  >
+                    💬 Chat
+                  </Button>
+                )}
 
-  {role === "student" && (
-    <Button
-      size="sm"
-      variant="outline-warning"
-      onClick={() => setShowRatingModal(true)}
-    >
-      ⭐ Rate
-    </Button>
-  )}
+                {role === "student" && (
+                  <Button
+                    size="sm"
+                    variant="outline-warning"
+                    onClick={() => setShowRatingModal(true)}
+                  >
+                    ⭐ Rate
+                  </Button>
+                )}
 
-  {(role === "admin" || role === "student") && (
-    <Button
-      size="sm"
-      variant="outline-secondary"
-      onClick={() =>
-        navigate(`/mentor/${email}/materials`, {
-          state: { mentorName: mentor.name },
-        })
-      }
-    >
-      📚 Materials
-    </Button>
-  )}
-</div>
-
+                {(role === "admin" || role === "student") && (
+                  <Button
+                    size="sm"
+                    variant="outline-secondary"
+                    onClick={() =>
+                      navigate(`/mentor/${email}/materials`, {
+                        state: { mentorName: mentor.name },
+                      })
+                    }
+                  >
+                    📚 Materials
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* RIGHT CARD */}
+          {/* ================= RIGHT (SPLIT CARDS) ================= */}
           <div className="col-md-8">
-            <div className="card shadow-sm p-4">
-              <h5 className="fw-bold mb-2">About Mentor</h5>
-              <p className="text-muted">
-                {mentor.bio || "No bio available"}
-              </p>
+            {/* ABOUT */}
+            <div className="card shadow-sm p-4 mb-3">
+              <h5 className="fw-bold mb-3">About Mentor</h5>
+              <p className="text-muted">{mentor.bio || "No bio available"}</p>
 
-              <hr className="my-3" />
-<div className="row g-3">
+              <div className="row g-3">
                 <div className="col-md-6">
-                  <p>
-                    <strong>Email:</strong> {mentor.email}
-                  </p>
-                  <p>
-                    <strong>Experience:</strong> {mentor.experience} yrs
-                  </p>
-                  <p>
-                    <strong>Degree:</strong> {mentor.degree || "-"}
-                  </p>
+                  <p><strong>Email:</strong> {mentor.email}</p>
+                  <p><strong>Experience:</strong> {mentor.experience || "-"} yrs</p>
+                  <p><strong>Degree:</strong> {mentor.degree || "-"}</p>
                 </div>
-
                 <div className="col-md-6">
+                  <p><strong>Specialization:</strong> {mentor.specialization || "-"}</p>
                   <p>
-                    <strong>Specialization:</strong>{" "}
-                    {mentor.specialization || "-"}
+                    <strong>Status:</strong>{" "}
+                    <span
+                      className={`badge ${
+                        mentor.isDisabled ? "bg-danger" : "bg-success"
+                      }`}
+                    >
+                      {mentor.isDisabled ? "Disabled" : "Active"}
+                    </span>
                   </p>
-                  <p>
-  <strong>Status:</strong>{" "}
-  <span
-    className={`badge ${
-      mentor.isDisabled ? "bg-danger" : "bg-success"
-    }`}
-  >
-    {mentor.isDisabled ? "Disabled" : "Active"}
-  </span>
-</p>
                   {role !== "student" && (
-                    <p>
-                      <strong>Mobile:</strong> {mentor.mobileNo}
-                    </p>
+                    <p><strong>Mobile:</strong> {mentor.mobileNo || "-"}</p>
                   )}
                 </div>
               </div>
+            </div>
 
-              <hr />
-
-              <h6>Connected Students</h6>
-              {mentorDetails.students?.count === 0 ? (
+            {/* CONNECTED STUDENTS */}
+            <div className="card shadow-sm p-4">
+              <h5 className="fw-bold mb-3">👨‍🎓 Connected Students</h5>
+              {students.count === 0 ? (
                 <p className="text-muted">No students connected</p>
               ) : (
                 <ListGroup>
-                  {mentorDetails.students.items.map((s) => (
+                  {students.items.map((s) => (
                     <ListGroup.Item
-                      key={s.email}
-                      className="d-flex justify-content-between align-items-center"
-                    >
-                      <div>
-                        <strong>{s.name}</strong> ({s.class || "-"})
-                      </div>
+  key={s.email}
+  className="d-flex justify-content-between align-items-center"
+>
+  {/* 👇 CLICKABLE STUDENT PROFILE */}
+  <div
+    className="d-flex align-items-center gap-2"
+    style={{ cursor: "pointer" }}
+    onClick={() =>
+      navigate(`/patient-info/${encodeURIComponent(s.email)}`)
+    }
+  >
+    <img
+      src={getMentorAvatar(s.email)}
+      alt={s.name}
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: "50%",
+        objectFit: "cover",
+      }}
+    />
 
-                      {role === "admin" && (
-                        <Button
-                          size="sm"
-                          variant="outline-primary"
-                          onClick={() => handleViewMessages(s.email, s.name)}
-                        >
-                          View Chat
-                        </Button>
-                      )}
-                    </ListGroup.Item>
+    <div>
+      <strong>{s.name}</strong>
+      <div className="small text-muted">
+        {s.class || "-"}
+      </div>
+    </div>
+  </div>
+
+  {/* 👇 ADMIN CHAT BUTTON (unchanged) */}
+  {role === "admin" && (
+    <Button
+      size="sm"
+      variant="outline-primary"
+      onClick={() => handleViewMessages(s.email, s.name)}
+    >
+      View Chat
+    </Button>
+  )}
+</ListGroup.Item>
                   ))}
                 </ListGroup>
               )}
@@ -285,7 +306,7 @@ export default function MentorProfileInfo() {
         </div>
       </div>
 
-      {/* RATING MODAL */}
+      {/* ================= RATING MODAL ================= */}
       <Modal show={showRatingModal} onHide={() => setShowRatingModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Rate Mentor</Modal.Title>
@@ -312,11 +333,12 @@ export default function MentorProfileInfo() {
         </Modal.Footer>
       </Modal>
 
-      {/* ADMIN CHAT MODAL */}
+      {/* ================= ADMIN CHAT MODAL ================= */}
       <Modal
         show={showMessagesModal}
         onHide={() => setShowMessagesModal(false)}
         size="lg"
+        centered
       >
         <Modal.Header closeButton>
           <Modal.Title>{activeChatTitle}</Modal.Title>
@@ -324,9 +346,9 @@ export default function MentorProfileInfo() {
         <Modal.Body>
           {messagesLoading && <Spinner />}
           {messagesList.map((m, i) => (
-            <div key={i}>
+            <div key={i} className="mb-2">
               <strong>{m.author}</strong>
-              <p>{m.body}</p>
+              <p className="mb-1">{m.body}</p>
             </div>
           ))}
         </Modal.Body>

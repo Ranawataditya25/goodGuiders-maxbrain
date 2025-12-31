@@ -2022,11 +2022,11 @@ useEffect(() => {
           </Row>
 
           {/* ===== Summary counters (deep-link to filtered list) ===== */}
-          <Row className="mb-4">
+          {/* <Row className="mb-4">
             <Col xl={12}>
               <AssignedTestsSummary />
             </Col>
-          </Row>
+          </Row> */}
 
           {/* ========================== ASSIGNED TESTS ========================== */}
           <Card className="mb-4">
@@ -2049,8 +2049,7 @@ useEffect(() => {
                 </Button>
 
                 <Button
-                  as={Link}
-                  to="/bootstrapreact/medixo/my-assignments"
+                  onClick={() => navigate("/my-assignments")}
                   size="sm"
                   variant="outline-primary"
                 >

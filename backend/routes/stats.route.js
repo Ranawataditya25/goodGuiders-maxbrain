@@ -304,9 +304,14 @@ router.get("/student/:email/details", async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    const student = await User.findOne({ email, role: "student" })
-      .select("name email mobileNo address dob className course enrolledCourses isDisabled")
-      .lean();
+   const student = await User.findOne({ email, role: "student" })
+  .select("name email mobileNo address dob education course isDisabled")
+  .lean();
+
+const className =
+  student.education && student.education.length > 0
+    ? student.education[0].className
+    : null;
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
@@ -395,7 +400,7 @@ router.get("/student/:email/details", async (req, res) => {
         mobileNo: student.mobileNo,
         address: student.address,
         dob: student.dob,
-        className: student.className || null,
+        className,
         course: student.course || null,
         isDisabled: !!student.isDisabled,
       },

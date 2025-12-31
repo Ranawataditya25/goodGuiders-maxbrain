@@ -114,6 +114,7 @@ import AdminPdfSubmissions from "./pages/AdminPdfSubmissions.jsx";
 import MentorEvaluations from "./pages/MentorEvaluations.jsx";
 import ResetPassword from "./pages/ResetPassword";
 import MentorProfileInfo from "./pages/MentorProfileInfo.jsx";
+import StudentProfileInfo from "./pages/StudentProfileInfo.jsx";
 import StudentEvaluationResult from "./pages/StudentEvaluationResult.jsx";
 import StudentClasses from "./pages/Classes.jsx";
 
@@ -214,6 +215,7 @@ function AppContent() {
 
         <Route exact path="/all-doctors" element={<All_doctor />} />
         <Route exact path="/doctor-info/:email" element={<MentorProfileInfo /> } />
+        <Route exact path="/patient-info/:email" element={<StudentProfileInfo /> } />
         {/* <Route exact path="/add-doctor" element={<Add_doctor />} /> */}
         <Route exact path="/edit-doctor" element={<Edit_doctor />} />
 
