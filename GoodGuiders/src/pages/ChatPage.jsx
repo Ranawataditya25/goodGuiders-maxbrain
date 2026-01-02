@@ -32,7 +32,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef(null);
   const location = useLocation();
   const uniqueNameFromState = location.state?.conversationUniqueName;
-const mentorNameFromState = location.state?.mentorName;
+  const mentorNameFromState = location.state?.mentorName;
 
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -114,15 +114,27 @@ const mentorNameFromState = location.state?.mentorName;
   // ✅ Start Call
   const startVideoCall = async () => {
     try {
+      const receiverId = isMentor ? userEmail : mentorEmail;
+
       const res = await fetch(
         `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/start-call`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ caller: userEmail }),
+          body: JSON.stringify({
+            caller: userEmail,
+            receiverId: mentorEmail, // ✅ FIX
+          }),
         }
       );
-      if (res.ok) setShowVideo(true);
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Start call failed:", err);
+        return;
+      }
+
+      setShowVideo(true);
     } catch (err) {
       console.error("Start call error:", err);
     }
@@ -135,7 +147,7 @@ const mentorNameFromState = location.state?.mentorName;
     const checkCallStatus = async () => {
       try {
         const res = await fetch(
-          `http://127.0.0.1:5000/api/conversation/${conversation.uniqueName}`
+          `http://127.0.0.1:5000/api/video/${conversation.uniqueName}`
         );
         if (!res.ok) return; // handle 404
         const convo = await res.json();
@@ -155,8 +167,16 @@ const mentorNameFromState = location.state?.mentorName;
   const handleAcceptCall = async () => {
     await fetch(
       `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/answer-call`,
-      { method: "PUT" }
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          caller: caller, // person who started call
+          receiverId: userEmail, // current user
+        }),
+      }
     );
+
     setIncomingCall(false);
     setShowVideo(true);
   };
@@ -164,24 +184,32 @@ const mentorNameFromState = location.state?.mentorName;
   const handleEndCall = async () => {
     await fetch(
       `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/end-call`,
-      { method: "PUT" }
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          caller: userEmail,
+          receiverId: mentorEmail,
+          reason: "finished",
+        }),
+      }
     );
     setShowVideo(false);
   };
 
   // add this function somewhere inside ChatPage
-const handleRejectCall = async () => {
-  try {
-    await fetch(
-      `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/end-call`,
-      { method: "PUT" }
-    );
-  } catch (err) {
-    console.error("Reject call error:", err);
-  } finally {
-    setIncomingCall(false);
-  }
-};
+  const handleRejectCall = async () => {
+    try {
+      await fetch(
+        `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/end-call`,
+        { method: "PUT" }
+      );
+    } catch (err) {
+      console.error("Reject call error:", err);
+    } finally {
+      setIncomingCall(false);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!input.trim() || !conversation) return;
@@ -218,7 +246,9 @@ const handleRejectCall = async () => {
 
   return (
     <div className="themebody-wrap">
-      <PageBreadcrumb pagename={`Chat with ${mentorNameFromState || mentorEmail}`} />
+      <PageBreadcrumb
+        pagename={`Chat with ${mentorNameFromState || mentorEmail}`}
+      />
       <div className="theme-body">
         <Container fluid>
           <Row>
@@ -294,7 +324,7 @@ const handleRejectCall = async () => {
                           className="ms-2"
                           onClick={startVideoCall}
                         >
-                        Start Call
+                          Start Call
                         </Button>
                       </Form>
                     </>
@@ -311,12 +341,12 @@ const handleRejectCall = async () => {
             <div className="bg-white rounded-lg p-5 text-center shadow-xl">
               <h4 className="mb-3">{caller} is calling...</h4>
               <div className="flex justify-center gap-3">
-              <Button variant="success" onClick={handleAcceptCall}>
-  Accept
-</Button>
-<Button variant="danger" onClick={handleRejectCall}>
-  Reject
-</Button>
+                <Button variant="success" onClick={handleAcceptCall}>
+                  Accept
+                </Button>
+                <Button variant="danger" onClick={handleRejectCall}>
+                  Reject
+                </Button>
               </div>
             </div>
           </div>
@@ -327,7 +357,8 @@ const handleRejectCall = async () => {
           <VideoCall
             userName={userEmail}
             roomName={conversation?.uniqueName} // for Twilio room
-    uniqueName={conversation?.uniqueName} // for backend polling
+            uniqueName={conversation?.uniqueName} // for backend polling
+            receiverId={mentorEmail}
             onClose={handleEndCall}
           />
         )}

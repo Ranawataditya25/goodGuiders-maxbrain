@@ -17,7 +17,7 @@ router.get("/token", (req, res) => {
     process.env.TWILIO_ACCOUNT_SID,
     process.env.TWILIO_API_KEY_SID,
     process.env.TWILIO_API_KEY_SECRET,
-    { identity: `${identity}_${Date.now()}` }
+    { identity: identity }
   );
 
   token.addGrant(new VideoGrant({ room }));
@@ -28,7 +28,13 @@ router.get("/token", (req, res) => {
 /* ---------------------  START CALL  --------------------- */
 // PUT /api/video/:uniqueName/start-call
 router.put("/:uniqueName/start-call", async (req, res) => {
-  const { caller, receiverId } = req.body;
+  const { caller, receiverId } = req.body || {};
+
+if (!caller || !receiverId) {
+  return res.status(400).json({
+    error: "caller and receiverId are required",
+  });
+}
 
   try {
     // Update convo: set ringing, caller, receiver and startedAt
@@ -78,7 +84,13 @@ router.put("/:uniqueName/start-call", async (req, res) => {
 /* ---------------------  ANSWER CALL  --------------------- */
 // PUT /api/video/:uniqueName/answer-call
 router.put("/:uniqueName/answer-call", async (req, res) => {
-  const { receiverId, caller } = req.body;
+  const { caller, receiverId } = req.body || {};
+
+if (!caller || !receiverId) {
+  return res.status(400).json({
+    error: "caller and receiverId are required",
+  });
+}
 
   try {
     const convo = await Conversation.findOneAndUpdate(
@@ -117,8 +129,13 @@ router.put("/:uniqueName/answer-call", async (req, res) => {
 /* ---------------------  END CALL  --------------------- */
 // PUT /api/video/:uniqueName/end-call
 router.put("/:uniqueName/end-call", async (req, res) => {
-  const { caller, receiverId, reason } = req.body; // reason optional (rejected, finished, missed)
+  const { caller, receiverId, reason } = req.body || {};
 
+if (!caller || !receiverId) {
+  return res.status(400).json({
+    error: "caller and receiverId are required",
+  });
+}
   try {
     const now = new Date();
 
@@ -126,7 +143,6 @@ router.put("/:uniqueName/end-call", async (req, res) => {
       { uniqueName: req.params.uniqueName },
       {
         callStatus: "ended",
-        caller: null,
         endedAt: now,
         // if reason provided, set flags
         isRejected: reason === "rejected" ? true : undefined,
