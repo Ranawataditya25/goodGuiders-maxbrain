@@ -12,6 +12,7 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import VideoCall from "./VideoCall";
+import Video from "twilio-video";
 
 export default function ChatPage() {
   const { mentorEmail } = useParams();
@@ -25,7 +26,7 @@ export default function ChatPage() {
   const [conversation, setConversation] = useState(null);
   // const [autoScroll, setAutoScroll] = useState(true);
   const [subscriptionExpired, setSubscriptionExpired] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
+  const [callTracks, setCallTracks] = useState(null);
   const [incomingCall, setIncomingCall] = useState(false);
   const [caller, setCaller] = useState("");
 
@@ -113,9 +114,35 @@ export default function ChatPage() {
 
   // ✅ Start Call
   const startVideoCall = async () => {
-    try {
-      const receiverId = isMentor ? userEmail : mentorEmail;
+    if (callTracks) return;
 
+    let stream;
+
+    // 1️⃣ CAMERA STEP (ONLY camera logic)
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+    } catch (err) {
+      console.error("getUserMedia failed:", err);
+      alert("Camera permission denied or camera not available");
+      return; // ⛔ STOP here
+    }
+
+    // 2️⃣ CREATE TRACKS
+    const tracks = [
+      new Video.LocalVideoTrack(stream.getVideoTracks()[0]),
+      new Video.LocalAudioTrack(stream.getAudioTracks()[0]),
+    ];
+
+    console.log(
+      "Tracks OK:",
+      tracks.map((t) => t.kind)
+    );
+
+    // 3️⃣ BACKEND CALL (SEPARATE TRY)
+    try {
       const res = await fetch(
         `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/start-call`,
         {
@@ -123,20 +150,23 @@ export default function ChatPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             caller: userEmail,
-            receiverId: mentorEmail, // ✅ FIX
+            receiverId: mentorEmail,
           }),
         }
       );
 
       if (!res.ok) {
-        const err = await res.json();
-        console.error("Start call failed:", err);
-        return;
+        const text = await res.text();
+        throw new Error(text || "start-call failed");
       }
-
-      setShowVideo(true);
+      console.log("Before setCallTracks");
+      setCallTracks(tracks); // ✅ THIS opens VideoCall UI
     } catch (err) {
-      console.error("Start call error:", err);
+      console.error("start-call API failed:", err);
+      alert("Failed to start call. Please try again.");
+
+      // cleanup camera if API fails
+      tracks.forEach((t) => t.stop());
     }
   };
 
@@ -178,7 +208,6 @@ export default function ChatPage() {
     );
 
     setIncomingCall(false);
-    setShowVideo(true);
   };
 
   const handleEndCall = async () => {
@@ -194,7 +223,7 @@ export default function ChatPage() {
         }),
       }
     );
-    setShowVideo(false);
+    setCallTracks(null);
   };
 
   // add this function somewhere inside ChatPage
@@ -288,7 +317,9 @@ export default function ChatPage() {
                             }
                           >
                             <b>
-                              {msg.author === userEmail ? "You" : msg.author}
+                              {msg.author === userEmail
+                                ? "You"
+                                : mentorNameFromState || msg.author}
                             </b>
                             : {msg.body}
                           </ListGroup.Item>
@@ -353,13 +384,15 @@ export default function ChatPage() {
         )}
 
         {/* ✅ Video Call Window */}
-        {showVideo && (
+        {callTracks && (
           <VideoCall
             userName={userEmail}
-            roomName={conversation?.uniqueName} // for Twilio room
-            uniqueName={conversation?.uniqueName} // for backend polling
+            uniqueName={conversation.uniqueName}
             receiverId={mentorEmail}
-            onClose={handleEndCall}
+            tracks={callTracks}
+            onClose={() => {
+              handleEndCall();
+            }}
           />
         )}
       </div>

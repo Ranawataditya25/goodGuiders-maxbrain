@@ -137,7 +137,7 @@ fs.mkdirSync(uploadsDir, { recursive: true });
 const materialsDir = path.join(uploadsDir, "materials");
 fs.mkdirSync(materialsDir, { recursive: true });
 
-app.use("/bootstrapreact/medixo/uploads", express.static(uploadsDir));
+app.use("/GoodGuiders/Goodguide/uploads", express.static(uploadsDir));
 app.use("/uploads", express.static(uploadsDir));
 
 /* ---------------------- Health ----------------------- */

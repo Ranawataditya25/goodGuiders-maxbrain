@@ -373,7 +373,7 @@ export default function App() {
       {/* Loader */}
       <Loader />
 
-      <BrowserRouter basename="/bootstrapreact/medixo">
+      <BrowserRouter basename="/GoodGuiders/Goodguide">
         <SidebarProvider>
           <AppContent />
         </SidebarProvider>

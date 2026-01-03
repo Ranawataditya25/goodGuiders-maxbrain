@@ -12,9 +12,10 @@ import axios from "axios";
  */
 export default function VideoCall({
   userName,
-  roomName,
+  // roomName,
   uniqueName,
   receiverId,
+  tracks,
   onClose,
 }) {
   const [room, setRoom] = useState(null);
@@ -35,7 +36,8 @@ export default function VideoCall({
       el.setAttribute("data-track", sid);
       el.style.width = "100%";
       el.style.height = "100%";
-      el.style.objectFit = "cover";
+      el.style.objectFit = "contain";
+el.style.background = "black";
       container.current.appendChild(el);
     } catch (e) {
       console.warn("attachTrack error", e);
@@ -85,100 +87,60 @@ export default function VideoCall({
   // ------------------------------
   // Join Twilio room (CORRECT)
   // ------------------------------
-  useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
+useEffect(() => {
+  if (!tracks?.length) return;
 
-    let activeRoom;
+  let activeRoom;
 
-    const joinRoom = async () => {
-      try {
-        // 1️⃣ Create local video FIRST
-        const localVideoTrack = await Video.createLocalVideoTrack({
-          width: 640,
-          height: 480,
-          frameRate: 24,
-        });
+  const joinRoom = async () => {
+    try {
+      // Attach local preview
+      const videoTrack = tracks.find(t => t.kind === "video");
+      if (videoTrack && localVideoRef.current) {
+        localVideoRef.current.innerHTML = "";
+        localVideoRef.current.appendChild(videoTrack.attach());
+      }
 
-        // 2️⃣ Attach local preview
-        const localEl = localVideoTrack.attach();
-        localEl.style.width = "100%";
-        localEl.style.height = "100%";
-        localEl.style.objectFit = "cover";
+      const { data } = await axios.get(
+        `http://127.0.0.1:5000/api/video/token?identity=${encodeURIComponent(userName)}&room=${encodeURIComponent(uniqueName)}`
+      );
 
-        if (localVideoRef.current) {
-          localVideoRef.current.innerHTML = "";
-          localVideoRef.current.appendChild(localEl);
+      activeRoom = await Video.connect(data.token, { tracks });
+      setRoom(activeRoom);
+
+      activeRoom.participants.forEach(p =>
+        p.tracks.forEach(pub => pub.track && attachTrack(pub.track))
+      );
+
+      activeRoom.on("participantConnected", p => {
+        p.on("trackSubscribed", attachTrack);
+      });
+
+    } catch (err) {
+      console.error("Join room failed:", err);
+      alert("Failed to join video room");
+      onClose();
+    }
+  };
+
+  joinRoom();
+
+  return () => {
+    if (activeRoom) {
+      activeRoom.localParticipant.tracks.forEach(pub => {
+        const track = pub.track;
+        if (track) {
+          track.stop();
+          track.detach().forEach(el => el.remove());
         }
+      });
+      activeRoom.disconnect();
+    }
 
-        // 3️⃣ Get token
-        const { data } = await axios.get(
-          `http://127.0.0.1:5000/api/video/token?identity=${encodeURIComponent(
-            userName
-          )}&room=${encodeURIComponent(uniqueName)}`
-        );
-
-        // 4️⃣ Connect (video false because we already created track)
-        activeRoom = await Video.connect(data.token, {
-          audio: true,
-          video: false,
-        });
-
-        // 5️⃣ Publish local video
-        activeRoom.localParticipant.publishTrack(localVideoTrack);
-
-        setRoom(activeRoom);
-
-        // 6️⃣ Handle remote participants
-        const attachParticipant = (participant) => {
-          participant.tracks.forEach((pub) => {
-            if (pub.track && pub.track.kind === "video") {
-              attachTrack(pub.track);
-            }
-          });
-
-          participant.on("trackSubscribed", (track) => {
-            if (track.kind === "video") attachTrack(track);
-            if (track.kind === "audio") {
-              const audioEl = track.attach();
-              audioEl.autoplay = true;
-              document.body.appendChild(audioEl);
-              audioElsRef.current.push(audioEl);
-            }
-          });
-        };
-
-        activeRoom.participants.forEach(attachParticipant);
-        activeRoom.on("participantConnected", attachParticipant);
-      } catch (err) {
-        console.error("Camera or room failed:", err);
-        alert("Camera could not start. Close other tabs using camera.");
-      }
-    };
-
-    joinRoom();
-
-    return () => {
-      startedRef.current = false;
-
-      if (activeRoom) {
-        audioElsRef.current.forEach((el) => el.remove());
-        audioElsRef.current = [];
-
-        activeRoom.localParticipant.tracks.forEach((pub) => {
-          try {
-            pub.track.stop?.();
-            pub.track.detach?.().forEach((el) => el.remove());
-          } catch {}
-        });
-
-        if (remoteVideosRef.current) remoteVideosRef.current.innerHTML = "";
-        if (localVideoRef.current) localVideoRef.current.innerHTML = "";
-
-        activeRoom.disconnect();
-      }
-    };
-  }, [userName, uniqueName]);
+    if (localVideoRef.current) localVideoRef.current.innerHTML = "";
+    if (remoteVideosRef.current) remoteVideosRef.current.innerHTML = "";
+  };
+}, [tracks, userName, uniqueName]);
 
   // ------------------------------
   // End call handler
@@ -280,8 +242,9 @@ export default function VideoCall({
 
 VideoCall.propTypes = {
   userName: PropTypes.string.isRequired,
-  roomName: PropTypes.string.isRequired,
+  // roomName: PropTypes.string.isRequired,
   uniqueName: PropTypes.string.isRequired,
   receiverId: PropTypes.string.isRequired,
+  tracks: PropTypes.array.isRequired,
   onClose: PropTypes.func.isRequired,
 };
