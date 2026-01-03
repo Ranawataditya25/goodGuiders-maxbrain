@@ -12,7 +12,7 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import VideoCall from "./VideoCall";
-import Video from "twilio-video";
+// import Video from "twilio-video";
 
 export default function ChatPage() {
   const { mentorEmail } = useParams();
@@ -116,32 +116,6 @@ export default function ChatPage() {
   const startVideoCall = async () => {
     if (callTracks) return;
 
-    let stream;
-
-    // 1️⃣ CAMERA STEP (ONLY camera logic)
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-    } catch (err) {
-      console.error("getUserMedia failed:", err);
-      alert("Camera permission denied or camera not available");
-      return; // ⛔ STOP here
-    }
-
-    // 2️⃣ CREATE TRACKS
-    const tracks = [
-      new Video.LocalVideoTrack(stream.getVideoTracks()[0]),
-      new Video.LocalAudioTrack(stream.getAudioTracks()[0]),
-    ];
-
-    console.log(
-      "Tracks OK:",
-      tracks.map((t) => t.kind)
-    );
-
-    // 3️⃣ BACKEND CALL (SEPARATE TRY)
     try {
       const res = await fetch(
         `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/start-call`,
@@ -156,17 +130,14 @@ export default function ChatPage() {
       );
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "start-call failed");
+        throw new Error(await res.text());
       }
-      console.log("Before setCallTracks");
-      setCallTracks(tracks); // ✅ THIS opens VideoCall UI
+
+      // IMPORTANT: just open VideoCall UI
+      setCallTracks(true);
     } catch (err) {
       console.error("start-call API failed:", err);
-      alert("Failed to start call. Please try again.");
-
-      // cleanup camera if API fails
-      tracks.forEach((t) => t.stop());
+      alert("Failed to start call");
     }
   };
 
@@ -181,7 +152,11 @@ export default function ChatPage() {
         );
         if (!res.ok) return; // handle 404
         const convo = await res.json();
-        if (convo.callStatus === "ringing" && convo.caller !== userEmail) {
+        if (
+          convo.callStatus === "ringing" &&
+          convo.caller !== userEmail &&
+          !convo.isRejected
+        ) {
           setIncomingCall(true);
           setCaller(convo.caller);
         }
@@ -195,48 +170,63 @@ export default function ChatPage() {
   }, [conversation?.uniqueName, userEmail]);
 
   const handleAcceptCall = async () => {
-    await fetch(
-      `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/answer-call`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          caller: caller, // person who started call
-          receiverId: userEmail, // current user
-        }),
-      }
-    );
+    try {
+      await fetch(
+        `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/answer-call`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            caller: caller,
+            receiverId: userEmail,
+          }),
+        }
+      );
 
-    setIncomingCall(false);
+      // 🔥 THIS IS THE MISSING PART
+      setIncomingCall(false);
+      setCallTracks(true); // <-- open VideoCall UI
+    } catch (err) {
+      console.error("Accept call error:", err);
+    }
   };
 
-  const handleEndCall = async () => {
-    await fetch(
-      `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/end-call`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          caller: userEmail,
-          receiverId: mentorEmail,
-          reason: "finished",
-        }),
-      }
-    );
-    setCallTracks(null);
-  };
+  // const handleEndCall = async () => {
+  //   await fetch(
+  //     `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/end-call`,
+  //     {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         caller: userEmail,
+  //         receiverId: mentorEmail,
+  //         reason: "finished",
+  //       }),
+  //     }
+  //   );
+  //   setCallTracks(null);
+  // };
 
   // add this function somewhere inside ChatPage
+
   const handleRejectCall = async () => {
     try {
       await fetch(
         `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/end-call`,
-        { method: "PUT" }
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            caller: caller, // person who started call
+            receiverId: userEmail, // person rejecting
+            reason: "rejected",
+          }),
+        }
       );
     } catch (err) {
       console.error("Reject call error:", err);
     } finally {
-      setIncomingCall(false);
+      setIncomingCall(false); // close popup immediately
     }
   };
 
@@ -389,9 +379,8 @@ export default function ChatPage() {
             userName={userEmail}
             uniqueName={conversation.uniqueName}
             receiverId={mentorEmail}
-            tracks={callTracks}
             onClose={() => {
-              handleEndCall();
+              setCallTracks(false);
             }}
           />
         )}
