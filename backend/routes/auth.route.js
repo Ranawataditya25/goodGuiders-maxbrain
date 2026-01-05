@@ -56,8 +56,52 @@ router.post("/register", async (req, res) => {
       role: newUser.role,
     });
   } catch (err) {
+  console.error(err);
+
+  // Mongo duplicate key error
+  if (err.code === 11000) {
+    if (err.keyPattern?.mobileNo) {
+      return res.status(400).json({
+        msg: "Mobile number already exists",
+        field: "mobileNo",
+      });
+    }
+
+    if (err.keyPattern?.email) {
+      return res.status(400).json({
+        msg: "Email already exists",
+        field: "email",
+      });
+    }
+  }
+
+  res.status(500).json({ msg: "Server error" });
+}
+});
+
+// POST /api/auth/check-unique
+router.post("/check-unique", async (req, res) => {
+  const { email, mobileNo } = req.body;
+
+  try {
+    if (await User.findOne({ email })) {
+      return res.status(400).json({
+        msg: "Email already exists",
+        field: "email",
+      });
+    }
+
+    if (await User.findOne({ mobileNo })) {
+      return res.status(400).json({
+        msg: "Mobile number already exists",
+        field: "mobileNo",
+      });
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: "Server errrrror" });
+    res.status(500).json({ msg: "Server error" });
   }
 });
 

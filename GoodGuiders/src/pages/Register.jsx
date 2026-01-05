@@ -137,6 +137,7 @@ export default function Register() {
 
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -144,6 +145,10 @@ export default function Register() {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
+
+    if (errors[name]) {
+    setErrors((prev) => ({ ...prev, [name]: null }));
+  }
   };
 
   const togglePasswordVisibility = () => {
@@ -160,37 +165,59 @@ export default function Register() {
   //   // Submit the form data to your backend or API here
   // };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrors({});
 
-  try {
-    if (formData.role === "student") {
-      // Hit API only for students
-      const res = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+    try {
+      // 🔍 Step 1: Validate uniqueness
+      const checkRes = await fetch(
+        "http://localhost:5000/api/auth/check-unique",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            mobileNo: formData.mobileNo,
+          }),
+        }
+      );
 
-      const data = await res.json();
+      const checkData = await checkRes.json();
 
-      if (res.ok) {
-        alert(`✅ Registered successfully! Your referral code: ${data.referralCode}`);
-        navigate("/login");
-      } else {
-        alert(`❌ Error: ${data.msg}`);
+      if (!checkRes.ok) {
+        setErrors({ [checkData.field]: checkData.msg });
+        return;
       }
-    } else if (formData.role === "mentor") {
-      // Save mentor data in localStorage only, no DB hit
-      localStorage.setItem("mentorPendingData", JSON.stringify(formData));
-      navigate("/mentor-registration");
+
+      // ✅ Step 2: Continue based on role
+      if (formData.role === "student") {
+        const res = await fetch("http://localhost:5000/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setErrors({ general: data.msg });
+          return;
+        }
+
+        alert(`Registered successfully! Referral: ${data.referralCode}`);
+        navigate("/login");
+      }
+
+      if (formData.role === "mentor") {
+        localStorage.setItem("mentorPendingData", JSON.stringify(formData));
+        navigate("/mentor-registration");
+      }
+    } catch (err) {
+      console.error(err);
+      setErrors({ general: "Server error. Please try again." });
     }
-  } catch (err) {
-    console.error(err);
-    alert("Server error. Please try again.");
-  }
-};
-  
+  };
 
   return (
     <section className="py-100">
@@ -228,7 +255,6 @@ const handleSubmit = async (e) => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    
                   />
                 </Form.Group>
 
@@ -241,7 +267,11 @@ const handleSubmit = async (e) => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
+                    isInvalid={!!errors.email} // 🔥 ADD THIS
                   />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.email}
+                  </Form.Control.Feedback>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -253,7 +283,11 @@ const handleSubmit = async (e) => {
                     name="mobileNo"
                     value={formData.mobileNo}
                     onChange={handleChange}
+                    isInvalid={!!errors.mobileNo}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.mobileNo}
+                  </Form.Control.Feedback>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
