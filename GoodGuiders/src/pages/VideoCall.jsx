@@ -261,12 +261,9 @@
 //   onClose: PropTypes.func.isRequired,
 // };
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import Video, {
-  createLocalAudioTrack,
-  createLocalVideoTrack,
-} from "twilio-video";
+import Video from "twilio-video";
 import axios from "axios";
 import { io } from "socket.io-client";
 
@@ -277,46 +274,56 @@ export default function VideoCall({
   onClose,
 }) {
   const roomRef = useRef(null);
-  const videoTrackRef = useRef(null);
-  const audioTrackRef = useRef(null);
   const socketRef = useRef(null);
-
+  const audioElsRef = useRef([]);
   const localVideoRef = useRef(null);
   const remoteVideosRef = useRef(null);
-
   const joinedRef = useRef(false);
   const closedRef = useRef(false);
+
+  const [isMuted, setIsMuted] = useState(false);
+  const [canJoin, setCanJoin] = useState(true);
 
   /* =======================
      HELPER: CLEANUP ALL
   ======================= */
-  const cleanupAll = (source) => {
-    console.log("🧹 CLEANUP START from:", source);
+const cleanupAll = (source) => {
+  console.log("🧹 CLEANUP START from:", source);
 
-    if (videoTrackRef.current) {
-      console.log("🛑 stopping video track");
-      videoTrackRef.current.stop();
-      videoTrackRef.current.detach().forEach((el) => el.remove());
-      videoTrackRef.current = null;
-    }
+  joinedRef.current = false;
+  closedRef.current = false;
+  setIsMuted(false);
 
-    if (audioTrackRef.current) {
-      console.log("🛑 stopping audio track");
-      audioTrackRef.current.stop();
-      audioTrackRef.current = null;
-    }
+  if (roomRef.current) {
+    // 🔥 STOP LOCAL TRACKS EXPLICITLY
+    roomRef.current.localParticipant.tracks.forEach((publication) => {
+      publication.track.stop();
+      publication.track.detach().forEach(el => el.remove());
+    });
 
-    if (roomRef.current) {
-      console.log("📴 disconnecting room");
-      roomRef.current.disconnect();
-      roomRef.current = null;
-    }
+    roomRef.current.disconnect();
+    roomRef.current = null;
+  }
 
-    if (localVideoRef.current) localVideoRef.current.innerHTML = "";
-    if (remoteVideosRef.current) remoteVideosRef.current.innerHTML = "";
+  // 🔥 STOP REMOTE AUDIO ELEMENTS
+  audioElsRef.current.forEach(el => {
+    el.pause();
+    el.srcObject = null;
+    el.remove();
+  });
+  audioElsRef.current = [];
 
-    console.log("✅ CLEANUP DONE");
-  };
+  if (localVideoRef.current) localVideoRef.current.innerHTML = "";
+  if (remoteVideosRef.current) remoteVideosRef.current.innerHTML = "";
+
+setCanJoin(false);
+  setTimeout(() => {
+    setCanJoin(true);
+    console.log("⏳ Media devices released, ready for next call");
+  }, 1500);
+
+  console.log("✅ CLEANUP DONE");
+};
 
   /* =======================
    SOCKET INIT
@@ -328,7 +335,7 @@ export default function VideoCall({
 
     socketRef.current.on("connect", () => {
       console.log("🆔 registering user on socket:", userName);
-
+      console.log("✅ Socket connected:", socketRef.current.id);
       socketRef.current.emit("register", userName);
     });
 
@@ -343,6 +350,10 @@ export default function VideoCall({
      JOIN ROOM
   ======================= */
   useEffect(() => {
+    if (!canJoin) {
+    console.warn("⛔ Skipping join: media not released yet");
+    return;
+  }
     if (joinedRef.current) return;
     joinedRef.current = true;
 
@@ -350,15 +361,6 @@ export default function VideoCall({
 
     const joinRoom = async () => {
       try {
-        console.log("🎥 creating local tracks");
-
-        videoTrackRef.current = await createLocalVideoTrack();
-        audioTrackRef.current = await createLocalAudioTrack();
-
-        if (localVideoRef.current) {
-          localVideoRef.current.appendChild(videoTrackRef.current.attach());
-        }
-
         console.log("🔑 fetching token");
 
         const { data } = await axios.get(
@@ -366,18 +368,90 @@ export default function VideoCall({
             userName
           )}&room=${encodeURIComponent(uniqueName)}`
         );
+        console.log("✅ Token received");
 
-        console.log("🔗 connecting to room");
+        console.log("🔗 Connecting to Twilio room...");
 
         roomRef.current = await Video.connect(data.token, {
-          tracks: [videoTrackRef.current, audioTrackRef.current],
+          audio: true,
+          video: { facingMode: "user" },
+        });
+        console.log("✅ Room connected:", roomRef.current.name);
+
+        roomRef.current.localParticipant.tracks.forEach((publication) => {
+          if (publication.track.kind === "video" && localVideoRef.current) {
+            const el = publication.track.attach();
+            el.style.width = "100%";
+            el.style.height = "100%";
+            el.style.objectFit = "cover";
+            el.style.position = "absolute";
+            el.style.top = "0";
+            el.style.left = "0";
+            localVideoRef.current.appendChild(el);
+            console.log("🎥 Local video track attached");
+          }
         });
 
-        console.log("✅ room connected");
+        roomRef.current.participants.forEach((participant) => {
+          participant.tracks.forEach((publication) => {
+            if (publication.track) {
+              const el = publication.track.attach();
+
+              if (publication.track.kind === "video") {
+                el.style.position = "absolute";
+                el.style.top = "0";
+                el.style.left = "0";
+                el.style.width = "100vw";
+                el.style.height = "100vh";
+                el.style.objectFit = "cover";
+                el.style.backgroundColor = "black";
+                remoteVideosRef.current?.replaceChildren(el);
+              }
+
+              if (publication.track.kind === "audio") {
+                el.autoplay = true;
+                el.controls = false;
+                el.autoplay = true;
+                el.controls = false;
+                document.body.appendChild(el);
+                audioElsRef.current.push(el);
+              }
+            }
+          });
+        });
 
         roomRef.current.on("trackSubscribed", (track) => {
-          console.log("📡 remote track subscribed:", track.kind);
-          remoteVideosRef.current?.appendChild(track.attach());
+          console.log(`📡 Track subscribed: ${track.kind}`);
+
+          const el = track.attach();
+
+          if (track.kind === "video") {
+            console.log("🎥 Remote video attached");
+
+            el.style.position = "absolute";
+            el.style.top = "0";
+            el.style.left = "0";
+            el.style.width = "100vw";
+            el.style.height = "100vh";
+            el.style.objectFit = "cover";
+            el.style.backgroundColor = "black";
+
+            remoteVideosRef.current?.replaceChildren(el);
+          }
+
+          if (track.kind === "audio") {
+            console.log("🔊 Remote audio attached");
+
+            el.autoplay = true;
+            el.controls = false;
+            el.autoplay = true;
+            el.controls = false;
+            document.body.appendChild(el);
+            audioElsRef.current.push(el);
+          }
+        });
+        roomRef.current.on("trackUnsubscribed", (track) => {
+          track.detach().forEach((el) => el.remove());
         });
       } catch (err) {
         console.error("❌ JOIN FAILED:", err);
@@ -392,7 +466,7 @@ export default function VideoCall({
       console.log("🔻 VideoCall unmount");
       cleanupAll("unmount");
     };
-  }, []);
+  }, [canJoin]);
 
   /* =======================
    SOCKET: CALL ENDED
@@ -445,6 +519,21 @@ export default function VideoCall({
     onClose();
   };
 
+  const toggleMute = () => {
+    if (!roomRef.current) return;
+
+    roomRef.current.localParticipant.audioTracks.forEach((publication) => {
+      if (isMuted) {
+        publication.track.enable();
+      } else {
+        publication.track.disable();
+      }
+    });
+
+    console.log(isMuted ? "🎤 Mic unmuted" : "🔇 Mic muted");
+    setIsMuted(!isMuted);
+  };
+
   /* =======================
      UI
   ======================= */
@@ -465,15 +554,10 @@ export default function VideoCall({
         ref={remoteVideosRef}
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-          padding: "8px",
+          inset: 0,
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "black",
         }}
       />
 
@@ -484,8 +568,9 @@ export default function VideoCall({
           position: "absolute",
           bottom: 20,
           right: 20,
-          width: 180,
-          height: 120,
+          width: "22vw",
+          maxWidth: 280,
+          aspectRatio: "16 / 9",
           borderRadius: 12,
           overflow: "hidden",
           border: "2px solid rgba(255,255,255,0.9)",
@@ -500,6 +585,7 @@ export default function VideoCall({
           position: "absolute",
           bottom: 20,
           left: "50%",
+          gap: 2,
           transform: "translateX(-50%)",
           zIndex: 2147483649,
         }}
@@ -518,6 +604,25 @@ export default function VideoCall({
           }}
         >
           End Call
+        </button>
+        <button
+          onClick={toggleMute}
+          style={{
+            background: isMuted ? "#e53935" : "#1faa59",
+            color: "#fff",
+            border: "none",
+            padding: "10px 10px",
+            borderRadius: "50%",
+            width: 48,
+            height: 48,
+            fontSize: 18,
+            cursor: "pointer",
+            marginRight: 12,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          }}
+          title={isMuted ? "Unmute" : "Mute"}
+        >
+          {isMuted ? "🔇" : "🔊"}
         </button>
       </div>
     </div>
