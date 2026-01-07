@@ -19,7 +19,7 @@
 //   const [referralInput, setReferralInput] = useState("");
 //   const [activeTab, setActiveTab] = useState("avail"); // Default tab
 // const [referEmail, setReferEmail] = useState(""); // For referral input
-// const [referMobile, setReferMobile] = useState(""); 
+// const [referMobile, setReferMobile] = useState("");
 // const navigate = useNavigate();
 
 // const user = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
@@ -113,9 +113,9 @@
 
 //   return (
 //     <div className="themebody-wrap">
-    
+
 //       <PageBreadcrumb pagename="Mentor Dashboard" />
-     
+
 //       <div className="theme-body">
 //         <Container fluid className="cdxuser-profile">
 //           <Row>
@@ -173,9 +173,8 @@
 //                     </div>
 //                   ) : doctor ? (
 //                     <Row>
-                     
 
-// {/* 
+// {/*
 //  <Col xxl={4} md={6}>
 //                         <Card className="mt-3 shadow">
 //                           <div className="card">
@@ -278,7 +277,6 @@
 //               </div>
 //             </Col>
 
-                      
 //                        <Col xxl={8} md={6}>
 //                         <Card
 //                           className="mt-3 shadow"
@@ -1047,18 +1045,26 @@
 //   );
 // }
 
-
-
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import FeatherIcon from "feather-icons-react";
-import { Row, Col, Card, Table, Container, Spinner, Button, Badge ,Modal} from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+// import FeatherIcon from "feather-icons-react";
+import {
+  Row,
+  Col,
+  Card,
+  Table,
+  Container,
+  Spinner,
+  Button,
+  Badge,
+  Modal,
+} from "react-bootstrap";
 import axios from "axios";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import Chart from "react-apexcharts";
-import { doctskill, Gallerydata } from "./js/Dashboard2";
+// import { doctskill, Gallerydata } from "./js/Dashboard2";
 
-import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
+// import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 import { Fancybox } from "@fancyapps/ui";
 import "@fancyapps/ui/dist/fancybox/fancybox.css";
 
@@ -1068,20 +1074,25 @@ export default function Dashboard2() {
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [referralInput, setReferralInput] = useState("");
-  const [activeTab, setActiveTab] = useState("avail"); 
-const [referEmail, setReferEmail] = useState(""); 
-const [referMobile, setReferMobile] = useState(""); 
-const [appointments, setAppointments] = useState([]);
-const [appointmentsLoading, setAppointmentsLoading] = useState(true);
-const [ratingSeries, setRatingSeries] = useState([0, 0, 0, 0, 0]);
-const [ratingLoading, setRatingLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("avail");
+  const [referEmail, setReferEmail] = useState("");
+  const [referMobile, setReferMobile] = useState("");
+  const [appointments, setAppointments] = useState([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
+  const [ratingSeries, setRatingSeries] = useState([0, 0, 0, 0, 0]);
+  const [ratingLoading, setRatingLoading] = useState(true);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsSkip, setCommentsSkip] = useState(0);
+  const [commentsTotal, setCommentsTotal] = useState(0);
 
+  const COMMENTS_LIMIT = 5;
 
   const [showCreditsModal, setShowCreditsModal] = useState(false);
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
-const user = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
-const [pendingCount, setPendingCount] = useState(0);
+  const user = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const doctorData = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -1103,38 +1114,40 @@ const [pendingCount, setPendingCount] = useState(0);
       });
   }, []);
 
-
   // sanitize + unique chat name (same logic backend uses)
-const sanitize = (s = "") =>
-  String(s).trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
+  const sanitize = (s = "") =>
+    String(s)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "_");
 
-const makeUniqueName = (a = "", b = "") =>
-  [sanitize(a), sanitize(b)].sort().join("_");
+  const makeUniqueName = (a = "", b = "") =>
+    [sanitize(a), sanitize(b)].sort().join("_");
 
-useEffect(() => {
-  if (!doctor?.email) return;
+  useEffect(() => {
+    if (!doctor?.email) return;
 
-  const fetchAppointments = async () => {
-    try {
-      const res = await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
-          doctor.email
-        )}/details`
-      );
-      const data = await res.json();
+    const fetchAppointments = async () => {
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+            doctor.email
+          )}/details`
+        );
+        const data = await res.json();
 
-      if (res.ok) {
-        setAppointments(data.students?.items || []);
+        if (res.ok) {
+          setAppointments(data.students?.items || []);
+        }
+      } catch (err) {
+        console.error("Failed to load appointments", err);
+      } finally {
+        setAppointmentsLoading(false);
       }
-    } catch (err) {
-      console.error("Failed to load appointments", err);
-    } finally {
-      setAppointmentsLoading(false);
-    }
-  };
+    };
 
-  fetchAppointments();
-}, [doctor?.email]);
+    fetchAppointments();
+  }, [doctor?.email]);
 
   useEffect(() => {
     Fancybox.bind('[data-fancybox="gallery"]', {});
@@ -1143,58 +1156,98 @@ useEffect(() => {
     };
   }, []);
 
-useEffect(() => {
-  if (!user?._id || user.role !== "mentor") return;
+  useEffect(() => {
+    if (!user?._id || user.role !== "mentor") return;
 
-  const fetchCount = async () => {
-    try {
-      const res = await axios.get(
-        `${API}/pdf-evaluations/mentor/count`,
-        {
+    const fetchCount = async () => {
+      try {
+        const res = await axios.get(`${API}/pdf-evaluations/mentor/count`, {
           headers: {
             "x-user-id": user._id,
             "x-user-role": user.role,
           },
-        }
-      );
-      setPendingCount(res.data.count || 0);
-    } catch (e) {
-      console.error("Failed to fetch evaluation count", e);
-    }
-  };
+        });
+        setPendingCount(res.data.count || 0);
+      } catch (e) {
+        console.error("Failed to fetch evaluation count", e);
+      }
+    };
 
-  fetchCount();
-}, [user?._id]);
+    fetchCount();
+  }, [user?._id]);
 
-useEffect(() => {
-  if (!doctor?.email) return;
+  useEffect(() => {
+    if (!doctor?.email) return;
 
-  const fetchRatings = async () => {
+    const fetchRatings = async () => {
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+            doctor.email
+          )}/rating`
+        );
+        const data = await res.json();
+
+        const b = data.breakdown || {};
+        setRatingSeries([
+          b["1"] || 0,
+          b["2"] || 0,
+          b["3"] || 0,
+          b["4"] || 0,
+          b["5"] || 0,
+        ]);
+      } catch (e) {
+        console.error("Rating fetch failed", e);
+      } finally {
+        setRatingLoading(false);
+      }
+    };
+
+    fetchRatings();
+  }, [doctor?.email]);
+
+  const fetchComments = async (reset = false) => {
+    if (!doctor?.email) return;
+
     try {
+      if (reset) {
+        setComments([]);
+        setCommentsSkip(0);
+      }
+
+      setCommentsLoading(true);
+
       const res = await fetch(
         `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
           doctor.email
-        )}/rating`
+        )}/comments?skip=${reset ? 0 : commentsSkip}&limit=${COMMENTS_LIMIT}`
       );
+
       const data = await res.json();
 
-      const b = data.breakdown || {};
-      setRatingSeries([
-        b["1"] || 0,
-        b["2"] || 0,
-        b["3"] || 0,
-        b["4"] || 0,
-        b["5"] || 0,
-      ]);
-    } catch (e) {
-      console.error("Rating fetch failed", e);
+      setComments((prev) =>
+        reset ? data.comments : [...prev, ...data.comments]
+      );
+      setCommentsTotal(data.total);
+    } catch (err) {
+      console.error("Failed to load comments", err);
     } finally {
-      setRatingLoading(false);
+      setCommentsLoading(false);
     }
   };
 
-  fetchRatings();
-}, [doctor?.email]);
+  useEffect(() => {
+    if (doctor?.email) {
+      fetchComments(true);
+    }
+  }, [doctor?.email]);
+
+  useEffect(() => {
+    if (!doctor?.email) return;
+    if (commentsSkip === 0) return;
+
+    fetchComments(false);
+  }, [commentsSkip]);
 
   const handleUseReferral = async () => {
     if (!referralInput.trim()) {
@@ -1233,115 +1286,112 @@ useEffect(() => {
   };
 
   // ⭐ Rating Pie Chart config (dynamic)
-const ratingChartOptions = {
-  chart: {
-    type: "pie",
-  },
-
-  labels: [
-    "⭐ 1 Star",
-    "⭐ 2 Stars",
-    "⭐ 3 Stars",
-    "⭐ 4 Stars",
-    "⭐ 5 Stars",
-  ],
-
-  legend: {
-    position: "bottom",
-  },
-
-  colors: ["#dc3545", "#fd7e14", "#ffc107", "#20c997", "#198754"],
-
-  dataLabels: {
-    enabled: true,
-    formatter: function (val, opts) {
-      const count = opts.w.config.series[opts.seriesIndex];
-      return count > 0 ? count : "";
+  const ratingChartOptions = {
+    chart: {
+      type: "pie",
     },
-  },
 
-  tooltip: {
-    y: {
-      formatter: function (value) {
-        return `${value} student${value !== 1 ? "s" : ""}`;
+    labels: [
+      "⭐ 1 Star",
+      "⭐ 2 Stars",
+      "⭐ 3 Stars",
+      "⭐ 4 Stars",
+      "⭐ 5 Stars",
+    ],
+
+    legend: {
+      position: "bottom",
+    },
+
+    colors: ["#dc3545", "#fd7e14", "#ffc107", "#20c997", "#198754"],
+
+    dataLabels: {
+      enabled: true,
+      formatter: function (val, opts) {
+        const count = opts.w.config.series[opts.seriesIndex];
+        return count > 0 ? count : "";
       },
     },
-  },
 
-  plotOptions: {
-    pie: {
-      donut: {
-        size: "0%", // keep as pie (not donut)
+    tooltip: {
+      y: {
+        formatter: function (value) {
+          return `${value} student${value !== 1 ? "s" : ""}`;
+        },
       },
     },
-  },
-};
+
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "0%", // keep as pie (not donut)
+        },
+      },
+    },
+  };
 
   return (
     <div className="themebody-wrap">
-    
       <PageBreadcrumb pagename="Mentor Dashboard" />
-     
+
       <div className="theme-body">
         <Container fluid className="cdxuser-profile">
           <Row>
             <Col xl={12} className="mb-4">
               <Card>
-                 <Card.Header className="d-flex justify-content-between align-items-center">
-  {/* <div>
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                  {/* <div>
     <h4>Your Profile & Referral</h4>
     <p>
       <strong>Credits:</strong> {doctor?.credits}
     </p>
   </div> */}
 
-
-    <button
+                  <button
                     className="btn btn-primary"
                     onClick={() => setShowCreditsModal(true)}
                   >
                     View Credits
                   </button>
 
-  <div className="d-flex gap-2">
-    {/* NEW BUTTON 1*/}
-    <button
-      className="btn btn-success"
-      onClick={() => navigate("/mentor/materials")}
-    >
-      Upload Materials
-    </button>
+                  <div className="d-flex gap-2">
+                    {/* NEW BUTTON 1*/}
+                    <button
+                      className="btn btn-success"
+                      onClick={() => navigate("/mentor/materials")}
+                    >
+                      Upload Materials
+                    </button>
 
-    {/* NEW BUTTON 2*/}
-    <Button
-  variant="warning"
-  onClick={() => navigate("/mentor/pdf-evaluations")}
-  className="position-relative"
->
-  PDF Evaluations
+                    {/* NEW BUTTON 2*/}
+                    <Button
+                      variant="warning"
+                      onClick={() => navigate("/mentor/pdf-evaluations")}
+                      className="position-relative"
+                    >
+                      PDF Evaluations
+                      {pendingCount > 0 && (
+                        <Badge
+                          bg="danger"
+                          pill
+                          className="position-absolute top-0 start-100 translate-middle"
+                        >
+                          {pendingCount}
+                        </Badge>
+                      )}
+                    </Button>
 
-  {pendingCount > 0 && (
-    <Badge
-      bg="danger"
-      pill
-      className="position-absolute top-0 start-100 translate-middle"
-    >
-      {pendingCount}
-    </Badge>
-  )}
-</Button>
+                    {/* EXISTING */}
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => navigate("/all-chats")}
+                    >
+                      Chats
+                    </button>
+                  </div>
+                </Card.Header>
 
-    {/* EXISTING */}
-    <button
-      className="btn btn-primary"
-      onClick={() => navigate("/all-chats")}
-    >
-      Chats
-    </button>
-  </div>
-</Card.Header>
-
-              {/* <Card.Body>
+                {/* <Card.Body>
                   {loading ? (
                     <div className="text-center">
                       <Spinner animation="border" />
@@ -1565,8 +1615,7 @@ const ratingChartOptions = {
                   )}
                 </Card.Body> */}
 
-
-   <Card.Body>
+                <Card.Body>
                   {loading ? (
                     <div className="text-center">
                       <Spinner animation="border" />
@@ -1600,7 +1649,9 @@ const ratingChartOptions = {
                             <h5
                               style={{
                                 backgroundColor:
-                                  activeTab === "avail" ? "#F1FCFE" : "transparent",
+                                  activeTab === "avail"
+                                    ? "#F1FCFE"
+                                    : "transparent",
                                 cursor: "pointer",
                                 width: "300px",
                                 textAlign: "center",
@@ -1614,7 +1665,9 @@ const ratingChartOptions = {
                             <h5
                               style={{
                                 backgroundColor:
-                                  activeTab === "refer" ? "#F1FCFE" : "transparent",
+                                  activeTab === "refer"
+                                    ? "#F1FCFE"
+                                    : "transparent",
                                 cursor: "pointer",
                                 width: "300px",
                                 textAlign: "center",
@@ -1685,7 +1738,9 @@ const ratingChartOptions = {
                                   className="form-control"
                                   placeholder="Enter Name"
                                   value={referEmail}
-                                  onChange={(e) => setReferEmail(e.target.value)}
+                                  onChange={(e) =>
+                                    setReferEmail(e.target.value)
+                                  }
                                   style={{ width: "350px" }}
                                 />
                               </div>
@@ -1698,7 +1753,9 @@ const ratingChartOptions = {
                                   className="form-control"
                                   placeholder="Enter Email ID"
                                   value={referEmail}
-                                  onChange={(e) => setReferEmail(e.target.value)}
+                                  onChange={(e) =>
+                                    setReferEmail(e.target.value)
+                                  }
                                   style={{ width: "350px" }}
                                 />
                               </div>
@@ -1711,7 +1768,9 @@ const ratingChartOptions = {
                                   className="form-control"
                                   placeholder="Enter Mobile Number"
                                   value={referMobile}
-                                  onChange={(e) => setReferMobile(e.target.value)}
+                                  onChange={(e) =>
+                                    setReferMobile(e.target.value)
+                                  }
                                   style={{ width: "350px" }}
                                 />
                               </div>
@@ -1720,7 +1779,9 @@ const ratingChartOptions = {
                                   className="btn btn-success"
                                   style={{ width: "200px", marginTop: "25px" }}
                                   onClick={() =>
-                                    alert(`Refer to ${referEmail}, ${referMobile}`)
+                                    alert(
+                                      `Refer to ${referEmail}, ${referMobile}`
+                                    )
                                   }
                                 >
                                   Refer
@@ -1735,9 +1796,6 @@ const ratingChartOptions = {
                     <p className="text-danger">Mentor data not found</p>
                   )}
                 </Card.Body>
-
-
-
               </Card>
             </Col>
 
@@ -1783,30 +1841,76 @@ const ratingChartOptions = {
                 </Card.Body>
               </Card>
             </Col>
-           
+
             <Col xxl={4} md={6}>
               <div className="card">
                 <Card>
-  <Card.Header>
-    <h4>Ratings Distribution</h4>
-  </Card.Header>
+                  <Card.Header>
+                    <h4>Ratings Distribution</h4>
+                  </Card.Header>
 
-  <Card.Body>
-    {ratingLoading ? (
-      <Spinner animation="border" />
-    ) : ratingSeries.every((v) => v === 0) ? (
-      <p className="text-muted text-center">No ratings yet</p>
-    ) : (
-      <Chart
-        options={ratingChartOptions}
-        series={ratingSeries}
-        type="pie"
-        height={410}
-      />
-    )}
-  </Card.Body>
-</Card>
+                  <Card.Body>
+                    {ratingLoading ? (
+                      <Spinner animation="border" />
+                    ) : ratingSeries.every((v) => v === 0) ? (
+                      <p className="text-muted text-center">No ratings yet</p>
+                    ) : (
+                      <Chart
+                        options={ratingChartOptions}
+                        series={ratingSeries}
+                        type="pie"
+                        height={410}
+                      />
+                    )}
+                  </Card.Body>
+                </Card>
               </div>
+            </Col>
+            <Col xxl={4} md={6}>
+              <Card>
+                <Card.Header>
+                  <h4>Latest Student Reviews</h4>
+                </Card.Header>
+
+                <Card.Body style={{ maxHeight: 420, overflowY: "auto" }}>
+                  {commentsLoading && comments.length === 0 ? (
+                    <div className="text-center">
+                      <Spinner animation="border" size="sm" />
+                    </div>
+                  ) : comments.length === 0 ? (
+                    <p className="text-muted text-center">No comments yet</p>
+                  ) : (
+                    <>
+                      {comments.map((c) => (
+                        <div key={c._id} className="border-bottom pb-2 mb-2">
+                          <strong>{c.studentName}</strong>
+                          <p className="mb-1 text-muted">{c.comment}</p>
+                        </div>
+                      ))}
+
+                      {/* LOAD MORE */}
+                      {comments.length < commentsTotal && (
+                        <div className="text-center mt-2">
+                          <Button
+                            size="sm"
+                            variant="outline-primary"
+                            disabled={commentsLoading}
+                            onClick={() => {
+                              setCommentsSkip((prev) => prev + COMMENTS_LIMIT);
+                            }}
+                          >
+                            {commentsLoading ? (
+                              <Spinner animation="border" size="sm" />
+                            ) : (
+                              "Load More"
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </Card.Body>
+              </Card>
             </Col>
             {/* <Col xxl={4} md={6}>
               <div className="card">
@@ -1911,81 +2015,80 @@ const ratingChartOptions = {
                 </Card.Body>
               </div>
             </Col>
-       
-            
+
             {/* <Col xxl={8} xl={12}> */}
-              <Card>
- <Card.Header>
-  <h4>Appointments</h4>
-</Card.Header>
+            <Card>
+              <Card.Header>
+                <h4>Appointments</h4>
+              </Card.Header>
 
-<Card.Body>
-  <Table className="patients-tbl table">
-    <thead>
-      <tr>
-        <th>Student</th>
-        <th>Email</th>
-        <th>Class</th>
-        <th>Date</th>
-        <th>Action</th>
-      </tr>
-    </thead>
+              <Card.Body>
+                <Table className="patients-tbl table">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Email</th>
+                      <th>Class</th>
+                      <th>Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
 
-    <tbody>
-      {appointmentsLoading ? (
-        <tr>
-          <td colSpan={5} className="text-center">
-            <Spinner animation="border" size="sm" />
-          </td>
-        </tr>
-      ) : appointments.length === 0 ? (
-        <tr>
-          <td colSpan={5} className="text-center text-muted">
-            No students have visited you yet
-          </td>
-        </tr>
-      ) : (
-        appointments.map((s) => (
-          <tr key={s.email}>
-            <td>{s.name}</td>
-            <td>{s.email}</td>
-            <td>{s.class || "-"}</td>
-            <td>
-              {s.lastInteraction
-                ? new Date(s.lastInteraction).toLocaleDateString()
-                : "-"}
-            </td>
-            <td>
-             <Button
-  size="sm"
-  variant="outline-primary"
-  onClick={() => {
-    const mentorEmail = doctor.email;      // logged-in mentor
-    const studentEmail = s.email;          // row student email
+                  <tbody>
+                    {appointmentsLoading ? (
+                      <tr>
+                        <td colSpan={5} className="text-center">
+                          <Spinner animation="border" size="sm" />
+                        </td>
+                      </tr>
+                    ) : appointments.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center text-muted">
+                          No students have visited you yet
+                        </td>
+                      </tr>
+                    ) : (
+                      appointments.map((s) => (
+                        <tr key={s.email}>
+                          <td>{s.name}</td>
+                          <td>{s.email}</td>
+                          <td>{s.class || "-"}</td>
+                          <td>
+                            {s.lastInteraction
+                              ? new Date(s.lastInteraction).toLocaleDateString()
+                              : "-"}
+                          </td>
+                          <td>
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              onClick={() => {
+                                const mentorEmail = doctor.email; // logged-in mentor
+                                const studentEmail = s.email; // row student email
 
-    const uniqueName = makeUniqueName(
-      mentorEmail,
-      studentEmail
-    );
+                                const uniqueName = makeUniqueName(
+                                  mentorEmail,
+                                  studentEmail
+                                );
 
-    navigate(`/chat/${mentorEmail}`, {
-      state: {
-        conversationUniqueName: uniqueName,
-        mentorName: doctor.name,
-      },
-    });
-  }}
->
-  Chat
-</Button>
-            </td>
-          </tr>
-        ))
-      )}
-    </tbody>
-  </Table>
-</Card.Body>
-</Card>
+                                navigate(`/chat/${mentorEmail}`, {
+                                  state: {
+                                    conversationUniqueName: uniqueName,
+                                    mentorName: doctor.name,
+                                  },
+                                });
+                              }}
+                            >
+                              Chat
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </Table>
+              </Card.Body>
+            </Card>
 
             {/* </Col> */}
           </Row>

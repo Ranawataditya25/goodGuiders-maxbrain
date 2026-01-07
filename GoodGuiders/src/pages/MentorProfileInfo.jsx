@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Button, Modal, ListGroup, Spinner, Badge } from "react-bootstrap";
+import { Button, Modal, ListGroup, Spinner, Form } from "react-bootstrap";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
 /* ---------- avatar helper (same pattern as students) ---------- */
@@ -30,6 +30,11 @@ export default function MentorProfileInfo() {
   /* ---------- rating modal ---------- */
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [comment, setComment] = useState("");
+  const [skip, setSkip] = useState(0);
+  const [totalComments, setTotalComments] = useState(0);
+  const LIMIT = 5;
 
   /* ---------- messages modal (admin) ---------- */
   const [showMessagesModal, setShowMessagesModal] = useState(false);
@@ -46,6 +51,18 @@ export default function MentorProfileInfo() {
 
   const makeUniqueName = (a = "", b = "") =>
     [sanitize(a), sanitize(b)].sort().join("_");
+
+  const reloadRating = async () => {
+    const ratingRes = await fetch(
+      `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        email
+      )}/rating`
+    );
+    const ratingData = await ratingRes.json();
+
+    setAvgRating(ratingData.avgRating || 0);
+    setRatingCount(ratingData.count || 0);
+  };
 
   /* ---------- load mentor ---------- */
   useEffect(() => {
@@ -73,7 +90,46 @@ export default function MentorProfileInfo() {
     }
 
     loadData();
+    setComments([]);
+    setSkip(0);
   }, [email]);
+
+  useEffect(() => {
+    loadComments();
+  }, [skip, email]);
+
+  const loadComments = async () => {
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+          email
+        )}/comments?skip=${skip}&limit=${LIMIT}`
+      );
+      const data = await res.json();
+
+      setComments((prev) => [...prev, ...data.comments]);
+      setTotalComments(data.total);
+    } catch (err) {
+      console.error("Failed to load comments", err);
+    }
+  };
+
+  const deleteComment = async (id) => {
+    // 1️⃣ call backend
+    await fetch(`http://127.0.0.1:5000/api/stats/admin/mentor-comment/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        adminEmail: loggedInUser.email,
+      }),
+    });
+
+    // 2️⃣ optimistic UI update (NO refetch)
+    setComments((prev) => prev.filter((c) => c._id !== id));
+
+    // 3️⃣ update total count safely
+    setTotalComments((prev) => Math.max(prev - 1, 0));
+  };
 
   /* ---------- admin: view messages ---------- */
   const handleViewMessages = async (studentEmail, studentName) => {
@@ -92,8 +148,9 @@ export default function MentorProfileInfo() {
     setMessagesLoading(false);
   };
 
-  /* ---------- submit rating ---------- */
+  /* ---------- submit rating & comment---------- */
   const submitRating = async () => {
+    // submit rating
     await fetch(
       `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
         email
@@ -107,8 +164,35 @@ export default function MentorProfileInfo() {
         }),
       }
     );
+
+    // submit comment
+    if (comment.trim()) {
+      await fetch(
+        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+          email
+        )}/comment`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            studentEmail: loggedInUser.email,
+            studentName: loggedInUser.name,
+            comment,
+          }),
+        }
+      );
+    }
+
+    // reset modal
     setShowRatingModal(false);
     setSelectedRating(0);
+    setComment("");
+
+    // refresh UI immediately
+    await reloadRating(); // ⭐ FIX
+    setComments([]);
+    setSkip(0);
+    loadComments();
   };
 
   if (loading)
@@ -257,6 +341,48 @@ export default function MentorProfileInfo() {
                 </div>
               </div>
 
+              <div className="card shadow-sm p-4 mb-3">
+                <h5 className="fw-bold mb-3">📝 Student Reviews</h5>
+
+                {comments.length === 0 ? (
+                  <p className="text-muted">No comments yet</p>
+                ) : (
+                  comments.map((c) => (
+                    <div key={c._id} className="border-bottom pb-2 mb-2">
+                      <div className="d-flex justify-content-between align-items-stretch">
+                        {/* LEFT: name + comment */}
+                        <div>
+                          <strong>{c.studentName}</strong>
+                          <p className="mb-1 mt-1">{c.comment}</p>
+                        </div>
+
+                        {/* RIGHT: delete button (centered vertically) */}
+                        {role === "admin" && (
+                          <div className="d-flex align-items-center">
+                            <Button
+                              size="sm"
+                              variant="danger"
+                              onClick={() => deleteComment(c._id)}
+                            >
+                              🗑
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+
+                {comments.length > 0 && comments.length < totalComments && (
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setSkip((prev) => prev + LIMIT)}
+                  >
+                    View more
+                  </Button>
+                )}
+              </div>
+
               {/* CONNECTED STUDENTS */}
               {role === "admin" && (
                 <div className="card shadow-sm p-4">
@@ -355,6 +481,14 @@ export default function MentorProfileInfo() {
               ★
             </span>
           ))}
+
+          <Form.Control
+            as="textarea"
+            rows={3}
+            placeholder="Write a short comment (optional)"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={submitRating} disabled={!selectedRating}>

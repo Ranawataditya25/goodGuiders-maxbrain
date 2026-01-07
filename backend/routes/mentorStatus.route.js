@@ -106,6 +106,7 @@ router.get("/pending", async (req, res) => {
       role: "mentor", 
       $or: [
         { mentorStatus: "pending" }, 
+        { mentorStatus: "verifyDocs" }, 
         { mentorStatus: "" }, 
         { mentorStatus: { $exists: false } } // in case field missing
       ] 
@@ -119,7 +120,6 @@ router.get("/pending", async (req, res) => {
 
 // Admin Approval
 // ✅ PATCH /api/mentor/mentor-status/:id
-
 router.patch("/mentor-status/:id", async (req, res) => {
   try {
     const { mentorStatus } = req.body; // "approved" | "rejected" | "verifyDocs"

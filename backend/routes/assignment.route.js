@@ -271,6 +271,22 @@ router.get("/assignments", async (req, res) => {
           resolvedTestId: { $ifNull: ["$test._id", "$testId"] },
         },
       },
+      // bring in assignee (mentor/admin)
+{
+  $lookup: {
+    from: "users",
+    localField: "assignedBy",
+    foreignField: "_id",
+    as: "assignedByUser",
+  },
+},
+{
+  $unwind: {
+    path: "$assignedByUser",
+    preserveNullAndEmptyArrays: true,
+  },
+},
+
 
       // keep payload lean for the FE (➡️ add timer fields)
       {
@@ -287,6 +303,18 @@ router.get("/assignments", async (req, res) => {
     as: "s",
     in: { _id: "$$s._id", name: "$$s.name", email: "$$s.email" }
   }
+},
+assignedBy: {
+  $cond: [
+    { $ne: ["$assignedByUser", null] },
+    {
+      _id: "$assignedByUser._id",
+      name: "$assignedByUser.name",
+      role: "$assignedByUser.role",
+      email: "$assignedByUser.email",
+    },
+    null
+  ]
 },
 
           // ⬇️ timer fields included in list API
@@ -417,35 +445,26 @@ router.post("/tests/:testId/assign", async (req, res) => {
     const { testId } = req.params;
     const { studentIds = [], dueAt, note } = req.body;
 
-    if (!studentIds.length) {
+    if (!studentIds.length)
       return res.status(400).json({ ok: false, message: "studentIds is required" });
-    }
-    if (!isValidObjectId(testId)) {
-      return res.status(400).json({ ok: false, message: "Invalid test id" });
-    }
 
-    const test = await Questions.findById(testId).lean();
+    if (!isValidObjectId(testId))
+      return res.status(400).json({ ok: false, message: "Invalid test id" });
+
+    const test = await Questions.findById(testId);
     if (!test) return res.status(404).json({ ok: false, message: "Test not found" });
 
     const assignedBy = resolveUserId(req);
-
-    // ⬇️ NEW: capture time-limit minutes (or null)
-    const limitMin = pickLimitMinutes(req.body || {});
-    const settings = req.body?.settings || {};
+    if (!assignedBy)
+      return res.status(401).json({ ok: false, message: "Unauthorized" });
 
     const doc = await TestAssignment.create({
-      testId: toObjectId(testId),
-      studentIds: studentIds.map(toObjectId),
+      testId,
+      studentIds,
       dueAt: dueAt ? new Date(dueAt) : undefined,
       note: note || "",
       status: "assigned",
-      assignedBy: assignedBy || undefined,
-
-      // ⬇️ Persist timer under common keys so FE can read any
-      durationMinutes: limitMin ?? undefined,
-      durationMin: limitMin ?? undefined,
-      timeLimitMin: limitMin ?? undefined,
-      settings: limitMin ? { ...(settings || {}), durationMinutes: limitMin } : settings,
+      assignedBy, // ✅ ALWAYS STORED
     });
 
     res.status(201).json({ ok: true, id: doc._id });

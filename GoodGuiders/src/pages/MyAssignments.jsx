@@ -18,11 +18,26 @@ const API = "http://localhost:5000/api";
 const LS_KEY = "assignProgressByAssignment"; // <- local fallback from TestPlayer
 
 /* ---------------- Helpers ---------------- */
+function pickAssignee(a) {
+  const u = a?.assignedBy;
+
+  // If truly not assigned (system / legacy)
+  if (!u) return "System (Admin)";
+
+  const name = u.name || u.email || "";
+  const role = u.role ;
+
+  return `${name} (${role})`;
+}
+
 function coerceArray(x) {
   if (!x) return [];
   if (Array.isArray(x)) return x;
   if (typeof x === "string") {
-    return x.split(",").map((s) => s.trim()).filter(Boolean);
+    return x
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
   return [];
 }
@@ -34,8 +49,15 @@ function normalizeStringList(list) {
       if (typeof item === "string") return item.trim();
       if (typeof item === "object") {
         return (
-          item.name ?? item.title ?? item.subject ?? item.label ?? item.value ?? ""
-        ).toString().trim();
+          item.name ??
+          item.title ??
+          item.subject ??
+          item.label ??
+          item.value ??
+          ""
+        )
+          .toString()
+          .trim();
       }
       return String(item).trim();
     })
@@ -56,13 +78,22 @@ function pickType(test) {
 }
 function pickClass(test) {
   const val =
-    test?.class ?? test?.className ?? test?.klass ?? test?.grade ?? test?.standard ?? null;
+    test?.class ??
+    test?.className ??
+    test?.klass ??
+    test?.grade ??
+    test?.standard ??
+    null;
   if (val === 0 || val === "0") return "0";
   if (!val && val !== 0) return "—";
   return typeof val === "string" ? val : String(val);
 }
 function asLocale(dt) {
-  try { return dt ? new Date(dt).toLocaleString() : "—"; } catch { return "—"; }
+  try {
+    return dt ? new Date(dt).toLocaleString() : "—";
+  } catch {
+    return "—";
+  }
 }
 const extractId = (x) => {
   if (!x) return null;
@@ -72,27 +103,46 @@ const extractId = (x) => {
 };
 const toDateMs = (v) => {
   if (!v) return 0;
-  try { return new Date(v).getTime() || 0; } catch { return 0; }
+  try {
+    return new Date(v).getTime() || 0;
+  } catch {
+    return 0;
+  }
 };
 const normalizeStatus = (s) => {
-  const v = String(s || "").toLowerCase().replace(/\s+/g, "_");
-  if (["completed", "submitted", "finished", "done"].includes(v)) return "completed";
-  if (["in_progress", "ongoing", "started", "active"].includes(v)) return "in_progress";
-  if (["assigned", "pending", "not_started", "new", ""].includes(v)) return "assigned";
+  const v = String(s || "")
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  if (["completed", "submitted", "finished", "done"].includes(v))
+    return "completed";
+  if (["in_progress", "ongoing", "started", "active"].includes(v))
+    return "in_progress";
+  if (["assigned", "pending", "not_started", "new", ""].includes(v))
+    return "assigned";
   return "assigned";
 };
 const pickLatestLocal = (arr) => {
   if (!arr?.length) return null;
-  return arr
-    .filter(Boolean)
-    .sort(
-      (a, b) =>
-        (toDateMs(b?.submittedAt) || toDateMs(b?.updatedAt) || toDateMs(b?.startedAt)) -
-        (toDateMs(a?.submittedAt) || toDateMs(a?.updatedAt) || toDateMs(a?.startedAt))
-    )[0] || null;
+  return (
+    arr
+      .filter(Boolean)
+      .sort(
+        (a, b) =>
+          (toDateMs(b?.submittedAt) ||
+            toDateMs(b?.updatedAt) ||
+            toDateMs(b?.startedAt)) -
+          (toDateMs(a?.submittedAt) ||
+            toDateMs(a?.updatedAt) ||
+            toDateMs(a?.startedAt))
+      )[0] || null
+  );
 };
 const readLocal = () => {
-  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY)) || {};
+  } catch {
+    return {};
+  }
 };
 /* ----------------------------------------- */
 
@@ -101,12 +151,18 @@ export default function MyAssignments() {
 
   // read deep-link filters once
   const initialStatus = (() => {
-    try { return new URLSearchParams(window.location.search).get("status") || "all"; }
-    catch { return "all"; }
+    try {
+      return new URLSearchParams(window.location.search).get("status") || "all";
+    } catch {
+      return "all";
+    }
   })();
   const initialQ = (() => {
-    try { return new URLSearchParams(window.location.search).get("q") || ""; }
-    catch { return ""; }
+    try {
+      return new URLSearchParams(window.location.search).get("q") || "";
+    } catch {
+      return "";
+    }
   })();
 
   // user
@@ -122,7 +178,7 @@ export default function MyAssignments() {
 
   // UI
   const [startingId, setStartingId] = useState(null);
-  const [q, setQ] = useState(initialQ);                // search text
+  const [q, setQ] = useState(initialQ); // search text
   const [status, setStatus] = useState(initialStatus); // filter by status
   const [sortKey, setSortKey] = useState("dueAt");
   const [sortAsc, setSortAsc] = useState(true);
@@ -138,10 +194,13 @@ export default function MyAssignments() {
     }
     (async () => {
       try {
-        const res = await fetch(`${API}/auth/dashboard?email=${encodeURIComponent(loggedIn.email)}`);
+        const res = await fetch(
+          `${API}/auth/dashboard?email=${encodeURIComponent(loggedIn.email)}`
+        );
         const json = await res.json();
         const backendUser = json?.data || json?.user || json;
-        const resolvedId = backendUser?._id || backendUser?.user?._id || loggedIn?._id || null;
+        const resolvedId =
+          backendUser?._id || backendUser?.user?._id || loggedIn?._id || null;
         setUser({ ...loggedIn, ...backendUser, _id: resolvedId });
       } catch {
       } finally {
@@ -170,7 +229,9 @@ export default function MyAssignments() {
       setAssignmentsRaw(payload);
       setAssignments(payload); // render quickly; enrich below
       if (!res.ok || json?.ok === false) {
-        setAssignErr(json?.message || "Server error while fetching assignments");
+        setAssignErr(
+          json?.message || "Server error while fetching assignments"
+        );
       }
     } catch {
       setAssignmentsRaw([]);
@@ -188,7 +249,9 @@ export default function MyAssignments() {
   /* -------- 3) Enrich each assignment with latest attempt + local fallback -------- */
   useEffect(() => {
     if (!assignmentsRaw?.length || (!user?._id && !user?.email)) return;
-    const sig = JSON.stringify(assignmentsRaw.map(a => a?._id || a?.id || "x"));
+    const sig = JSON.stringify(
+      assignmentsRaw.map((a) => a?._id || a?.id || "x")
+    );
     if (enrichSigRef.current === sig) return;
     enrichSigRef.current = sig;
 
@@ -199,7 +262,8 @@ export default function MyAssignments() {
           if (a?.attempt) candidates.push(a.attempt);
           if (a?.latestAttempt) candidates.push(a.latestAttempt);
           if (Array.isArray(a?.attempts)) candidates.push(...a.attempts);
-          if (Array.isArray(a?.previousAttempts)) candidates.push(...a.previousAttempts);
+          if (Array.isArray(a?.previousAttempts))
+            candidates.push(...a.previousAttempts);
 
           let latest = pickLatestLocal(candidates);
 
@@ -229,7 +293,11 @@ export default function MyAssignments() {
               const r = await fetch(u.toString());
               if (r.ok) {
                 const j = await r.json();
-                const list = Array.isArray(j?.data) ? j.data : Array.isArray(j) ? j : null;
+                const list = Array.isArray(j?.data)
+                  ? j.data
+                  : Array.isArray(j)
+                  ? j
+                  : null;
                 latest = list?.[0] || j?.attempt || j?.data || null;
               }
             } catch {}
@@ -284,8 +352,15 @@ export default function MyAssignments() {
 
   const getTestIdFor = (a) => {
     const fromRow =
-      a?.test ?? a?.testId ?? a?.exam ?? a?.examId ?? a?.paper ?? a?.paperId ??
-      a?.meta?.testId ?? a?.metadata?.testId ?? null;
+      a?.test ??
+      a?.testId ??
+      a?.exam ??
+      a?.examId ??
+      a?.paper ??
+      a?.paperId ??
+      a?.meta?.testId ??
+      a?.metadata?.testId ??
+      null;
     const fromAttempt =
       a?._latestAttempt?.test ||
       a?._latestAttempt?.testId ||
@@ -296,7 +371,9 @@ export default function MyAssignments() {
   };
 
   const getAttemptIdFor = (a) =>
-    extractId(a?._latestAttempt || a?.attempt || null) || a?._local?.attemptId || null;
+    extractId(a?._latestAttempt || a?.attempt || null) ||
+    a?._local?.attemptId ||
+    null;
 
   /* -------- 5) CTA: Start/Continue/Review -------- */
   const startNewAttemptAndOpen = async (a, testId) => {
@@ -314,24 +391,41 @@ export default function MyAssignments() {
       });
       if (res.ok) {
         const data = await res.json();
-        attemptId = data?.attemptId || data?.data?._id || data?.attempt?._id || null;
+        attemptId =
+          data?.attemptId || data?.data?._id || data?.attempt?._id || null;
         tId =
           tId ||
           extractId(
-            data?.test || data?.testId || data?.exam || data?.paper || data?.data?.test || data?.data?.testId
+            data?.test ||
+              data?.testId ||
+              data?.exam ||
+              data?.paper ||
+              data?.data?.test ||
+              data?.data?.testId
           );
         // persist local "in_progress"
         const map = readLocal();
-        map[a._id] = { ...(map[a._id] || {}), status: "in_progress", attemptId, testId: tId, updatedAt: new Date().toISOString() };
+        map[a._id] = {
+          ...(map[a._id] || {}),
+          status: "in_progress",
+          attemptId,
+          testId: tId,
+          updatedAt: new Date().toISOString(),
+        };
         localStorage.setItem(LS_KEY, JSON.stringify(map));
       }
     } catch (e) {
       console.warn("Start endpoint failed; proceeding anyway.", e);
     }
     const qs = new URLSearchParams(
-      Object.fromEntries(Object.entries({ testId: tId, attemptId }).filter(([, v]) => !!v))
+      Object.fromEntries(
+        Object.entries({ testId: tId, attemptId }).filter(([, v]) => !!v)
+      )
     ).toString();
-    if (!tId) alert("This assignment has no linked test yet. Please contact your mentor.");
+    if (!tId)
+      alert(
+        "This assignment has no linked test yet. Please contact your mentor."
+      );
     navigate(`/test-player/${a._id}${qs ? `?${qs}` : ""}`);
   };
 
@@ -356,30 +450,32 @@ export default function MyAssignments() {
   // };
 
   const handleOpen = async (a) => {
-  const stat = deriveStatus(a);
-  const testId = getTestIdFor(a);
-  const attemptId = getAttemptIdFor(a);
+    const stat = deriveStatus(a);
+    const testId = getTestIdFor(a);
+    const attemptId = getAttemptIdFor(a);
 
-  setStartingId(a._id);
-  try {
-    if (stat === "assigned") {
-      // go via instructions gate (pass testId if known)
+    setStartingId(a._id);
+    try {
+      if (stat === "assigned") {
+        // go via instructions gate (pass testId if known)
+        const qs = new URLSearchParams(
+          Object.fromEntries(Object.entries({ testId }).filter(([, v]) => !!v))
+        ).toString();
+        navigate(`/test-instructions/${a._id}${qs ? `?${qs}` : ""}`);
+        return;
+      }
+
+      // in_progress / completed -> open player directly (as before)
       const qs = new URLSearchParams(
-        Object.fromEntries(Object.entries({ testId }).filter(([, v]) => !!v))
+        Object.fromEntries(
+          Object.entries({ testId, attemptId }).filter(([, v]) => !!v)
+        )
       ).toString();
-      navigate(`/test-instructions/${a._id}${qs ? `?${qs}` : ""}`);
-      return;
+      navigate(`/test-player/${a._id}${qs ? `?${qs}` : ""}`);
+    } finally {
+      setStartingId(null);
     }
-
-    // in_progress / completed -> open player directly (as before)
-    const qs = new URLSearchParams(
-      Object.fromEntries(Object.entries({ testId, attemptId }).filter(([, v]) => !!v))
-    ).toString();
-    navigate(`/test-player/${a._id}${qs ? `?${qs}` : ""}`);
-  } finally {
-    setStartingId(null);
-  }
-};
+  };
 
   /* -------- 6) Derived rows (filter + search + sort + paginate) -------- */
   const rows = useMemo(() => {
@@ -407,13 +503,19 @@ export default function MyAssignments() {
 
       const getVal = (row, test) => {
         switch (key) {
-          case "subjects": return pickSubjects(test).join(", ");
-          case "type": return pickType(test);
-          case "class": return pickClass(test);
-          case "status": return deriveStatus(row);
-          case "createdAt": return row?.createdAt || null;
+          case "subjects":
+            return pickSubjects(test).join(", ");
+          case "type":
+            return pickType(test);
+          case "class":
+            return pickClass(test);
+          case "status":
+            return deriveStatus(row);
+          case "createdAt":
+            return row?.createdAt || null;
           case "dueAt":
-          default: return row?.dueAt || null;
+          default:
+            return row?.dueAt || null;
         }
       };
 
@@ -430,7 +532,9 @@ export default function MyAssignments() {
         return sortAsc ? da - db : db - da;
       }
 
-      return sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+      return sortAsc
+        ? String(va).localeCompare(String(vb))
+        : String(vb).localeCompare(String(va));
     });
 
     return sorted;
@@ -441,7 +545,10 @@ export default function MyAssignments() {
 
   const setSort = (key) => {
     if (key === sortKey) setSortAsc(!sortAsc);
-    else { setSortKey(key); setSortAsc(true); }
+    else {
+      setSortKey(key);
+      setSortAsc(true);
+    }
   };
 
   /* ------------------------------- Render ------------------------------- */
@@ -460,11 +567,20 @@ export default function MyAssignments() {
                 </Badge>
               </div>
               <div className="d-flex gap-2">
-                <Button size="sm" variant="outline-secondary" onClick={fetchAssignments}>
+                <Button
+                  size="sm"
+                  variant="outline-secondary"
+                  onClick={fetchAssignments}
+                >
                   <FeatherIcon icon="refresh-cw" className="me-2" />
                   Refresh
                 </Button>
-                <Button as={Link} to="/patient-dashboard" size="sm" variant="outline-dark">
+                <Button
+                  as={Link}
+                  to="/patient-dashboard"
+                  size="sm"
+                  variant="outline-dark"
+                >
                   <FeatherIcon icon="home" className="me-2" />
                   Dashboard
                 </Button>
@@ -477,14 +593,20 @@ export default function MyAssignments() {
                   <Form.Control
                     placeholder="e.g. Physics, Objective, Class 10"
                     value={q}
-                    onChange={(e) => { setQ(e.target.value); setPage(1); }}
+                    onChange={(e) => {
+                      setQ(e.target.value);
+                      setPage(1);
+                    }}
                   />
                 </Col>
                 <Col md={3}>
                   <Form.Label>Status</Form.Label>
                   <Form.Select
                     value={status}
-                    onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+                    onChange={(e) => {
+                      setStatus(e.target.value);
+                      setPage(1);
+                    }}
                   >
                     <option value="all">All</option>
                     <option value="assigned">Assigned</option>
@@ -495,11 +617,45 @@ export default function MyAssignments() {
                 <Col md="auto" className="ms-auto">
                   <div className="text-muted small">
                     Sort by:{" "}
-                    <Button size="sm" variant={sortKey==="dueAt"?"primary":"light"} className="me-1" onClick={() => setSort("dueAt")}>Due</Button>
-                    <Button size="sm" variant={sortKey==="createdAt"?"primary":"light"} className="me-1" onClick={() => setSort("createdAt")}>Assigned On</Button>
-                    <Button size="sm" variant={sortKey==="subjects"?"primary":"light"} className="me-1" onClick={() => setSort("subjects")}>Subjects</Button>
-                    <Button size="sm" variant={sortKey==="type"?"primary":"light"} className="me-1" onClick={() => setSort("type")}>Type</Button>
-                    <Button size="sm" variant={sortKey==="class"?"primary":"light"} onClick={() => setSort("class")}>Class</Button>
+                    <Button
+                      size="sm"
+                      variant={sortKey === "dueAt" ? "primary" : "light"}
+                      className="me-1"
+                      onClick={() => setSort("dueAt")}
+                    >
+                      Due
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={sortKey === "createdAt" ? "primary" : "light"}
+                      className="me-1"
+                      onClick={() => setSort("createdAt")}
+                    >
+                      Assigned On
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={sortKey === "subjects" ? "primary" : "light"}
+                      className="me-1"
+                      onClick={() => setSort("subjects")}
+                    >
+                      Subjects
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={sortKey === "type" ? "primary" : "light"}
+                      className="me-1"
+                      onClick={() => setSort("type")}
+                    >
+                      Type
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={sortKey === "class" ? "primary" : "light"}
+                      onClick={() => setSort("class")}
+                    >
+                      Class
+                    </Button>
                     <span className="ms-2">{sortAsc ? "↑" : "↓"}</span>
                   </div>
                 </Col>
@@ -513,9 +669,13 @@ export default function MyAssignments() {
               {assignErr ? (
                 <div className="alert alert-warning py-2">{assignErr}</div>
               ) : loadingUser || assignLoading ? (
-                <div className="text-center"><Spinner animation="border" /></div>
+                <div className="text-center">
+                  <Spinner animation="border" />
+                </div>
               ) : rows.length === 0 ? (
-                <div className="text-muted">No tests found for your filters.</div>
+                <div className="text-muted">
+                  No tests found for your filters.
+                </div>
               ) : (
                 <div className="table-responsive">
                   <Table hover className="align-middle">
@@ -524,6 +684,7 @@ export default function MyAssignments() {
                         <th>Subjects</th>
                         <th>Type</th>
                         <th>Class</th>
+                        <th>Assigned By</th>
                         <th>Assigned On</th>
                         <th>Due</th>
                         <th>Status</th>
@@ -533,6 +694,7 @@ export default function MyAssignments() {
                     <tbody>
                       {pageRows.map((a) => {
                         const t = pickTestObj(a) || {};
+                        const assignee = pickAssignee(a);
                         const subjects = pickSubjects(t).join(", ") || "—";
                         const typ = pickType(t);
                         const cls = pickClass(t);
@@ -541,34 +703,61 @@ export default function MyAssignments() {
 
                         const stat = deriveStatus(a);
                         const statusVariant =
-                          stat === "completed" ? "success" :
-                          stat === "in_progress" ? "info" : "warning";
+                          stat === "completed"
+                            ? "success"
+                            : stat === "in_progress"
+                            ? "info"
+                            : "warning";
 
                         const cta =
-                          stat === "completed" ? "Review" :
-                          stat === "in_progress" ? "Continue" : "Start";
+                          stat === "completed"
+                            ? "Review"
+                            : stat === "in_progress"
+                            ? "Continue"
+                            : "Start";
 
                         return (
                           <tr key={a._id}>
                             <td>{subjects}</td>
-                            <td><Badge bg="dark">{typ}</Badge></td>
-                            <td><Badge bg="secondary">{cls === "—" ? cls : `Class ${cls}`}</Badge></td>
+                            <td>
+                              <Badge bg="dark">{typ}</Badge>
+                            </td>
+                            <td>
+                              <Badge bg="secondary">
+                                {cls === "—" ? cls : `Class ${cls}`}
+                              </Badge>
+                            </td>
+                            <td>
+                              <span className="fw-medium">{assignee}</span>
+                            </td>
                             <td>{assigned}</td>
                             <td>{due}</td>
-                            <td><Badge bg={statusVariant}>{stat}</Badge></td>
+                            <td>
+                              <Badge bg={statusVariant}>{stat}</Badge>
+                            </td>
                             <td className="text-end">
                               <Button
                                 size="sm"
-                                variant={stat === "completed" ? "outline-secondary" : "primary"}
+                                variant={
+                                  stat === "completed"
+                                    ? "outline-secondary"
+                                    : "primary"
+                                }
                                 onClick={() => handleOpen(a)}
                                 disabled={startingId === a._id}
                               >
                                 {startingId === a._id ? (
                                   <>
-                                    <Spinner animation="border" size="sm" className="me-2" />
+                                    <Spinner
+                                      animation="border"
+                                      size="sm"
+                                      className="me-2"
+                                    />
                                     Opening…
                                   </>
-                                ) : cta}
+                                ) : (
+                                  cta
+                                )}
                               </Button>
                             </td>
                           </tr>
@@ -583,13 +772,26 @@ export default function MyAssignments() {
               {rows.length > perPage && (
                 <div className="d-flex justify-content-between align-items-center mt-2">
                   <div className="text-muted small">
-                    Showing {(page-1)*perPage + 1}–{Math.min(page*perPage, rows.length)} of {rows.length}
+                    Showing {(page - 1) * perPage + 1}–
+                    {Math.min(page * perPage, rows.length)} of {rows.length}
                   </div>
                   <div className="d-flex gap-2">
-                    <Button size="sm" variant="light" disabled={page===1} onClick={() => setPage(p => Math.max(1, p-1))}>
+                    <Button
+                      size="sm"
+                      variant="light"
+                      disabled={page === 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
                       <FeatherIcon icon="chevron-left" className="me-1" /> Prev
                     </Button>
-                    <Button size="sm" variant="light" disabled={page===totalPages} onClick={() => setPage(p => Math.min(totalPages, p+1))}>
+                    <Button
+                      size="sm"
+                      variant="light"
+                      disabled={page === totalPages}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
+                    >
                       Next <FeatherIcon icon="chevron-right" className="ms-1" />
                     </Button>
                   </div>

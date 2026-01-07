@@ -127,12 +127,15 @@
 //   );
 // }
 
-
 import { useEffect, useState } from "react";
 
 export default function AdminMentorRequests() {
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState({
+    id: null, // mentor id
+    type: null, // approved | rejected | verifyDocs
+  });
 
   // fetch pending mentors
   useEffect(() => {
@@ -151,6 +154,8 @@ export default function AdminMentorRequests() {
   // approve / reject / verify
   const updateStatus = async (id, status) => {
     try {
+      setActionLoading({ id, type: status });
+
       const res = await fetch(
         `http://127.0.0.1:5000/api/mentor/mentor-status/${id}`,
         {
@@ -169,12 +174,24 @@ export default function AdminMentorRequests() {
 
       alert(`Mentor ${status}`);
 
+      // ✅ APPROVE / REJECT → remove row
       if (status === "approved" || status === "rejected") {
         setMentors((prev) => prev.filter((m) => m._id !== id));
+      }
+
+      // ✅ VERIFY DOCS → update status locally
+      if (status === "verifyDocs") {
+        setMentors((prev) =>
+          prev.map((m) =>
+            m._id === id ? { ...m, mentorStatus: "verifyDocs" } : m
+          )
+        );
       }
     } catch (err) {
       console.error(err);
       alert("Server error. Please try again.");
+    } finally {
+      setActionLoading({ id: null, type: null });
     }
   };
 
@@ -215,6 +232,7 @@ export default function AdminMentorRequests() {
               <th>Experience</th>
               <th>Abilities</th>
               <th>Specialized In</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -248,36 +266,62 @@ export default function AdminMentorRequests() {
                     ? mentor.specializedIn.join(", ")
                     : mentor?.specializedIn || "-"}
                 </td>
+                <td>
+                  {mentor.mentorStatus === "verifyDocs" ? (
+                    <span className="badge bg-warning text-dark">
+                      Docs Requested
+                    </span>
+                  ) : (
+                    <span className="badge bg-secondary">Pending</span>
+                  )}
+                </td>
 
                 <td>
                   <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                     <button
                       className="btn btn-success btn-sm"
-                      onClick={() =>
-                        updateStatus(mentor._id, "approved")
-                      }
+                      disabled={actionLoading.id === mentor._id}
+                      onClick={() => updateStatus(mentor._id, "approved")}
                     >
-                      Approve
+                      {actionLoading.id === mentor._id &&
+                      actionLoading.type === "approved" ? (
+                        <span className="spinner-border spinner-border-sm"></span>
+                      ) : (
+                        "Approve"
+                      )}
                     </button>
 
                     <button
                       className="btn btn-danger btn-sm"
-                      onClick={() =>
-                        updateStatus(mentor._id, "rejected")
-                      }
+                      disabled={actionLoading.id === mentor._id}
+                      onClick={() => updateStatus(mentor._id, "rejected")}
                     >
-                      Reject
+                      {actionLoading.id === mentor._id &&
+                      actionLoading.type === "rejected" ? (
+                        <span className="spinner-border spinner-border-sm"></span>
+                      ) : (
+                        "Reject"
+                      )}
                     </button>
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "center" }}>
                     <button
                       className="btn btn-warning btn-sm"
-                      onClick={() =>
-                        updateStatus(mentor._id, "verifyDocs")
+                      disabled={
+                        actionLoading.id === mentor._id ||
+                        mentor.mentorStatus === "verifyDocs"
                       }
+                      onClick={() => updateStatus(mentor._id, "verifyDocs")}
                     >
-                      Verify Degree
+                      {actionLoading.id === mentor._id &&
+                      actionLoading.type === "verifyDocs" ? (
+                        <span className="spinner-border spinner-border-sm"></span>
+                      ) : mentor.mentorStatus === "verifyDocs" ? (
+                        "Docs Requested"
+                      ) : (
+                        "Verify Degree"
+                      )}
                     </button>
                   </div>
                 </td>

@@ -4,6 +4,7 @@ import User from "../models/User.model.js";
 import mongoose from "mongoose";
 import Submission from "../models/Submission.model.js";
 import MentorRating from "../models/MentorRating.model.js";
+import MentorComment from "../models/MentorComment.model.js";
 
 const router = express.Router();
 
@@ -631,6 +632,67 @@ router.get("/mentor/:email/rating", async (req, res) => {
       count: totalCount,
       breakdown,
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// POST /api/stats/mentor/:email/comment
+router.post("/mentor/:email/comment", async (req, res) => {
+  const mentorEmail = req.params.email;
+  const { studentEmail, studentName, comment } = req.body;
+
+  if (!comment?.trim())
+    return res.status(400).json({ message: "Comment required" });
+
+  await MentorComment.create({
+    mentorEmail,
+    studentEmail,
+    studentName,
+    comment,
+  });
+
+  res.json({ success: true });
+});
+
+// GET /api/stats/mentor/:email/comments
+router.get("/mentor/:email/comments", async (req, res) => {
+  const mentorEmail = req.params.email;
+  const skip = Number(req.query.skip || 0);
+  const limit = Number(req.query.limit || 5);
+
+  const comments = await MentorComment.find({
+    mentorEmail,
+    isDeleted: false,
+  })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await MentorComment.countDocuments({
+    mentorEmail,
+    isDeleted: false,
+  });
+
+  res.json({ comments, total });
+});
+
+// DELETE /api/stats/admin/mentor-comment/:id
+router.delete("/admin/mentor-comment/:id", async (req, res) => {
+  try {
+    const { adminEmail } = req.body; // ✅ get from body
+
+    if (!adminEmail) {
+      return res.status(400).json({ message: "adminEmail required" });
+    }
+
+    await MentorComment.findByIdAndUpdate(req.params.id, {
+      isDeleted: true,
+      deletedBy: adminEmail,
+    });
+
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
