@@ -429,7 +429,7 @@ router.get("/mentor/:email/details", async (req, res) => {
 
     // 1) Find mentor
     const mentor = await User.findOne({ email, role: "mentor" })
-      .select("name email mobileNo specializedIn experience education isDisabled -_id")
+      .select("name email mobileNo specializedIn experience education isDisabled _id")
       .lean();
 
     if (!mentor) {
@@ -505,7 +505,7 @@ router.get("/mentor/:email/details", async (req, res) => {
         email: { $in: otherEmails },
         role: "student",
       })
-        .select("name email className education -_id")
+        .select("name email className education _id")
         .lean();
 
       // Map by email (case-insensitive)
@@ -542,6 +542,7 @@ router.get("/mentor/:email/details", async (req, res) => {
 
     return res.json({
       mentor: {
+        _id: mentor._id,
         name: mentor.name,
         email: mentor.email,
         mobileNo: mentor.mobileNo || null,

@@ -91,7 +91,7 @@ export default function StudentProfileInfo() {
   /* ================= UI ================= */
   return (
     <>
-      <div className="themebody-wrap" style={{ marginTop: 120 }}>
+      <div className="themebody-wrap" style={{ marginTop: 80, paddingBottom: 80 }}>
         {/* COVER */}
         <div
           style={{
@@ -105,7 +105,7 @@ export default function StudentProfileInfo() {
             {/* ================= LEFT (STICKY) ================= */}
             <div className="col-md-4">
               <div
-                className="card text-center p-3"
+                className="card text-center p-15"
                 style={{
                   borderRadius: 14,
                   boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
@@ -149,7 +149,7 @@ export default function StudentProfileInfo() {
             {/* ================= RIGHT (SPLIT CARDS) ================= */}
             <div className="col-md-8">
               {/* ABOUT */}
-              <div className="card shadow-sm p-4 mb-3">
+              <div className="card shadow-sm p-15 mb-10">
                 <h5 className="fw-bold mb-3">About Student</h5>
                 <div className="row g-3">
                   <div className="col-md-6">
@@ -182,7 +182,7 @@ export default function StudentProfileInfo() {
               </div>
 
               {/* PERFORMANCE */}
-              <div className="card shadow-sm p-4 mb-3">
+              <div className="card shadow-sm p-15 mb-10">
                 <h5 className="fw-bold mb-3">📊 Performance</h5>
                 <div className="d-flex gap-3">
                   <Badge bg="primary">
@@ -195,7 +195,7 @@ export default function StudentProfileInfo() {
               </div>
 
               {/* EXAMS */}
-              <div className="card shadow-sm p-4 mb-3">
+              <div className="card shadow-sm p-15 mb-10">
                 <h5 className="fw-bold mb-3">📝 Recent Exams</h5>
                 {exams.length === 0 ? (
                   <p className="text-muted">No exams found</p>
@@ -220,7 +220,7 @@ export default function StudentProfileInfo() {
 
               {/* MENTORS */}
               {role === "admin" && (
-                <div className="card shadow-sm p-4">
+                <div className="card shadow-sm p-15 mb-10">
                   <h5 className="fw-bold mb-3">👨‍🏫 Connected Mentors</h5>
                   {mentors.count === 0 ? (
                     <p className="text-muted">No mentors connected</p>

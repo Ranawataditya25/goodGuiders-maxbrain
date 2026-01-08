@@ -117,6 +117,7 @@ import MentorProfileInfo from "./pages/MentorProfileInfo.jsx";
 import StudentProfileInfo from "./pages/StudentProfileInfo.jsx";
 import StudentEvaluationResult from "./pages/StudentEvaluationResult.jsx";
 import StudentClasses from "./pages/Classes.jsx";
+import Appointments from "./pages/Appointments.jsx";
 
 const routesWithoutExtras = [
   "/",
@@ -254,6 +255,8 @@ function AppContent() {
         <Route exact path="/test-start" element={<TestStart />} />
         <Route exact path="/test-end" element={<TestEnd />} />
 
+
+        <Route path="/appointments" element={<Appointments />} /> 
         <Route exact path="/doctor-schedule" element={<Doctor_schedule />} />
         <Route exact path="/add-appointment" element={<Add_appointment />} />
         <Route exact path="/edit-appointment" element={<Edit_appointment />} />

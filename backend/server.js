@@ -35,6 +35,7 @@ import interactionsRouter from "./routes/interactions.route.js";
 import materialsRoutes from "./routes/material.route.js";
 import pdfEvaluationRoutes from "./routes/pdfEvaluation.route.js";
 import { mentorExpiryCron } from "./cron/mentorExpiry.cron.js";
+import appointmentRoutes from "./routes/appointment.route.js";
 
 
 
@@ -167,6 +168,7 @@ app.use("/api", tokenRoute);
 app.use("/api", twilioConversationRoutes);
 app.use("/api/video", videoRoutes);
 app.use("/api/interactions", interactionsRouter);
+app.use("/api/appointments", appointmentRoutes);
 
 // app.use("/api/tests", testsRouter);
 

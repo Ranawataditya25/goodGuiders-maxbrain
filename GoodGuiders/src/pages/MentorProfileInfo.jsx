@@ -2,6 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button, Modal, ListGroup, Spinner, Form } from "react-bootstrap";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
+import Calendar from "react-calendar";
+import axios from "axios";
 
 /* ---------- avatar helper (same pattern as students) ---------- */
 function getMentorAvatar(email = "") {
@@ -41,6 +43,10 @@ export default function MentorProfileInfo() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messagesList, setMessagesList] = useState([]);
   const [activeChatTitle, setActiveChatTitle] = useState("");
+
+  /* ---------- appointments ---------- */
+  const [appointments, setAppointments] = useState([]);
+  const [calendarLoading, setCalendarLoading] = useState(true);
 
   /* ---------- helpers ---------- */
   const sanitize = (s = "") =>
@@ -195,6 +201,81 @@ export default function MentorProfileInfo() {
     loadComments();
   };
 
+  useEffect(() => {
+    if (!mentorDetails?.mentor?._id) return;
+
+    const loadAppointments = async () => {
+      setCalendarLoading(true);
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:5000/api/appointments/mentor/${mentorDetails.mentor._id}`,
+          {
+            headers: {
+              "x-user-id": loggedInUser._id,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          setAppointments([]);
+          return;
+        }
+
+        const data = await res.json();
+        setAppointments(data.appointments || []);
+      } catch (err) {
+        setAppointments([]);
+      } finally {
+        setCalendarLoading(false);
+      }
+    };
+
+    loadAppointments();
+  }, [mentorDetails?.mentor?._id]);
+
+  /* ---------- calendar helpers ---------- */
+  const acceptedDates = appointments
+    .filter((a) => a.status === "accepted")
+    .map((a) => a.date);
+
+  const blockedDates = appointments
+    .filter((a) => a.status === "accepted" || a.status === "pending")
+    .map((a) => a.date);
+
+  const handleDateClick = async (date) => {
+    if (role !== "student") return;
+
+    const formatted = date.toLocaleDateString("en-CA");
+
+    if (acceptedDates.includes(formatted)) {
+      alert("This date is already booked");
+      return;
+    }
+
+    try {
+      await axios.post(
+        "http://127.0.0.1:5000/api/appointments/request",
+        {
+          mentorId: mentorDetails?.mentor?._id,
+          date: formatted,
+        },
+        {
+          headers: {
+            "x-user-id": loggedInUser._id,
+          },
+        }
+      );
+
+      alert("Appointment request sent, you will be notified soon.");
+      setAppointments((prev) => [
+        ...prev,
+        { date: formatted, status: "pending" },
+      ]);
+    } catch (err) {
+      alert(err.response?.data?.msg || "Failed to request appointment");
+    }
+  };
+
   if (loading)
     return (
       <div className="text-center mt-5">
@@ -208,10 +289,57 @@ export default function MentorProfileInfo() {
   const mentor = mentorDetails?.mentor || {};
   const students = mentorDetails?.students || { count: 0, items: [] };
 
+  const calendarStyles = `
+  .react-calendar {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .react-calendar__navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .react-calendar__month-view__days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .react-calendar__tile {
+    padding: 10px 6px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .react-calendar__tile--now {
+    background: #e7f1ff;
+    font-weight: bold;
+  }
+
+  .react-calendar__tile:hover {
+    background: #f1f3f5;
+  }
+
+  .booked-date {
+  background: #ffa940 !important; /* orange for pending/accepted */
+  color: white !important;
+  pointer-events: none;
+  font-weight: bold;
+}
+`;
+
   /* ================= UI ================= */
   return (
     <>
-      <div className="themebody-wrap" style={{ marginTop: 120 }}>
+      <div
+        className="themebody-wrap"
+        style={{ marginTop: 80, paddingBottom: 80 }}
+      >
         {/* COVER */}
         <div
           style={{
@@ -225,7 +353,7 @@ export default function MentorProfileInfo() {
             {/* ================= LEFT (STICKY) ================= */}
             <div className="col-md-4">
               <div
-                className="card text-center p-3"
+                className="card text-center p-15"
                 style={{
                   borderRadius: 14,
                   boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
@@ -300,7 +428,7 @@ export default function MentorProfileInfo() {
             {/* ================= RIGHT (SPLIT CARDS) ================= */}
             <div className="col-md-8">
               {/* ABOUT */}
-              <div className="card shadow-sm p-4 mb-3">
+              <div className="card shadow-sm p-15 mb-10">
                 <h5 className="fw-bold mb-3">About Mentor</h5>
                 <p className="text-muted">{mentor.bio || "No bio available"}</p>
 
@@ -341,7 +469,34 @@ export default function MentorProfileInfo() {
                 </div>
               </div>
 
-              <div className="card shadow-sm p-4 mb-3">
+              <div className="card shadow-sm p-15 mb-10">
+                <h5 className="fw-bold mb-3">📅 Book Appointment</h5>
+
+                <style>{calendarStyles}</style>
+
+                {calendarLoading ? (
+                  <div className="text-center">
+                    <Spinner animation="border" size="sm" />
+                  </div>
+                ) : (
+                  <Calendar
+                    minDate={new Date()}
+                    onClickDay={handleDateClick}
+                    tileClassName={({ date }) => {
+                      const d = date.toLocaleDateString("en-CA");
+                      if (blockedDates.includes(d)) return "booked-date";
+                    }}
+                  />
+                )}
+
+                {role !== "student" && (
+                  <p className="text-muted large mt-2">
+                    *Only students can request appointments.
+                  </p>
+                )}
+              </div>
+
+              <div className="card shadow-sm p-15 mb-10">
                 <h5 className="fw-bold mb-3">📝 Student Reviews</h5>
 
                 {comments.length === 0 ? (
@@ -385,7 +540,7 @@ export default function MentorProfileInfo() {
 
               {/* CONNECTED STUDENTS */}
               {role === "admin" && (
-                <div className="card shadow-sm p-4">
+                <div className="card shadow-sm p-15 mb-10">
                   <h5 className="fw-bold mb-3">👨‍🎓 Connected Students</h5>
                   {students.count === 0 ? (
                     <p className="text-muted">No students connected</p>
