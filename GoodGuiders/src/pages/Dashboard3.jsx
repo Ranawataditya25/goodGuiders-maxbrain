@@ -1235,6 +1235,7 @@ import FeatherIcon from "feather-icons-react";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import AssignedTestsSummary from "../componets/AssignedTestsSummary";
+import StudentClassesCard from "../componets/StudentClassesCard";
 
 const API = "http://localhost:5000/api";
 
@@ -1367,6 +1368,17 @@ function getQuestionPdfUrl(a) {
   return fileUrl.startsWith("http")
     ? fileUrl
     : `http://localhost:5000${fileUrl}`;
+}
+
+function pickAssignee(a) {
+  const u = a?.assignedBy;
+
+  if (!u) return "System (Admin)";
+
+  const name = u.name || u.email || "";
+  const role = u.role || "mentor";
+
+  return `${name} (${role})`;
 }
 
 export default function Dashboard3() {
@@ -1756,21 +1768,21 @@ export default function Dashboard3() {
     }
   };
 
-useEffect(() => {
-  const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-  if (!loggedInUser?._id) return;
+  useEffect(() => {
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!loggedInUser?._id) return;
 
-  fetch("http://127.0.0.1:5000/api/pdf-evaluations/student", {
-    credentials: "include",
-    headers: {
-      "x-user-role": "student",
-      "x-user-id": loggedInUser._id,
-    },
-  })
-    .then((r) => r.json())
-    .then((d) => setResultCount(d.count || 0))
-    .catch(() => {});
-}, []);
+    fetch("http://127.0.0.1:5000/api/pdf-evaluations/student", {
+      credentials: "include",
+      headers: {
+        "x-user-role": "student",
+        "x-user-id": loggedInUser._id,
+      },
+    })
+      .then((r) => r.json())
+      .then((d) => setResultCount(d.count || 0))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="themebody-wrap">
@@ -1831,11 +1843,11 @@ useEffect(() => {
                       )}
                     </Button>
                     <Button
-  variant="outline-primary"
-  onClick={() => navigate("/student/classes")}
->
-  📚 Study Materials
-</Button>
+                      variant="outline-primary"
+                      onClick={() => navigate("/student/classes")}
+                    >
+                      📚 Study Materials
+                    </Button>
                     {/* New Chat Button for Student */}
                     <Button
                       size="sm"
@@ -2021,6 +2033,8 @@ useEffect(() => {
             </Col>
           </Row>
 
+          <StudentClassesCard />
+
           {/* ===== Summary counters (deep-link to filtered list) ===== */}
           {/* <Row className="mb-4">
             <Col xl={12}>
@@ -2079,6 +2093,7 @@ useEffect(() => {
                           <th>Subjects</th>
                           <th>Type</th>
                           <th>Class</th>
+                          <th>Assigned By</th>
                           <th>Due</th>
                           <th>Status</th>
                           <th />
@@ -2089,6 +2104,7 @@ useEffect(() => {
                           const t = pickTestObj(a) || {};
                           const due = asLocale(a?.dueAt);
                           const stat = deriveStatus(a); // <-- now using server truth
+                          const assignee = pickAssignee(a);
                           const statusVariant =
                             stat === "completed"
                               ? "success"
@@ -2106,6 +2122,9 @@ useEffect(() => {
                                 <Badge bg="secondary">
                                   {renderClass(a, t)}
                                 </Badge>
+                              </td>
+                              <td>
+                                <span className="fw-medium">{assignee}</span>
                               </td>
                               <td>{due}</td>
                               <td>

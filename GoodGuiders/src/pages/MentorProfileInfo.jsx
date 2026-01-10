@@ -234,12 +234,25 @@ export default function MentorProfileInfo() {
   }, [mentorDetails?.mentor?._id]);
 
   /* ---------- calendar helpers ---------- */
-  const acceptedDates = appointments
-    .filter((a) => a.status === "accepted")
+  // const acceptedDates = appointments
+  //   .filter((a) => a.status === "accepted")
+  //   .map((a) => a.date);
+
+  const myPendingDates = appointments
+    .filter(
+      (a) =>
+        a.status === "pending" &&
+        String(a.studentId) === String(loggedInUser._id)
+    )
     .map((a) => a.date);
 
   const blockedDates = appointments
-    .filter((a) => a.status === "accepted" || a.status === "pending")
+    .filter((a) => {
+      if (a.status === "accepted") return true;
+      if (a.status === "pending" && a.studentId !== loggedInUser._id)
+        return true;
+      return false;
+    })
     .map((a) => a.date);
 
   const handleDateClick = async (date) => {
@@ -247,13 +260,17 @@ export default function MentorProfileInfo() {
 
     const formatted = date.toLocaleDateString("en-CA");
 
-    if (acceptedDates.includes(formatted)) {
-      alert("This date is already booked");
+    const isAccepted = appointments.some(
+      (a) => a.date === formatted && a.status === "accepted"
+    );
+
+    if (isAccepted) {
+      alert("This appointment is already accepted and cannot be cancelled.");
       return;
     }
 
     try {
-      await axios.post(
+      const res = await axios.post(
         "http://127.0.0.1:5000/api/appointments/request",
         {
           mentorId: mentorDetails?.mentor?._id,
@@ -266,13 +283,33 @@ export default function MentorProfileInfo() {
         }
       );
 
-      alert("Appointment request sent, you will be notified soon.");
-      setAppointments((prev) => [
-        ...prev,
-        { date: formatted, status: "pending" },
-      ]);
+      if (res.data.action === "booked") {
+        alert("Appointment requested");
+        setAppointments((prev) => [
+          ...prev,
+          {
+            date: formatted,
+            status: "pending",
+            studentId: loggedInUser._id,
+          },
+        ]);
+      }
+
+      if (res.data.action === "cancelled") {
+        alert("Appointment cancelled");
+        setAppointments((prev) =>
+          prev.filter(
+            (a) =>
+              !(
+                a.date === formatted &&
+                a.studentId === loggedInUser._id &&
+                a.status === "pending"
+              )
+          )
+        );
+      }
     } catch (err) {
-      alert(err.response?.data?.msg || "Failed to request appointment");
+      alert(err.response?.data?.msg || "Failed");
     }
   };
 
@@ -325,10 +362,15 @@ export default function MentorProfileInfo() {
     background: #f1f3f5;
   }
 
-  .booked-date {
-  background: #ffa940 !important; /* orange for pending/accepted */
+.booked-date {
+  background: #ffa940 !important;   /* others pending / accepted */
   color: white !important;
-  pointer-events: none;
+  font-weight: bold;
+}
+
+.my-pending {
+  background: #3b82f6 !important;   /* your request */
+  color: white !important;
   font-weight: bold;
 }
 `;
@@ -470,7 +512,7 @@ export default function MentorProfileInfo() {
               </div>
 
               <div className="card shadow-sm p-15 mb-10">
-                <h5 className="fw-bold mb-3">📅 Book Appointment</h5>
+                <h5 className="fw-bold mb-15">📅 Book Appointment</h5>
 
                 <style>{calendarStyles}</style>
 
@@ -484,10 +526,54 @@ export default function MentorProfileInfo() {
                     onClickDay={handleDateClick}
                     tileClassName={({ date }) => {
                       const d = date.toLocaleDateString("en-CA");
+
+                      if (myPendingDates.includes(d)) return "my-pending";
                       if (blockedDates.includes(d)) return "booked-date";
                     }}
                   />
                 )}
+
+                <div
+                  className="d-flex gap-2 flex-wrap mt-15"
+                  style={{ fontSize: 13 }}
+                >
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        background: "#3b82f6",
+                        borderRadius: 4,
+                      }}
+                    />
+                    <span>Your requested date (click again to cancel)</span>
+                  </div>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        background: "#ffa940",
+                        borderRadius: 4,
+                      }}
+                    />
+                    <span>Booked by someone else / Accepted</span>
+                  </div>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        border: "1px solid #ccc",
+                        background: "#fff",
+                        borderRadius: 4,
+                      }}
+                    />
+                    <span>Available</span>
+                  </div>
+                </div>
 
                 {role !== "student" && (
                   <p className="text-muted large mt-2">

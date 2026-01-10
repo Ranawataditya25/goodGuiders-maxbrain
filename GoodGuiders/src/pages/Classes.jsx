@@ -11,7 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
-import PurchaseModal from "../componets/PurchaseModal";
+// import PurchaseModal from "../componets/PurchaseModal";
 
 const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
 
@@ -22,8 +22,8 @@ export default function StudentClasses() {
   const [error, setError] = useState("");
 
   // purchase modal
-  const [modalShow, setModalShow] = useState(false);
-  const [modalNote, setModalNote] = useState(null);
+  // const [modalShow, setModalShow] = useState(false);
+  // const [modalNote, setModalNote] = useState(null);
 
   const navigate = useNavigate();
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -76,20 +76,18 @@ useEffect(() => {
   );
 
   /* ================= PDF CLICK (LOCKED) ================= */
-  function handleOpenPdf(fileUrl, title, price = 49) {
-    const user = localStorage.getItem("loggedInUser");
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+function handleOpenPdf(fileUrl) {
+  if (!fileUrl) return;
 
-    setModalNote({
-      title,
-      price,
-      fileUrl,
-    });
-    setModalShow(true);
+  const user = localStorage.getItem("loggedInUser");
+  if (!user) {
+    navigate("/login");
+    return;
   }
+
+  // Open PDF in new tab
+  window.open(fileUrl, "_blank", "noopener,noreferrer");
+}
 
   const toggleRow = (id) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -119,12 +117,7 @@ useEffect(() => {
                     <Button
                       size="sm"
                       variant="outline-primary"
-                      onClick={() =>
-                        handleOpenPdf(
-                          c.onePagePdfUrl,
-                          `${item.name} - ${s.name} - ${c.name} (1-page)`
-                        )
-                      }
+                      onClick={() => handleOpenPdf(c.onePagePdfUrl)}
                     >
                       <FeatherIcon icon="file-text" size={14} className="me-1" />
                       1-page
@@ -135,12 +128,7 @@ useEffect(() => {
                     <Button
                       size="sm"
                       variant="outline-success"
-                      onClick={() =>
-                        handleOpenPdf(
-                          c.fullPdfUrl,
-                          `${item.name} - ${s.name} - ${c.name} (Full)`
-                        )
-                      }
+                      onClick={() => handleOpenPdf(c.fullPdfUrl)}
                     >
                       <FeatherIcon icon="file" size={14} className="me-1" />
                       Full PDF
@@ -227,12 +215,12 @@ useEffect(() => {
       </Container>
 
       {/* ===== Purchase Modal ===== */}
-      <PurchaseModal
+      {/* <PurchaseModal
         show={modalShow}
         onHide={() => setModalShow(false)}
         note={modalNote}
         onPurchase={() => navigate("/purchase-temp")}
-      />
+      /> */}
     </div>
   );
 }

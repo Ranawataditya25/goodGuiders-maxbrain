@@ -15,24 +15,52 @@ router.post("/request", protect, async (req, res) => {
 
     const { mentorId, date } = req.body;
 
-    const exists = await Appointment.findOne({
+    // 1️⃣ Check if THIS student already booked this date
+    const myBooking = await Appointment.findOne({
       mentorId,
       date,
-      status: { $in: ["pending", "accepted"] },
+      studentId: req.user._id,
+      status: "pending"
     });
 
-    if (exists) {
-      return res.status(400).json({ ok: false, msg: "Date already booked" });
+    // If yes → CANCEL (UNDO)
+    if (myBooking) {
+      await Appointment.deleteOne({ _id: myBooking._id });
+
+      return res.json({
+        ok: true,
+        action: "cancelled"
+      });
     }
 
+    // 2️⃣ Check if date is blocked by someone else
+    const clash = await Appointment.findOne({
+      mentorId,
+      date,
+      status: { $in: ["pending", "accepted"] }
+    });
+
+    if (clash) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Date already booked"
+      });
+    }
+
+    // 3️⃣ Create new request
     const appointment = await Appointment.create({
       mentorId,
       studentId: req.user._id,
       date,
-      status: "pending",
+      status: "pending"
     });
 
-    res.json({ ok: true, appointment });
+    res.json({
+      ok: true,
+      action: "booked",
+      appointment
+    });
+
   } catch (err) {
     res.status(500).json({ ok: false, msg: err.message });
   }
