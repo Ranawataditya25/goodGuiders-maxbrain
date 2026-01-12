@@ -14,7 +14,7 @@ router.post("/upload", uploadMaterial.single("file"), async (req, res) => {
       return res.status(403).json({ message: "Only mentors can upload" });
     }
 
-    const { title, description } = req.body;
+    const { title, description, isPaid, price } = req.body;
 
     if (!req.file) {
       return res.status(400).json({ message: "File required" });
@@ -27,6 +27,8 @@ router.post("/upload", uploadMaterial.single("file"), async (req, res) => {
       fileUrl: `/uploads/materials/${req.file.filename}`,
       fileType: req.file.mimetype,
       fileSize: req.file.size,
+      isPaid: isPaid === "true",
+      price: Number(price || 0),
     });
 
     res.json({ success: true, material });

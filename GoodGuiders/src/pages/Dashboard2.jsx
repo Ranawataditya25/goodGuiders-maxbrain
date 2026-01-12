@@ -1076,6 +1076,7 @@ export default function Dashboard2() {
   const [referralInput, setReferralInput] = useState("");
   const [activeTab, setActiveTab] = useState("avail");
   const [referEmail, setReferEmail] = useState("");
+  const [referName, setReferName] = useState("");
   const [referMobile, setReferMobile] = useState("");
   const [appointments, setAppointments] = useState([]);
   const [appointmentsLoading, setAppointmentsLoading] = useState(true);
@@ -1737,9 +1738,9 @@ export default function Dashboard2() {
                                   type="text"
                                   className="form-control"
                                   placeholder="Enter Name"
-                                  value={referEmail}
+                                  value={referName}
                                   onChange={(e) =>
-                                    setReferEmail(e.target.value)
+                                    setReferName(e.target.value)
                                   }
                                   style={{ width: "350px" }}
                                 />

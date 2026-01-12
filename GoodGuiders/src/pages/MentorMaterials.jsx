@@ -276,17 +276,10 @@
 //   );
 // }
 
-
 import { useCallback, useEffect, useState } from "react";
-import {
-  Card,
-  Button,
-  Form,
-  ListGroup,
-  Badge,
-  Spinner,
-} from "react-bootstrap";
+import { Card, Button, Form, ListGroup, Badge, Spinner } from "react-bootstrap";
 import { useParams, useLocation } from "react-router-dom";
+import PurchaseModal from "../componets/PurchaseModal";
 
 export default function MentorMaterials() {
   /* ---------------- USER CONTEXT ---------------- */
@@ -315,6 +308,10 @@ export default function MentorMaterials() {
   const [loading, setLoading] = useState(false);
   const [materials, setMaterials] = useState([]);
   const [loadingMaterials, setLoadingMaterials] = useState(true);
+  const [isPaid, setIsPaid] = useState(false);
+  const [price, setPrice] = useState("");
+  const [modalShow, setModalShow] = useState(false);
+  const [modalNote, setModalNote] = useState(null);
 
   const showNoMentorSelected =
     (role === "student" || role === "admin") && !routeMentorEmail;
@@ -353,10 +350,17 @@ export default function MentorMaterials() {
       return;
     }
 
+    if (isPaid && !price) {
+      alert("Please enter price for paid material");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("title", title);
     formData.append("description", description);
+    formData.append("isPaid", isPaid);
+    formData.append("price", isPaid ? price : 0);
 
     try {
       setLoading(true);
@@ -369,6 +373,8 @@ export default function MentorMaterials() {
       setFile(null);
       setTitle("");
       setDescription("");
+      setIsPaid(false);
+      setPrice("");
       fetchMaterials();
     } finally {
       setLoading(false);
@@ -389,15 +395,35 @@ export default function MentorMaterials() {
 
   /* ---------------- OPEN ---------------- */
   const handleOpen = async (material) => {
-    if (role === "student") {
-      await fetch(
-        `http://127.0.0.1:5000/api/materials/${material._id}/view`,
-        {
-          method: "POST",
-          headers: { "x-user-email": userEmail },
-        }
-      );
+    // Admin sees everything free
+    if (role === "admin") {
+      window.open(`http://127.0.0.1:5000${material.fileUrl}`, "_blank");
+      return;
     }
+
+    // Mentor sees their own free
+    if (role === "mentor") {
+      window.open(`http://127.0.0.1:5000${material.fileUrl}`, "_blank");
+      return;
+    }
+
+    // Student logic
+    if (material.isPaid) {
+      // 🔐 Must purchase first
+      setModalNote({
+        id: material._id,
+        title: material.title,
+        price: material.price,
+      });
+      setModalShow(true);
+      return;
+    }
+
+    // Free PDF
+    await fetch(`http://127.0.0.1:5000/api/materials/${material._id}/view`, {
+      method: "POST",
+      headers: { "x-user-email": userEmail },
+    });
 
     window.open(`http://127.0.0.1:5000${material.fileUrl}`, "_blank");
   };
@@ -469,10 +495,30 @@ export default function MentorMaterials() {
                     />
                   </Form.Group>
 
-                  <Button
-                    type="submit"
-                    disabled={loading || !file || !title}
-                  >
+                  <Form.Group className="mt-10 mb-3">
+                    <Form.Check
+                      type="switch"
+                      label="Paid material"
+                      checked={isPaid}
+                      onChange={(e) => setIsPaid(e.target.checked)}
+                    />
+                  </Form.Group>
+
+                  {isPaid && (
+                    <Form.Group className="mb-10">
+                      <Form.Label>Price (₹)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        min="1"
+                        placeholder="Enter price"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  )}
+
+                  <Button type="submit" disabled={loading || !file || !title}>
                     {loading ? "Uploading..." : "Upload Material"}
                   </Button>
                 </Form>
@@ -503,11 +549,20 @@ export default function MentorMaterials() {
                     className="d-flex justify-content-between align-items-start"
                   >
                     <div>
-                      <div className="fw-semibold">{m.title}</div>
+                      <div className="fw-semibold">
+                        {m.title}
+                        {m.isPaid ? (
+                          <Badge bg="warning" text="dark" className="ms-2">
+                            ₹{m.price}
+                          </Badge>
+                        ) : (
+                          <Badge bg="success" className="ms-2">
+                            Free
+                          </Badge>
+                        )}
+                      </div>
                       {m.description && (
-                        <div className="text-muted small">
-                          {m.description}
-                        </div>
+                        <div className="text-muted small">{m.description}</div>
                       )}
 
                       {role === "mentor" && (
@@ -526,22 +581,26 @@ export default function MentorMaterials() {
                         Open
                       </Button>
 
-                      {role === "mentor" &&
-                        m.mentorEmail === userEmail && (
-                          <Button
-                            size="sm"
-                            variant="outline-danger"
-                            onClick={() => handleDelete(m._id)}
-                          >
-                            Delete
-                          </Button>
-                        )}
+                      {role === "mentor" && m.mentorEmail === userEmail && (
+                        <Button
+                          size="sm"
+                          variant="outline-danger"
+                          onClick={() => handleDelete(m._id)}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </ListGroup.Item>
                 ))
               )}
             </ListGroup>
           </Card>
+          <PurchaseModal
+            show={modalShow}
+            onHide={() => setModalShow(false)}
+            note={modalNote}
+          />
         </>
       )}
     </div>

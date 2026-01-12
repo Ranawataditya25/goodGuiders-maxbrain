@@ -10,6 +10,8 @@ const MentorMaterialSchema = new mongoose.Schema(
     fileUrl: { type: String, required: true }, // 🔥 THIS IS KEY
     fileType: String, // pdf / ppt / doc
     fileSize: Number,
+    isPaid: { type: Boolean, default: false },
+    price: { type: Number, default: 0 },
 
     views: { type: Number, default: 0 },
 

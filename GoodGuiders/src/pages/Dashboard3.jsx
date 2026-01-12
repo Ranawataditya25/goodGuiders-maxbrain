@@ -1887,7 +1887,7 @@ export default function Dashboard3() {
                     <Modal.Title className="mb-0">
                       Referral & Benefits
                       <span style={{ marginLeft: "420px" }}>
-                        Credits: {doctor?.credits}
+                        Credits: {user?.credits}
                       </span>
                     </Modal.Title>
                   </Modal.Header>
@@ -1934,14 +1934,18 @@ export default function Dashboard3() {
                       <>
                         <div className="d-flex align-items-center gap-2 justify-content-center">
                           <span className="badge bg-primary fs-15">
-                            {doctor?.yourReferralCode || doctor?.referralCode}
+                            {user?.yourReferralCode || user?.referralCode}
                           </span>
                           <button
                             className="btn btn-outline-primary btn-sm"
                             onClick={() => {
-                              navigator.clipboard.writeText(
-                                doctor?.yourReferralCode || doctor?.referralCode
-                              );
+                              const code =
+                                user?.yourReferralCode || user?.referralCode;
+                              if (!code) {
+                                alert("Referral code not available yet");
+                                return;
+                              }
+                              navigator.clipboard.writeText(code);
                               alert("Referral code copied!");
                             }}
                           >
@@ -1983,8 +1987,8 @@ export default function Dashboard3() {
                             type="text"
                             className="form-control"
                             placeholder="Enter Name"
-                            value={referEmail}
-                            onChange={(e) => setReferEmail(e.target.value)}
+                            value={referName}
+                            onChange={(e) => setReferName(e.target.value)}
                             style={{ width: "350px" }}
                           />
                         </div>
