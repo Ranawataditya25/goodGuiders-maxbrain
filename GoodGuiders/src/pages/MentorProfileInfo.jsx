@@ -1484,7 +1484,7 @@ export default function MentorProfileInfo() {
                   )}
                 </div>
               </div>
-              *{" "}
+              {" "}
               <div className="card shadow-sm p-15 mb-10">
                 <h5 className="fw-bold mb-3">About Mentor</h5>
                 <p className="text-muted">{mentor.bio || "No bio available"}</p>

@@ -49,6 +49,30 @@ export default function MentorMaterialsInline({ mentorEmail, mentorName }) {
     window.open(`http://127.0.0.1:5000${m.fileUrl}`, "_blank");
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this material?")) return;
+
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/api/materials/${id}`, {
+        method: "DELETE",
+        headers: {
+          "x-user-email": userEmail, // needed by your auth middleware
+        },
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.message || "Delete failed");
+        return;
+      }
+
+      // remove from UI instantly
+      setMaterials((prev) => prev.filter((m) => m._id !== id));
+    } catch (err) {
+      alert("Server error", err);
+    }
+  };
+
   return (
     <>
       <div className="mb-4">
@@ -83,8 +107,33 @@ export default function MentorMaterialsInline({ mentorEmail, mentorName }) {
                     flexDirection: "column",
                     justifyContent: "space-between",
                     boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
+                    position: "relative",
                   }}
                 >
+                  {role === "admin" && (
+                    <button
+                      onClick={() => handleDelete(m._id)}
+                      title="Delete"
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        border: "none",
+                        background: "#fee2e2",
+                        color: "#b91c1c",
+                        borderRadius: "50%",
+                        width: 28,
+                        height: 28,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
                   {/* TOP */}
                   <div>
                     <h6 style={{ fontWeight: 700, marginBottom: 6 }}>
