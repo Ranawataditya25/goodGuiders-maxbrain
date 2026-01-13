@@ -76,9 +76,11 @@ router.delete("/:id", async (req, res) => {
     if (!material) {
       return res.status(404).json({ message: "Material not found" });
     }
-
-    // 🔐 Only mentor who uploaded it can delete
-    if (req.user?.role !== "mentor" || req.user.email !== material.mentorEmail) {
+    // 🔐 Allow admin OR the mentor who uploaded it
+    if (
+      req.user?.role !== "admin" &&
+      !(req.user?.role === "mentor" && req.user.email === material.mentorEmail)
+    ) {
       return res.status(403).json({ message: "Not allowed" });
     }
 
