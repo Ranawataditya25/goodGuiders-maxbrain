@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 
 export default function PurchaseModal({ show, onHide, note }) {
-  const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
+  const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
   const navigate = useNavigate();
 
   const handlePurchase = async () => {

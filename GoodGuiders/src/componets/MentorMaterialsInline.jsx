@@ -472,6 +472,9 @@ import { useEffect, useState, useCallback } from "react";
 import { Spinner } from "react-bootstrap";
 import PurchaseModal from "./PurchaseModal";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+
 export default function MentorMaterialsInline({ mentorEmail, mentorName }) {
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
   const role = loggedInUser.role;
@@ -487,7 +490,7 @@ export default function MentorMaterialsInline({ mentorEmail, mentorName }) {
     if (!mentorEmail) return;
     setLoading(true);
     const res = await fetch(
-      `http://127.0.0.1:5000/api/materials/mentor/${mentorEmail}`
+      `${API}/materials/mentor/${mentorEmail}`
     );
     const data = await res.json();
     setMaterials(Array.isArray(data) ? data : []);
@@ -501,7 +504,7 @@ export default function MentorMaterialsInline({ mentorEmail, mentorName }) {
 
   const handleOpen = async (m) => {
     if (role === "admin" || role === "mentor") {
-      window.open(`http://127.0.0.1:5000${m.fileUrl}`, "_blank");
+      window.open(`${BASE_URL}${m.fileUrl}`, "_blank");
       return;
     }
 
@@ -511,18 +514,18 @@ export default function MentorMaterialsInline({ mentorEmail, mentorName }) {
       return;
     }
 
-    await fetch(`http://127.0.0.1:5000/api/materials/${m._id}/view`, {
+    await fetch(`${API}/materials/${m._id}/view`, {
       method: "POST",
       headers: { "x-user-email": userEmail },
     });
 
-    window.open(`http://127.0.0.1:5000${m.fileUrl}`, "_blank");
+    window.open(`${BASE_URL}${m.fileUrl}`, "_blank");
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this material?")) return;
 
-    const res = await fetch(`http://127.0.0.1:5000/api/materials/${id}`, {
+    const res = await fetch(`${API}/materials/${id}`, {
       method: "DELETE",
       headers: { "x-user-email": userEmail },
     });

@@ -243,6 +243,8 @@ import "font-awesome/css/font-awesome.min.css";
 import adminimg from "/src/assets/images/avtar/admin.jpg";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function Header() {
   const [theme, setTheme] = useState("light");
   const toggleTheme = () => {
@@ -254,7 +256,7 @@ export default function Header() {
   useEffect(() => {
     if (user.role === "admin") return;
 
-    fetch("http://127.0.0.1:5000/api/appointments/notifications", {
+    fetch(`${API}/appointments/notifications`, {
       headers: { "x-user-id": user._id },
     })
       .then((res) => res.json())
@@ -273,7 +275,7 @@ export default function Header() {
   };
 
   const openAppointments = async () => {
-    await fetch("http://127.0.0.1:5000/api/appointments/notifications/read", {
+    await fetch(`${API}/appointments/notifications/read`, {
       method: "PATCH",
       headers: { "x-user-id": user._id },
     });

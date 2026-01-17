@@ -3,6 +3,7 @@ import Slider from "react-slick";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
 
 export default function Top_doctors() {
   const [mentors, setMentors] = useState([]);
@@ -44,7 +45,7 @@ export default function Top_doctors() {
     <Slider {...settings_slider} className="ratedoctor-slide arrow-style1">
       {mentors.map((mentor) => {
         const imgSrc = mentor.profileImage
-          ? `http://localhost:5000${mentor.profileImage}`
+          ? `${BASE_URL}${mentor.profileImage}`
           : IMAGE_URLS["avtar/1.jpg"];
 
         return (

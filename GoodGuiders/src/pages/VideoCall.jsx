@@ -268,6 +268,7 @@ import axios from "axios";
 import { io } from "socket.io-client";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const SOCKET_URL = API.replace("/api", "");
 
 export default function VideoCall({
   userName,
@@ -333,7 +334,10 @@ setCanJoin(false);
   useEffect(() => {
     console.log("🔌 Connecting socket");
 
-    socketRef.current = io("http://127.0.0.1:5000");
+    socketRef.current = io(SOCKET_URL, {
+  transports: ["websocket"],
+  withCredentials: true,
+});
 
     socketRef.current.on("connect", () => {
       console.log("🆔 registering user on socket:", userName);

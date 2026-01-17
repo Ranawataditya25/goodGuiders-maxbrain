@@ -12,7 +12,7 @@ import {
 import FeatherIcon from "feather-icons-react";
 import { useNavigate } from "react-router-dom";
 
-const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function StudentClassesCard() {
   const [rows, setRows] = useState([]);
