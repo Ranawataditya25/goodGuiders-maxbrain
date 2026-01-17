@@ -58,6 +58,7 @@ const corsOptions = {
         "http://localhost:5174", // Add this
         "http://localhost:4173",
         "https://landing-page-gg.onrender.com",
+        "https://goodguiders.onrender.com",
       ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
   // ✅ Allow dev headers for header-based auth shimming
