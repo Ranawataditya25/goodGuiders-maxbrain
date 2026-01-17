@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import http from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
+dotenv.config();
 
 // Routers
 import classesRouter from "./routes/classes.route.js";
@@ -174,19 +175,9 @@ app.use("/api/appointments", appointmentRoutes);
 
 /* ------------------- 404 Fallback -------------------- */
 // Pathless fallback avoids path-to-regexp pitfalls
-// app.use((req, res) =>
-//   res.status(404).json({ ok: false, message: "Not found" })
-// );
-
-// AFTER all app.use("/api/...", ...)
-const clientBuildPath = path.join(__dirname, "dist");
-app.use(express.static(clientBuildPath));
-
-// SPA fallback (FIX LOGIN 404)
-app.use((req, res) => {
-  res.sendFile(path.join(clientBuildPath, "index.html"));
-});
-
+app.use((req, res) =>
+  res.status(404).json({ ok: false, message: "Not found" })
+);
 
 /* --------------------- Start (Socket.IO Enabled) ------------------------- */
 
