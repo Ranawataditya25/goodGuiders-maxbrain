@@ -56,6 +56,7 @@ const corsOptions = {
         "http://127.0.0.1:5173",
         "http://localhost:5173",
         "http://localhost:5174", // Add this
+        "http://localhost:4173",
         "https://landing-page-gg.onrender.com",
       ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
