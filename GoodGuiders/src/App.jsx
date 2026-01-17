@@ -5,7 +5,7 @@ import {
   BrowserRouter,
   useLocation,
   Navigate,
-  useNavigate,
+  // useNavigate,
 } from "react-router-dom";
 
 import Index from "./pages/Index";
@@ -103,7 +103,7 @@ import Customizer from "./componets/Customizer";
 import ClassesList from "./pages/classes/List";
 import NewClass from "./pages/classes/New";
 import EditClass from "./pages/classes/Edit";
-import { useEffect } from "react";
+// import { useEffect } from "react";
 import ChatPage from "./pages/ChatPage.jsx";
 import AllChatsPage from "./pages/AllChatsPage.jsx";
 import AdminMentorRequests from "./pages/AdminMentorRequests.jsx";
@@ -133,7 +133,7 @@ const routesWithoutExtras = [
 
 function AppContent() {
   const location = useLocation();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   // const isSpecialRoute = hideExtras;
 
   // 👇 dynamic route check
@@ -146,25 +146,25 @@ function AppContent() {
   // const headerEnabled = true;
   // const sidebarEnabled = true;
 
-  useEffect(() => {
-    const handler = (event) => {
-      // ✅ Security check — only accept messages from your landing page domain
-      // Replace "https://your-landing-domain.com" with your actual deployed domain
-      if (
-        event.origin !== "http://localhost:5173" &&
-        !event.origin.includes("https://landing-page-gg.onrender.com")
-      ) {
-        return;
-      }
+  // useEffect(() => {
+  //   const handler = (event) => {
+  //     // ✅ Security check — only accept messages from your landing page domain
+  //     // Replace "https://your-landing-domain.com" with your actual deployed domain
+  //     if (
+  //       event.origin !== "http://localhost:5173" &&
+  //       !event.origin.includes("https://landing-page-gg.onrender.com")
+  //     ) {
+  //       return;
+  //     }
 
-      if (event.data && event.data.action === "navigate") {
-        navigate(event.data.path);
-      }
-    };
+  //     if (event.data && event.data.action === "navigate") {
+  //       navigate(event.data.path);
+  //     }
+  //   };
 
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-  }, [navigate]);
+  //   window.addEventListener("message", handler);
+  //   return () => window.removeEventListener("message", handler);
+  // }, [navigate]);
 
   return (
     <>
@@ -172,7 +172,7 @@ function AppContent() {
       {!hideExtras && <Header />}
       {!hideExtras && <Sidebar />}
       <Routes>
-        <Route
+        {/* <Route
           exact
           path="/"
           element={
@@ -181,8 +181,8 @@ function AppContent() {
               style={{ width: "100%", height: "100vh", border: "none" }}
             />
           }
-        />
-
+        /> */}
+<Route path="/" element={<Navigate to="/login" replace />} />
         <Route exact path="/admin-dashboard" element={<Index />} />
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/chat/:mentorEmail" element={<ChatPage />} />
@@ -376,16 +376,11 @@ export default function App() {
       {/* Loader */}
       <Loader />
 
-      <BrowserRouter basename="/GoodGuiders/Goodguide">
+      <BrowserRouter>
         <SidebarProvider>
           <AppContent />
         </SidebarProvider>
       </BrowserRouter>
-      {/* <BrowserRouter>
-        <SidebarProvider>
-          <AppContent />
-        </SidebarProvider>
-      </BrowserRouter> */}
     </>
   );
 }

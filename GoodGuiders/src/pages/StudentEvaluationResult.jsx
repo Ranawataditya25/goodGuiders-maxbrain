@@ -193,6 +193,8 @@
 import { useEffect, useState } from "react";
 import { Card, Spinner, Alert, Badge, Modal, ListGroup } from "react-bootstrap";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function StudentEvaluationResult() {
 const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
 
@@ -221,7 +223,7 @@ useEffect(() => {
     try {
       setLoading(true);
       const res = await fetch(
-        "http://127.0.0.1:5000/api/pdf-evaluations/student",
+        `${API}/pdf-evaluations/student`,
         {
           credentials: "include",
           headers: {
@@ -258,7 +260,7 @@ useEffect(() => {
       setActiveResult(null);
 
       const res = await fetch(
-  `http://127.0.0.1:5000/api/pdf-evaluations/student/${id}`,
+  `${API}/pdf-evaluations/student/${id}`,
   {
     credentials: "include",
     headers: {

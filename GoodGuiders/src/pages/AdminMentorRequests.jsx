@@ -336,6 +336,7 @@
 
 
 import { useEffect, useMemo, useState } from "react";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function AdminMentorRequests() {
   const [mentors, setMentors] = useState([]);
@@ -351,7 +352,7 @@ export default function AdminMentorRequests() {
 
   // fetch pending mentors
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/api/mentor/pending")
+    fetch(`${API}/mentor/pending`)
       .then((res) => res.json())
       .then((data) => {
         setMentors(Array.isArray(data) ? data : []);
@@ -369,7 +370,7 @@ export default function AdminMentorRequests() {
       setActionLoading({ id, type: status });
 
       const res = await fetch(
-        `http://127.0.0.1:5000/api/mentor/mentor-status/${id}`,
+        `${API}/mentor/mentor-status/${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useMemo } from "react";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export const TestStart = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export const TestStart = () => {
 
     const fetchQuestions = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/questions/fetch", {
+        const res = await fetch(`${API}/questions/fetch`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -135,7 +137,7 @@ export const TestStart = () => {
     const userEmail = user?.email;
 
     try {
-      const res = await fetch("http://localhost:5000/api/questions/submit", {
+      const res = await fetch(`${API}/questions/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

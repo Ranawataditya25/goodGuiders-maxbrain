@@ -124,6 +124,8 @@ import logo from "/src/assets/images/logo/icon-logo.png";
 // import google from "/src/assets/images/auth/2.png";
 import { useNavigate } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function Register() {
   const [formData, setFormData] = useState({
     name: "",
@@ -172,7 +174,7 @@ export default function Register() {
     try {
       // 🔍 Step 1: Validate uniqueness
       const checkRes = await fetch(
-        "http://localhost:5000/api/auth/check-unique",
+        `${API}/auth/check-unique`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -192,7 +194,7 @@ export default function Register() {
 
       // ✅ Step 2: Continue based on role
       if (formData.role === "student") {
-        const res = await fetch("http://localhost:5000/api/auth/register", {
+        const res = await fetch(`${API}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),

@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Button, Form, Spinner } from "react-bootstrap";
 import logo from "/src/assets/images/logo/icon-logo.png";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function Forgot_password() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ export default function Forgot_password() {
     setLoading(true);
     try {
       const res = await fetch(
-        "http://localhost:5000/api/auth/forgot-password",
+        `${API}/auth/forgot-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

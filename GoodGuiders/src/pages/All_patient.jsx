@@ -361,6 +361,8 @@ import {
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function All_Student() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -401,10 +403,10 @@ export default function All_Student() {
       setLoading(true);
       const url =
         cls && cls !== "All"
-          ? `http://127.0.0.1:5000/api/stats/students?class=${encodeURIComponent(
+          ? `${API}/stats/students?class=${encodeURIComponent(
               cls
             )}`
-          : "http://127.0.0.1:5000/api/stats/students";
+          : `${API}/stats/students`;
       const res = await fetch(url);
       const data = await res.json();
       if (res.ok) {
@@ -440,7 +442,7 @@ export default function All_Student() {
       setLoading(true);
 
       const res = await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        `${API}/stats/mentor/${encodeURIComponent(
           loggedInUser.email
         )}/details`
       );
@@ -499,7 +501,7 @@ export default function All_Student() {
     setStudentDetails(null);
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/stats/student/${encodeURIComponent(
+        `${API}/stats/student/${encodeURIComponent(
           rowData.Email
         )}/details`
       );
@@ -535,7 +537,7 @@ export default function All_Student() {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/conversation/${encodeURIComponent(
+        `${API}/conversation/${encodeURIComponent(
           uniqueName
         )}/messages`
       );
@@ -710,7 +712,7 @@ export default function All_Student() {
                                   )
                                     return;
                                   fetch(
-                                    `http://127.0.0.1:5000/api/stats/student/${encodeURIComponent(
+                                    `${API}/stats/student/${encodeURIComponent(
                                       rowData.Email
                                     )}`,
                                     { method: "DELETE" }
@@ -737,7 +739,7 @@ export default function All_Student() {
                                 }`}
                                 onClick={() => {
                                   fetch(
-                                    `http://127.0.0.1:5000/api/stats/student/${encodeURIComponent(
+                                    `${API}/stats/student/${encodeURIComponent(
                                       rowData.Email
                                     )}/toggle`,
                                     { method: "PATCH" }

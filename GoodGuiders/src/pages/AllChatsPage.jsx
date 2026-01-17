@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Card, Button, Spinner } from "react-bootstrap";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function AllChatsPage() {
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
   const userEmail = loggedInUser.email;
@@ -15,7 +17,7 @@ export default function AllChatsPage() {
     const fetchConversations = async () => {
       try {
         const res = await fetch(
-          `http://127.0.0.1:5000/api/conversations?email=${userEmail}`
+          `${API}/conversations?email=${userEmail}`
         );
         const data = await res.json();
         setConversations(data.conversations || []);

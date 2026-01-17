@@ -47,7 +47,7 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
     await user.save();
 
     // Reset URL
-    const resetUrl = `${process.env.FRONTEND_URL}/GoodGuiders/Goodguide/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     // Mail transporter
     const transporter = nodemailer.createTransport({

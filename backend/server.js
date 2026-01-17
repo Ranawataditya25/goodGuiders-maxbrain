@@ -138,7 +138,6 @@ fs.mkdirSync(uploadsDir, { recursive: true });
 const materialsDir = path.join(uploadsDir, "materials");
 fs.mkdirSync(materialsDir, { recursive: true });
 
-app.use("/GoodGuiders/Goodguide/uploads", express.static(uploadsDir));
 app.use("/uploads", express.static(uploadsDir));
 
 /* ---------------------- Health ----------------------- */
@@ -186,7 +185,8 @@ const server = http.createServer(app);
 // Create socket server
 const io = new Server(server, {
   cors: {
-    origin: "*",  // allow all for now
+    origin: corsOrigins,
+    credentials: true,  // allow all for now
   },
 });
 

@@ -1237,7 +1237,7 @@ import PageBreadcrumb from "../componets/PageBreadcrumb";
 import AssignedTestsSummary from "../componets/AssignedTestsSummary";
 import StudentClassesCard from "../componets/StudentClassesCard";
 
-const API = "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
 
 /** --------------------------
  *  Helpers to normalize shapes
@@ -1772,7 +1772,7 @@ export default function Dashboard3() {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
     if (!loggedInUser?._id) return;
 
-    fetch("http://127.0.0.1:5000/api/pdf-evaluations/student", {
+    fetch(`${API}/pdf-evaluations/student`, {
       credentials: "include",
       headers: {
         "x-user-role": "student",

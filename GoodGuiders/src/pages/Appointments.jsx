@@ -155,6 +155,8 @@ import {
   Col,
 } from "react-bootstrap";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function Appointments() {
   const user = JSON.parse(localStorage.getItem("loggedInUser"));
   const [appointments, setAppointments] = useState([]);
@@ -169,7 +171,7 @@ export default function Appointments() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/api/appointments/my", {
+    fetch(`${API}/appointments/my`, {
       headers: { "x-user-id": user._id },
     })
       .then((res) => res.json())
@@ -183,7 +185,7 @@ export default function Appointments() {
     setActionLoading({ id, action: status });
 
     try {
-      await fetch(`http://127.0.0.1:5000/api/appointments/${id}`, {
+      await fetch(`${API}/appointments/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

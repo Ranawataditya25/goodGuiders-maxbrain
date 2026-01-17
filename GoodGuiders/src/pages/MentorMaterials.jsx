@@ -281,6 +281,8 @@ import { Card, Button, Form, ListGroup, Badge, Spinner } from "react-bootstrap";
 import { useParams, useLocation } from "react-router-dom";
 import PurchaseModal from "../componets/PurchaseModal";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function MentorMaterials() {
   /* ---------------- USER CONTEXT ---------------- */
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
@@ -326,7 +328,7 @@ export default function MentorMaterials() {
     try {
       setLoadingMaterials(true);
       const res = await fetch(
-        `http://127.0.0.1:5000/api/materials/mentor/${mentorEmailToLoad}`
+        `${API}/materials/mentor/${mentorEmailToLoad}`
       );
       const data = await res.json();
       setMaterials(Array.isArray(data) ? data : []);
@@ -364,7 +366,7 @@ export default function MentorMaterials() {
 
     try {
       setLoading(true);
-      await fetch("http://127.0.0.1:5000/api/materials/upload", {
+      await fetch(`${API}/materials/upload`, {
         method: "POST",
         headers: { "x-user-email": userEmail },
         body: formData,
@@ -385,7 +387,7 @@ export default function MentorMaterials() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this material?")) return;
 
-    await fetch(`http://127.0.0.1:5000/api/materials/${id}`, {
+    await fetch(`${API}/materials/${id}`, {
       method: "DELETE",
       headers: { "x-user-email": userEmail },
     });
@@ -420,7 +422,7 @@ export default function MentorMaterials() {
     }
 
     // Free PDF
-    await fetch(`http://127.0.0.1:5000/api/materials/${material._id}/view`, {
+    await fetch(`${API}/materials/${material._id}/view`, {
       method: "POST",
       headers: { "x-user-email": userEmail },
     });

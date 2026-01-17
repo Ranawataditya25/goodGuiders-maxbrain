@@ -780,6 +780,8 @@ function getMentorAvatar(email = "") {
   return IMAGE_URLS[`avtar/${avatarIndex}.jpg`];
 }
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function MentorProfileInfo() {
   const { email } = useParams();
   const navigate = useNavigate();
@@ -825,7 +827,7 @@ export default function MentorProfileInfo() {
 
   const reloadRating = async () => {
     const ratingRes = await fetch(
-      `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+      `${API}/stats/mentor/${encodeURIComponent(
         email
       )}/rating`
     );
@@ -841,7 +843,7 @@ export default function MentorProfileInfo() {
       setLoading(true);
 
       const res = await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        `${API}/stats/mentor/${encodeURIComponent(
           email
         )}/details`
       );
@@ -849,7 +851,7 @@ export default function MentorProfileInfo() {
       setMentorDetails(data);
 
       const ratingRes = await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        `${API}/stats/mentor/${encodeURIComponent(
           email
         )}/rating`
       );
@@ -872,7 +874,7 @@ export default function MentorProfileInfo() {
   const loadComments = async () => {
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        `${API}/stats/mentor/${encodeURIComponent(
           email
         )}/comments?skip=${skip}&limit=${LIMIT}`
       );
@@ -887,7 +889,7 @@ export default function MentorProfileInfo() {
 
   const deleteComment = async (id) => {
     // 1️⃣ call backend
-    await fetch(`http://127.0.0.1:5000/api/stats/admin/mentor-comment/${id}`, {
+    await fetch(`${API}/stats/admin/mentor-comment/${id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -910,7 +912,7 @@ export default function MentorProfileInfo() {
     setMessagesLoading(true);
 
     const res = await fetch(
-      `http://127.0.0.1:5000/api/conversation/${encodeURIComponent(
+      `${API}/conversation/${encodeURIComponent(
         uniqueName
       )}/messages`
     );
@@ -923,7 +925,7 @@ export default function MentorProfileInfo() {
   const submitRating = async () => {
     // submit rating
     await fetch(
-      `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+      `${API}/stats/mentor/${encodeURIComponent(
         email
       )}/rate`,
       {
@@ -939,7 +941,7 @@ export default function MentorProfileInfo() {
     // submit comment
     if (comment.trim()) {
       await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        `${API}/stats/mentor/${encodeURIComponent(
           email
         )}/comment`,
         {
@@ -973,7 +975,7 @@ export default function MentorProfileInfo() {
       setCalendarLoading(true);
       try {
         const res = await fetch(
-          `http://127.0.0.1:5000/api/appointments/mentor/${mentorDetails.mentor._id}`,
+          `${API}/appointments/mentor/${mentorDetails.mentor._id}`,
           {
             headers: {
               "x-user-id": loggedInUser._id,
@@ -1036,7 +1038,7 @@ export default function MentorProfileInfo() {
 
     try {
       const res = await axios.post(
-        "http://127.0.0.1:5000/api/appointments/request",
+        `${API}/appointments/request`,
         {
           mentorId: mentorDetails?.mentor?._id,
           date: formatted,

@@ -14,6 +14,8 @@ import PageBreadcrumb from "../componets/PageBreadcrumb";
 import VideoCall from "./VideoCall";
 // import Video from "twilio-video";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function ChatPage() {
   const { mentorEmail } = useParams();
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
@@ -86,7 +88,7 @@ export default function ChatPage() {
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `http://127.0.0.1:5000/api/conversation/${conversation.uniqueName}/messages`
+          `${API}/conversation/${conversation.uniqueName}/messages`
         );
         const data = await res.json();
         const sortedMessages = (data.messages || [])
@@ -118,7 +120,7 @@ export default function ChatPage() {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/start-call`,
+        `${API}/video/${conversation.uniqueName}/start-call`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -148,7 +150,7 @@ export default function ChatPage() {
     const checkCallStatus = async () => {
       try {
         const res = await fetch(
-          `http://127.0.0.1:5000/api/video/${conversation.uniqueName}`
+          `${API}/video/${conversation.uniqueName}`
         );
         if (!res.ok) return; // handle 404
         const convo = await res.json();
@@ -172,7 +174,7 @@ export default function ChatPage() {
   const handleAcceptCall = async () => {
     try {
       await fetch(
-        `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/answer-call`,
+        `${API}/video/${conversation.uniqueName}/answer-call`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -212,7 +214,7 @@ export default function ChatPage() {
   const handleRejectCall = async () => {
     try {
       await fetch(
-        `http://127.0.0.1:5000/api/video/${conversation.uniqueName}/end-call`,
+        `${API}/video/${conversation.uniqueName}/end-call`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -234,7 +236,7 @@ export default function ChatPage() {
     if (!input.trim() || !conversation) return;
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/conversation/${conversation.uniqueName}/messages`,
+        `${API}/conversation/${conversation.uniqueName}/messages`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

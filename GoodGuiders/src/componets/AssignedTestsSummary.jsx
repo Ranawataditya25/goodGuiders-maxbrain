@@ -3,7 +3,7 @@ import { Card, Row, Col, Button, Spinner, Badge } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 
-const API = "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
 const BASE = "/bootstrapreact/medixo"; // aligns with your screenshot path
 
 /* ---------------- helpers (same logic as page) ---------------- */

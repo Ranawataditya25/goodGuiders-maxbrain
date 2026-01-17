@@ -267,6 +267,8 @@ import Video from "twilio-video";
 import axios from "axios";
 import { io } from "socket.io-client";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function VideoCall({
   userName,
   uniqueName,
@@ -364,7 +366,7 @@ setCanJoin(false);
         console.log("🔑 fetching token");
 
         const { data } = await axios.get(
-          `http://127.0.0.1:5000/api/video/token?identity=${encodeURIComponent(
+          `${API}/video/token?identity=${encodeURIComponent(
             userName
           )}&room=${encodeURIComponent(uniqueName)}`
         );
@@ -504,7 +506,7 @@ setCanJoin(false);
 
     try {
       await axios.put(
-        `http://127.0.0.1:5000/api/video/${uniqueName}/end-call`,
+        `${API}/video/${uniqueName}/end-call`,
         {
           caller: userName,
           receiverId,

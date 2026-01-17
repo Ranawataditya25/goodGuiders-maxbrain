@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Form, Button, InputGroup } from "react-bootstrap";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function ResetPassword() {
   const { token } = useParams();
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ export default function ResetPassword() {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/auth/reset-password/${token}`,
+        `${API}/auth/reset-password/${token}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

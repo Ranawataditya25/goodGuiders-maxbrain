@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Button, Modal, ListGroup, Spinner, Badge } from "react-bootstrap";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 /* ---------- avatar helper (same as All_Student) ---------- */
 function getStudentAvatar(email = "") {
   let hash = 0;
@@ -64,7 +66,7 @@ export default function StudentProfileInfo() {
     setMessagesLoading(true);
 
     const res = await fetch(
-      `http://127.0.0.1:5000/api/conversation/${encodeURIComponent(
+      `${API}/conversation/${encodeURIComponent(
         uniqueName
       )}/messages`
     );

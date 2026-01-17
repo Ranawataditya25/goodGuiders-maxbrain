@@ -8,14 +8,14 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-const API_URL = import.meta.env?.VITE_API_URL || "http://localhost:5000/api";
+const API = import.meta.env?.VITE_API_URL || "http://localhost:5000/api";
 
 /* ---------------------- Resolve current user (no hardcoding) ---------------------- */
 async function fetchUserFromAPI() {
   const candidates = ["/profile/me", "/auth/me", "/users/me", "/profile", "/auth"];
   for (const path of candidates) {
     try {
-      const { data } = await axios.get(`${API_URL}${path}`, { withCredentials: true });
+      const { data } = await axios.get(`${API}${path}`, { withCredentials: true });
       const u = data?.user ?? data?.data ?? data;
       if (u && (u._id || u.id || u.email)) return u;
     } catch {
@@ -272,13 +272,13 @@ const validateForm = () => {
         fd.append("educationBoard", formData.educationBoard || "");
         fd.append("questionPaper", questionPdf);
 
-        res = await axios.post(`${API_URL}/questions/pdf`, fd, {
+        res = await axios.post(`${API}/questions/pdf`, fd, {
           headers,
           withCredentials: true,
         });
       } else {
         // EXISTING FLOW (unchanged)
-        res = await axios.post(`${API_URL}/questions`, {
+        res = await axios.post(`${API}/questions`, {
           ...formData,
           subjects: subjectList,
           questions,

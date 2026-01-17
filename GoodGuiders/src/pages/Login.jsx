@@ -849,6 +849,8 @@ import logo from "/src/assets/images/logo/icon-logo.png";
 // import facebook from "/src/assets/images/auth/1.png";
 // import google from "/src/assets/images/auth/2.png";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function Login() {
   const navigate = useNavigate();
 
@@ -874,7 +876,7 @@ const handleSubmit = async (e) => {
   const { email, password } = formData;
 
   try {
-    const res = await fetch("http://localhost:5000/api/auth/login", {
+    const res = await fetch(`${API}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -3,6 +3,8 @@ import { Row, Col, Card, Form, Container, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";   // ✅ import navigate hook
 import "./css/ProfilePage.css";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function MentorRegistrationProfile() {
   const [formData, setFormData] = useState({
     name: "",
@@ -50,7 +52,7 @@ export default function MentorRegistrationProfile() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/mentor/profile-setup", {
+      const res = await fetch(`${API}/mentor/profile-setup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

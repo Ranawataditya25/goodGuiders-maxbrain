@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { Container, Card, Row, Col, Badge, Button, Spinner, Form, Alert, ListGroup } from "react-bootstrap";
 
-const API = "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
 const LS_KEY = "assignProgressByAssignment";
 
 // small helpers (kept inline so this file is standalone)

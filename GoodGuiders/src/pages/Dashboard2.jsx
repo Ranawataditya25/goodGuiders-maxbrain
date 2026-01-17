@@ -1102,7 +1102,7 @@ export default function Dashboard2() {
       return;
     }
 
-    fetch(`http://localhost:5000/api/auth/dashboard?email=${doctorData.email}`)
+    fetch(`${API}/auth/dashboard?email=${doctorData.email}`)
       .then((res) => res.json())
       .then((data) => {
         setDoctor({ ...doctorData, ...data });
@@ -1131,7 +1131,7 @@ export default function Dashboard2() {
     const fetchAppointments = async () => {
       try {
         const res = await fetch(
-          `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+          `${API}/stats/mentor/${encodeURIComponent(
             doctor.email
           )}/details`
         );
@@ -1183,7 +1183,7 @@ export default function Dashboard2() {
     const fetchRatings = async () => {
       try {
         const res = await fetch(
-          `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+          `${API}/stats/mentor/${encodeURIComponent(
             doctor.email
           )}/rating`
         );
@@ -1219,7 +1219,7 @@ export default function Dashboard2() {
       setCommentsLoading(true);
 
       const res = await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        `${API}/stats/mentor/${encodeURIComponent(
           doctor.email
         )}/comments?skip=${reset ? 0 : commentsSkip}&limit=${COMMENTS_LIMIT}`
       );
@@ -1257,7 +1257,7 @@ export default function Dashboard2() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/use-referral", {
+      const res = await fetch(`${API}/auth/use-referral`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

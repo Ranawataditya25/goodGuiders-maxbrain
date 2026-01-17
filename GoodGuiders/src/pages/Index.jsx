@@ -1264,27 +1264,28 @@
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom"; 
-import FeatherIcon from "feather-icons-react";
+// import FeatherIcon from "feather-icons-react";
 import {
   Row,
   Col,
   Card,
-  Form,
+  // Form,
   Table,
   Container,
-  Dropdown,
+  // Dropdown,
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
-import Chart from "react-apexcharts";
+// import Chart from "react-apexcharts";
 import {
-  hospitalsurvay,
-  recoverystatistics,
-  diseasesreport,
+  // hospitalsurvay,
+  // recoverystatistics,
+  // diseasesreport,
 } from "./js/Dashboard1";
 
 import Top_doctors from "../componets/Top_doctors";
-import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
+// import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function Index() {
   // Live Chat Data
@@ -1299,7 +1300,7 @@ const [recentLoading, setRecentLoading] = useState(true);
 
   useEffect(() => {
     // total mentors + students
-    fetch("http://127.0.0.1:5000/api/stats/total-users")
+    fetch(`${API}/stats/total-users`)
       .then((res) => res.json())
       .then((data) => {
         setTotalMentors(data.totalMentors || 0);
@@ -1308,7 +1309,7 @@ const [recentLoading, setRecentLoading] = useState(true);
       .catch((err) => console.error("Error fetching totals:", err));
 
     // pending mentor verifications
-    fetch("http://127.0.0.1:5000/api/mentor/pending")
+    fetch(`${API}/mentor/pending`)
       .then((res) => res.json())
       .then((data) => {
         // if backend returns array
@@ -1318,7 +1319,7 @@ const [recentLoading, setRecentLoading] = useState(true);
       .catch((err) => console.error("Error fetching pending mentors:", err));
 
     //10 recent students
-    fetch("http://127.0.0.1:5000/api/stats/students/recent")
+    fetch(`${API}/stats/students/recent`)
   .then(res => res.json())
   .then(data => {
     setRecentStudents(data.students || []);

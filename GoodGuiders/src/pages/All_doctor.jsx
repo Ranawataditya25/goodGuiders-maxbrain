@@ -962,6 +962,8 @@ function getLatestDegree(education = []) {
   return higherStudies[0].degree || "-";
 }
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function All_Mentor() {
   const [show, setShow] = useState(false);
   const Close_btn = () => setShow(false);
@@ -1036,10 +1038,10 @@ export default function All_Mentor() {
 
       const url =
         spec && spec !== "All"
-          ? `http://127.0.0.1:5000/api/stats/mentors?specialization=${encodeURIComponent(
+          ? `${API}/stats/mentors?specialization=${encodeURIComponent(
               spec
             )}`
-          : "http://127.0.0.1:5000/api/stats/mentors";
+          : `${API}/stats/mentors`;
 
       const res = await fetch(url);
       const data = await res.json();
@@ -1114,7 +1116,7 @@ const handleSpecializationChange = (e) => {
 
     // 🔹 FETCH AVG RATING (independent call)
     fetch(
-      `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+      `${API}/stats/mentor/${encodeURIComponent(
         rowData.Email
       )}/rating`
     )
@@ -1131,7 +1133,7 @@ const handleSpecializationChange = (e) => {
     try {
       // call your API implemented earlier
       const res = await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        `${API}/stats/mentor/${encodeURIComponent(
           rowData.Email
         )}/details`
       );
@@ -1225,7 +1227,7 @@ const imageBodyTemplate = (rowData) => {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/conversation/${encodeURIComponent(
+        `${API}/conversation/${encodeURIComponent(
           uniqueName
         )}/messages`
       );
@@ -1300,7 +1302,7 @@ const imageBodyTemplate = (rowData) => {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(email)}`,
+        `${API}/stats/mentor/${encodeURIComponent(email)}`,
         {
           method: "DELETE",
         }
@@ -1321,7 +1323,7 @@ const imageBodyTemplate = (rowData) => {
   const handleToggleMentor = async (email) => {
     try {
       const res = await fetch(
-        `http://127.0.0.1:5000/api/stats/mentor/${encodeURIComponent(
+        `${API}/stats/mentor/${encodeURIComponent(
           email
         )}/toggle`,
         { method: "PATCH" }
@@ -1844,7 +1846,7 @@ const imageBodyTemplate = (rowData) => {
               try {
                 setRatingSubmitting(true);
                 await fetch(
-                  `http://127.0.0.1:5000/api/stats/mentor/${selectedMentor.Email}/rate`,
+                  `${API}/stats/mentor/${selectedMentor.Email}/rate`,
                   {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -1860,7 +1862,7 @@ const imageBodyTemplate = (rowData) => {
 
                 // refresh avg rating
                 const r = await fetch(
-                  `http://127.0.0.1:5000/api/stats/mentor/${selectedMentor.Email}/rating`
+                  `${API}/stats/mentor/${selectedMentor.Email}/rating`
                 );
                 const d = await r.json();
                 setAvgRating(d.avgRating);
