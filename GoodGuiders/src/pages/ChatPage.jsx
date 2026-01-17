@@ -56,7 +56,7 @@ export default function ChatPage() {
           }
         } else {
           const convRes = await fetch(
-            "http://127.0.0.1:5000/api/conversation",
+            `${API}/conversation`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
