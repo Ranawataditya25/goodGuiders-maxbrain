@@ -57,7 +57,7 @@ import Faq from "./pages/Faq";
 import Element_Support from "./pages/Element_Support";
 import Table from "./pages/Table";
 import Datatable from "./pages/Datatable";
-import Element_Basic_form from "./pages/Element_Basic_form";
+import Element_Basic_form from "./pages/Element_basic_form";
 import Element_Checkbox_radio from "./pages/Element_Checkbox_radio";
 import Element_Datetimepicker from "./pages/Element_Datetimepicker";
 import ApexChart from "./pages/ApexChart";
