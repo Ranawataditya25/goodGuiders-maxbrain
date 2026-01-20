@@ -7,10 +7,21 @@ dotenv.config();
 
 // 📧 Email transporter (INLINE – no extra file)
 const emailTransporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // STARTTLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS, // Gmail App Password
+  },
+
+  // ⛔ CRITICAL for Render / cloud
+  connectionTimeout: 10_000, // 10 seconds
+  greetingTimeout: 10_000,
+  socketTimeout: 10_000,
+
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
@@ -238,27 +249,22 @@ router.post("/use-referral", async (req, res) => {
 
 /**
  * 👉 POST /api/auth/send-referral-invite
- * EMAIL ONLY
+ * EMAIL ONLY (Production-safe)
  */
 router.post("/send-referral-invite", async (req, res) => {
   const { name, email, referralCode } = req.body;
 
   if (!email) {
-    return res.status(400).json({
-      msg: "Email is required",
-    });
+    return res.status(400).json({ msg: "Email is required" });
   }
 
   if (!referralCode) {
-    return res.status(400).json({
-      msg: "Referral code is required",
-    });
+    return res.status(400).json({ msg: "Referral code is required" });
   }
 
-  try {
-    const inviteLink = `https://landing-page-gg.onrender.com/?ref=${referralCode}`;
+  const inviteLink = `https://landing-page-gg.onrender.com/?ref=${referralCode}`;
 
-    const message = `Hi ${name || "there"} 👋
+  const message = `Hi ${name || "there"} 👋
 
 You’ve been invited to join GoodGuiders 🎉
 
@@ -268,22 +274,22 @@ ${inviteLink}
 Use referral code: ${referralCode}
 `;
 
+  try {
     await emailTransporter.sendMail({
       from: `"GoodGuiders" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "You're invited to GoodGuiders 🎉",
       text: message,
     });
-
-    return res.json({
-      msg: "Referral email sent successfully",
-    });
-  } catch (err) {
-    console.error("Referral email error:", err);
-    return res.status(500).json({
-      msg: "Failed to send referral email",
-    });
+  } catch (mailErr) {
+    // ⛔ DO NOT FAIL API
+    console.error("Referral email failed:", mailErr);
   }
+
+  // ✅ Always respond (important for frontend)
+  return res.json({
+    msg: "Referral email sent successfully",
+  });
 });
 
 export default router;

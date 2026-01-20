@@ -6,8 +6,36 @@ import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import rateLimit from "express-rate-limit";
 import User from "../models/User.model.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const router = express.Router();
+
+const forgotPassTransporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // STARTTLS
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+
+  connectionTimeout: 10_000,
+  greetingTimeout: 10_000,
+  socketTimeout: 10_000,
+
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+forgotPassTransporter.verify((err) => {
+  if (err) {
+    console.error("❌ ForgotPass email transporter error:", err);
+  } else {
+    console.log("✅ ForgotPass email transporter ready");
+  }
+});
 
 // ------------------ Rate Limiter ------------------
 const forgotPasswordLimiter = rateLimit({
@@ -24,54 +52,44 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
 
-    // Respond the same way to prevent user enumeration
+    // Prevent user enumeration
     if (!user) {
       return res.json({
-        message:
-          "User not found for this email.",
+        message: "If an account exists for this email, a reset link has been sent.",
       });
     }
 
-    // Generate strong 48-byte token
     const resetToken = crypto.randomBytes(48).toString("hex");
 
-    // Hash token with SHA-512 before saving
     const hashedToken = crypto
       .createHash("sha512")
       .update(resetToken)
       .digest("hex");
 
-    // Save hashed token + expiry (10 minutes)
     user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 min
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    // Reset URL
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-    // Mail transporter
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    try {
+      await forgotPassTransporter.sendMail({
+        from: `"GoodGuiders" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "Password Reset Request",
+        html: `
+          <p>You requested a password reset.</p>
+          <p>Click the link below to reset your password (valid for 10 minutes):</p>
+          <a href="${resetUrl}">${resetUrl}</a>
+        `,
+      });
+    } catch (mailErr) {
+      // ⛔ Do NOT break password flow
+      console.error("Forgot password email failed:", mailErr);
+    }
 
-    await transporter.sendMail({
-      from: `"GoodGuiders" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `
-        <p>You requested a password reset.</p>
-        <p>Click the link below to reset your password (valid for 10 minutes):</p>
-        <a href="${resetUrl}">${resetUrl}</a>
-      `,
-    });
-
-    res.json({
-      message:
-        "If an account exists for this email, a reset link has been sent.",
+    return res.json({
+      message: "If an account exists for this email, a reset link has been sent.",
     });
   } catch (err) {
     console.error("Forgot password error:", err);
