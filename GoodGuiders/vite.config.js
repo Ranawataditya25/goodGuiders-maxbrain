@@ -4,7 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: '', // Updated to match your project path
+  base: '/', // Updated to match your project path
   resolve: {
     alias: {
       '@src': path.resolve(__dirname, 'src'), // Ensure this path is correct

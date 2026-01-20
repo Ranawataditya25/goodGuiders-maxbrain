@@ -46,17 +46,47 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     try {
-      await resend.emails.send({
-        from: "GoodGuiders <onboarding@resend.dev>",
-        to: user.email,
-        subject: "Password Reset Request",
-        reply_to: "ranawataaditya06@gmail.com",
-        html: `
-          <p>You requested a password reset.</p>
-          <p>Click below (valid for 10 minutes):</p>
-          <a href="${resetUrl}">${resetUrl}</a>
-        `,
-      });
+await resend.emails.send({
+  from: "GoodGuiders <onboarding@resend.dev>",
+  to: user.email,
+  subject: "Reset your GoodGuiders password",
+  reply_to: "ranawataaditya06@gmail.com",
+  html: `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <h2>Password Reset Request</h2>
+      <p>Hello ${user.name || "there"},</p>
+
+      <p>
+        We received a request to reset your GoodGuiders account password.
+        This link will expire in <strong>10 minutes</strong>.
+      </p>
+
+      <p>
+        <a href="${resetUrl}"
+           style="display:inline-block;padding:12px 18px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;">
+          Reset Password
+        </a>
+      </p>
+
+      <p>If you did not request this, you can safely ignore this email.</p>
+
+      <hr />
+      <p style="font-size:12px;color:#666;">
+        © ${new Date().getFullYear()} GoodGuiders · All rights reserved
+      </p>
+    </div>
+  `,
+  text: `
+GoodGuiders password reset request
+
+We received a request to reset your password.
+This link is valid for 10 minutes:
+
+${resetUrl}
+
+If you did not request this, ignore this email.
+`,
+});
     } catch (err) {
       console.error("Forgot password email failed:", err);
     }

@@ -238,22 +238,47 @@ router.post("/send-referral-invite", async (req, res) => {
   const inviteLink = `https://landing-page-gg.onrender.com/?ref=${referralCode}`;
 
   try {
-    await resend.emails.send({
-      from: "GoodGuiders <onboarding@resend.dev>", // ✅ use this for now
-      to: email,
-      subject: "You're invited to GoodGuiders 🎉",
-      reply_to: "ranawataaditya06@gmail.com",
-      html: `
-        <p>Hi ${name || "there"} 👋</p>
-        <p>You’ve been invited to join <strong>GoodGuiders</strong> 🎉</p>
-        <p>
-          👉 <a href="${inviteLink}">Sign up here</a>
-        </p>
-        <p>
-          Referral Code: <strong>${referralCode}</strong>
-        </p>
-      `,
-    });
+await resend.emails.send({
+  from: "GoodGuiders <onboarding@resend.dev>",
+  to: email,
+  subject: `${name || "Someone"} invited you to join GoodGuiders`,
+  reply_to: "ranawataaditya06@gmail.com",
+  html: `
+    <div style="font-family: Arial, sans-serif;">
+      <h2>You’re invited to GoodGuiders 🎉</h2>
+
+      <p>Hi ${name || "there"},</p>
+
+      <p>
+        You’ve been invited to join <strong>GoodGuiders</strong>,
+        a platform to connect mentors and students.
+      </p>
+
+      <p>
+        <a href="${inviteLink}"
+           style="padding:12px 16px;background:#16a34a;color:#fff;text-decoration:none;border-radius:6px;">
+          Join GoodGuiders
+        </a>
+      </p>
+
+      <p>Your referral code: <strong>${referralCode}</strong></p>
+
+      <hr />
+      <p style="font-size:12px;color:#666;">
+        This invitation was sent by a GoodGuiders user.
+        If you weren’t expecting this, you can ignore this email.
+      </p>
+    </div>
+  `,
+  text: `
+You're invited to GoodGuiders!
+
+Join using this link:
+${inviteLink}
+
+Referral code: ${referralCode}
+`,
+});
   } catch (err) {
     console.error("Referral email failed:", err);
   }
