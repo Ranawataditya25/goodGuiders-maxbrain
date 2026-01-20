@@ -1077,7 +1077,6 @@ export default function Dashboard2() {
   const [activeTab, setActiveTab] = useState("avail");
   const [referEmail, setReferEmail] = useState("");
   const [referName, setReferName] = useState("");
-  const [referMobile, setReferMobile] = useState("");
   const [appointments, setAppointments] = useState([]);
   const [appointmentsLoading, setAppointmentsLoading] = useState(true);
   const [ratingSeries, setRatingSeries] = useState([0, 0, 0, 0, 0]);
@@ -1086,6 +1085,7 @@ export default function Dashboard2() {
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentsSkip, setCommentsSkip] = useState(0);
   const [commentsTotal, setCommentsTotal] = useState(0);
+  const [sendingInvite, setSendingInvite] = useState(false);
 
   const COMMENTS_LIMIT = 5;
 
@@ -1131,9 +1131,7 @@ export default function Dashboard2() {
     const fetchAppointments = async () => {
       try {
         const res = await fetch(
-          `${API}/stats/mentor/${encodeURIComponent(
-            doctor.email
-          )}/details`
+          `${API}/stats/mentor/${encodeURIComponent(doctor.email)}/details`
         );
         const data = await res.json();
 
@@ -1183,9 +1181,7 @@ export default function Dashboard2() {
     const fetchRatings = async () => {
       try {
         const res = await fetch(
-          `${API}/stats/mentor/${encodeURIComponent(
-            doctor.email
-          )}/rating`
+          `${API}/stats/mentor/${encodeURIComponent(doctor.email)}/rating`
         );
         const data = await res.json();
 
@@ -1283,6 +1279,45 @@ export default function Dashboard2() {
     } catch (err) {
       console.error(err);
       alert("Server error. Please try again.");
+    }
+  };
+
+  const handleSendReferralInvite = async () => {
+    if (!referEmail) {
+      alert("Please enter email address");
+      return;
+    }
+
+    try {
+      setSendingInvite(true);
+
+      const res = await fetch(`${API}/auth/send-referral-invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: referName,
+          email: referEmail,
+          referralCode:
+            user?.yourReferralCode ||
+            user?.referralCode ||
+            doctor?.yourReferralCode ||
+            doctor?.referralCode,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(`✅ ${data.msg}`);
+        setReferName("");
+        setReferEmail("");
+      } else {
+        alert(`❌ ${data.msg}`);
+      }
+    } catch (err) {
+      alert("Server error. Please try again.");
+    } finally {
+      setSendingInvite(false);
     }
   };
 
@@ -1739,9 +1774,7 @@ export default function Dashboard2() {
                                   className="form-control"
                                   placeholder="Enter Name"
                                   value={referName}
-                                  onChange={(e) =>
-                                    setReferName(e.target.value)
-                                  }
+                                  onChange={(e) => setReferName(e.target.value)}
                                   style={{ width: "350px" }}
                                 />
                               </div>
@@ -1760,32 +1793,25 @@ export default function Dashboard2() {
                                   style={{ width: "350px" }}
                                 />
                               </div>
-                              <div className="d-flex align-items-center gap-3 mt-3">
-                                <label style={{ width: "250px" }}>
-                                  <strong>Friend&apos;s Mobile Number:</strong>
-                                </label>
-                                <input
-                                  type="tel"
-                                  className="form-control"
-                                  placeholder="Enter Mobile Number"
-                                  value={referMobile}
-                                  onChange={(e) =>
-                                    setReferMobile(e.target.value)
-                                  }
-                                  style={{ width: "350px" }}
-                                />
-                              </div>
                               <div className="d-flex justify-content-center">
                                 <button
                                   className="btn btn-success"
                                   style={{ width: "200px", marginTop: "25px" }}
-                                  onClick={() =>
-                                    alert(
-                                      `Refer to ${referEmail}, ${referMobile}`
-                                    )
-                                  }
+                                  onClick={handleSendReferralInvite}
+                                  disabled={sendingInvite}
                                 >
-                                  Refer
+                                  {sendingInvite ? (
+                                    <>
+                                      <Spinner
+                                        size="sm"
+                                        animation="border"
+                                        className="me-2"
+                                      />
+                                      Sending...
+                                    </>
+                                  ) : (
+                                    "Refer"
+                                  )}
                                 </button>
                               </div>
                             </div>

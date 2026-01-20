@@ -1,6 +1,26 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/User.model.js";
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
+
+// 📧 Email transporter (INLINE – no extra file)
+const emailTransporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // Gmail App Password
+  },
+});
+
+emailTransporter.verify((err, success) => {
+  if (err) {
+    console.error("❌ Email transporter error:", err);
+  } else {
+    console.log("✅ Email transporter ready");
+  }
+});
 
 const router = express.Router();
 
@@ -56,27 +76,27 @@ router.post("/register", async (req, res) => {
       role: newUser.role,
     });
   } catch (err) {
-  console.error(err);
+    console.error(err);
 
-  // Mongo duplicate key error
-  if (err.code === 11000) {
-    if (err.keyPattern?.mobileNo) {
-      return res.status(400).json({
-        msg: "Mobile number already exists",
-        field: "mobileNo",
-      });
+    // Mongo duplicate key error
+    if (err.code === 11000) {
+      if (err.keyPattern?.mobileNo) {
+        return res.status(400).json({
+          msg: "Mobile number already exists",
+          field: "mobileNo",
+        });
+      }
+
+      if (err.keyPattern?.email) {
+        return res.status(400).json({
+          msg: "Email already exists",
+          field: "email",
+        });
+      }
     }
 
-    if (err.keyPattern?.email) {
-      return res.status(400).json({
-        msg: "Email already exists",
-        field: "email",
-      });
-    }
+    res.status(500).json({ msg: "Server error" });
   }
-
-  res.status(500).json({ msg: "Server error" });
-}
 });
 
 // POST /api/auth/check-unique
@@ -115,7 +135,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ msg: "Invalid email or password" });
     }
 
-     // ❌ Check if disabled
+    // ❌ Check if disabled
     if (user.isDisabled) {
       return res.status(403).json({ msg: "Your account has been disabled by admin. Please contact support." });
     }
@@ -149,33 +169,33 @@ router.post("/login", async (req, res) => {
 
 // 👉 GET /api/auth/dashboard?email=...
 router.get("/dashboard", async (req, res) => {
-    const { email } = req.query;
-  
-    try {
-      const user = await User.findOne({ email });
-      if (!user) return res.status(404).json({ msg: "User not found" });
-  
-      const referredUsers = await User.find({ referredBy: user.referralCode });
-  
-      res.json({
-        name: user.name,
-        credits: user.credits,
-        role: user.role,
-        yourReferralCode: user.referralCode,
-        totalReferred: referredUsers.length,
-        referredUsers: referredUsers.map(u => ({
-          name: u.name,
-          email: u.email,
-          joinedOn: u.createdAt
-        }))
-      });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ msg: "Server error" });
-    }
-  });
+  const { email } = req.query;
 
-  // 👉 POST /api/auth/use-referral
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    const referredUsers = await User.find({ referredBy: user.referralCode });
+
+    res.json({
+      name: user.name,
+      credits: user.credits,
+      role: user.role,
+      yourReferralCode: user.referralCode,
+      totalReferred: referredUsers.length,
+      referredUsers: referredUsers.map(u => ({
+        name: u.name,
+        email: u.email,
+        joinedOn: u.createdAt
+      }))
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+// 👉 POST /api/auth/use-referral
 router.post("/use-referral", async (req, res) => {
   const { email, referralCode } = req.body;
 
@@ -216,6 +236,54 @@ router.post("/use-referral", async (req, res) => {
   }
 });
 
-  
+/**
+ * 👉 POST /api/auth/send-referral-invite
+ * EMAIL ONLY
+ */
+router.post("/send-referral-invite", async (req, res) => {
+  const { name, email, referralCode } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      msg: "Email is required",
+    });
+  }
+
+  if (!referralCode) {
+    return res.status(400).json({
+      msg: "Referral code is required",
+    });
+  }
+
+  try {
+    const inviteLink = `https://landing-page-gg.onrender.com/?ref=${referralCode}`;
+
+    const message = `Hi ${name || "there"} 👋
+
+You’ve been invited to join GoodGuiders 🎉
+
+👉 Sign up here:
+${inviteLink}
+
+Use referral code: ${referralCode}
+`;
+
+    await emailTransporter.sendMail({
+      from: `"GoodGuiders" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "You're invited to GoodGuiders 🎉",
+      text: message,
+    });
+
+    return res.json({
+      msg: "Referral email sent successfully",
+    });
+  } catch (err) {
+    console.error("Referral email error:", err);
+    return res.status(500).json({
+      msg: "Failed to send referral email",
+    });
+  }
+});
 
 export default router;

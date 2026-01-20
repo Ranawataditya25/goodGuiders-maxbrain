@@ -1389,7 +1389,6 @@ export default function Dashboard3() {
   const [referralInput, setReferralInput] = useState("");
   const [referName, setReferName] = useState("");
   const [referEmail, setReferEmail] = useState("");
-  const [referMobile, setReferMobile] = useState("");
 
   const [assignLoading, setAssignLoading] = useState(true);
   const [assignments, setAssignments] = useState([]);
@@ -1407,10 +1406,9 @@ export default function Dashboard3() {
   const [answerPdf, setAnswerPdf] = useState(null);
   const [submittingPdf, setSubmittingPdf] = useState(false);
   const [resultCount, setResultCount] = useState(0);
+  const [sendingInvite, setSendingInvite] = useState(false);
 
   const [doctor, setDoctor] = useState(null);
-  const [loading, setLoading] = useState(true);
-
   const [mentorVisits, setMentorVisits] = useState([]);
   const [loadingMentorVisits, setLoadingMentorVisits] = useState(true);
 
@@ -1784,6 +1782,41 @@ export default function Dashboard3() {
       .catch(() => {});
   }, []);
 
+  const handleSendReferralInvite = async () => {
+    if (!referEmail) {
+      alert("Please enter email address");
+      return;
+    }
+
+    try {
+      setSendingInvite(true);
+
+      const res = await fetch(`${API}/auth/send-referral-invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: referName,
+          email: referEmail,
+          referralCode: user?.yourReferralCode || user?.referralCode,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(`✅ ${data.msg}`);
+        setReferName("");
+        setReferEmail("");
+      } else {
+        alert(`❌ ${data.msg}`);
+      }
+    } catch (err) {
+      alert("Server error. Please try again.");
+    } finally {
+      setSendingInvite(false);
+    }
+  };
+
   return (
     <div className="themebody-wrap">
       <PageBreadcrumb pagename="Student Dashboard" />
@@ -2005,28 +2038,25 @@ export default function Dashboard3() {
                             style={{ width: "350px" }}
                           />
                         </div>
-                        <div className="d-flex align-items-center gap-3 mt-3">
-                          <label style={{ width: "250px" }}>
-                            <strong>Friend's Mobile Number:</strong>
-                          </label>
-                          <input
-                            type="tel"
-                            className="form-control"
-                            placeholder="Enter Mobile Number"
-                            value={referMobile}
-                            onChange={(e) => setReferMobile(e.target.value)}
-                            style={{ width: "350px" }}
-                          />
-                        </div>
                         <div className="d-flex justify-content-center">
                           <button
                             className="btn btn-success"
                             style={{ width: "200px", marginTop: "25px" }}
-                            onClick={() =>
-                              alert(`Refer to ${referEmail}, ${referMobile}`)
-                            }
+                            onClick={handleSendReferralInvite}
+                            disabled={sendingInvite}
                           >
-                            Refer
+                            {sendingInvite ? (
+                              <>
+                                <Spinner
+                                  size="sm"
+                                  animation="border"
+                                  className="me-2"
+                                />
+                                Sending...
+                              </>
+                            ) : (
+                              "Refer"
+                            )}
                           </button>
                         </div>
                       </div>
