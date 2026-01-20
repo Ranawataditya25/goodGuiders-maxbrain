@@ -1,37 +1,10 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/User.model.js";
-import nodemailer from "nodemailer";
+import { resend } from "../utils/resend.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-// 📧 Email transporter (INLINE – no extra file)
-const emailTransporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // STARTTLS
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Gmail App Password
-  },
-
-  // ⛔ CRITICAL for Render / cloud
-  connectionTimeout: 10_000, // 10 seconds
-  greetingTimeout: 10_000,
-  socketTimeout: 10_000,
-
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-emailTransporter.verify((err, success) => {
-  if (err) {
-    console.error("❌ Email transporter error:", err);
-  } else {
-    console.log("✅ Email transporter ready");
-  }
-});
 
 const router = express.Router();
 
@@ -264,32 +237,31 @@ router.post("/send-referral-invite", async (req, res) => {
 
   const inviteLink = `https://landing-page-gg.onrender.com/?ref=${referralCode}`;
 
-  const message = `Hi ${name || "there"} 👋
-
-You’ve been invited to join GoodGuiders 🎉
-
-👉 Sign up here:
-${inviteLink}
-
-Use referral code: ${referralCode}
-`;
-
   try {
-    await emailTransporter.sendMail({
-      from: `"GoodGuiders" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: "GoodGuiders <onboarding@resend.dev>", // ✅ use this for now
       to: email,
       subject: "You're invited to GoodGuiders 🎉",
-      text: message,
+      reply_to: "ranawataaditya06@gmail.com",
+      html: `
+        <p>Hi ${name || "there"} 👋</p>
+        <p>You’ve been invited to join <strong>GoodGuiders</strong> 🎉</p>
+        <p>
+          👉 <a href="${inviteLink}">Sign up here</a>
+        </p>
+        <p>
+          Referral Code: <strong>${referralCode}</strong>
+        </p>
+      `,
     });
-  } catch (mailErr) {
-    // ⛔ DO NOT FAIL API
-    console.error("Referral email failed:", mailErr);
+  } catch (err) {
+    console.error("Referral email failed:", err);
   }
 
-  // ✅ Always respond (important for frontend)
+  // ✅ Always respond (important)
   return res.json({
     msg: "Referral email sent successfully",
   });
-});
+})
 
 export default router;

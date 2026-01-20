@@ -3,39 +3,13 @@ import express from "express";
 import crypto from "crypto";
 
 import bcrypt from "bcryptjs";
-import nodemailer from "nodemailer";
 import rateLimit from "express-rate-limit";
 import User from "../models/User.model.js";
+import { resend } from "../utils/resend.js";
 import dotenv from "dotenv";
 dotenv.config();
 
 const router = express.Router();
-
-const forgotPassTransporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // STARTTLS
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-
-  connectionTimeout: 10_000,
-  greetingTimeout: 10_000,
-  socketTimeout: 10_000,
-
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-forgotPassTransporter.verify((err) => {
-  if (err) {
-    console.error("❌ ForgotPass email transporter error:", err);
-  } else {
-    console.log("✅ ForgotPass email transporter ready");
-  }
-});
 
 // ------------------ Rate Limiter ------------------
 const forgotPasswordLimiter = rateLimit({
@@ -52,15 +26,14 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
 
-    // Prevent user enumeration
     if (!user) {
       return res.json({
-        message: "If an account exists for this email, a reset link has been sent.",
+        message:
+          "If an account exists for this email, a reset link has been sent.",
       });
     }
 
     const resetToken = crypto.randomBytes(48).toString("hex");
-
     const hashedToken = crypto
       .createHash("sha512")
       .update(resetToken)
@@ -73,23 +46,24 @@ router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     try {
-      await forgotPassTransporter.sendMail({
-        from: `"GoodGuiders" <${process.env.EMAIL_USER}>`,
+      await resend.emails.send({
+        from: "GoodGuiders <onboarding@resend.dev>",
         to: user.email,
         subject: "Password Reset Request",
+        reply_to: "ranawataaditya06@gmail.com",
         html: `
           <p>You requested a password reset.</p>
-          <p>Click the link below to reset your password (valid for 10 minutes):</p>
+          <p>Click below (valid for 10 minutes):</p>
           <a href="${resetUrl}">${resetUrl}</a>
         `,
       });
-    } catch (mailErr) {
-      // ⛔ Do NOT break password flow
-      console.error("Forgot password email failed:", mailErr);
+    } catch (err) {
+      console.error("Forgot password email failed:", err);
     }
 
     return res.json({
-      message: "If an account exists for this email, a reset link has been sent.",
+      message:
+        "If an account exists for this email, a reset link has been sent.",
     });
   } catch (err) {
     console.error("Forgot password error:", err);
