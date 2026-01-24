@@ -86,6 +86,11 @@ const userSchema = new mongoose.Schema(
     // NEW: education array
     education: { type: [EducationSchema], default: [] },
 
+    pushSubscription: {
+      type: Object,
+      default: null,
+    },
+
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },

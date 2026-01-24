@@ -1,6 +1,8 @@
 import express from "express";
 import twilio from "twilio";
 import Conversation from "../models/Conversation.model.js";
+import webpush from "web-push";
+import User from "../models/User.model.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -30,14 +32,14 @@ router.get("/token", (req, res) => {
 router.put("/:uniqueName/start-call", async (req, res) => {
   const { caller, receiverId } = req.body || {};
 
-if (!caller || !receiverId) {
-  return res.status(400).json({
-    error: "caller and receiverId are required",
-  });
-}
+  if (!caller || !receiverId) {
+    return res.status(400).json({
+      error: "caller and receiverId are required",
+    });
+  }
 
   try {
-    // Update convo: set ringing, caller, receiver and startedAt
+    // 1️⃣ Update conversation
     const convo = await Conversation.findOneAndUpdate(
       { uniqueName: req.params.uniqueName },
       {
@@ -47,20 +49,22 @@ if (!caller || !receiverId) {
         isRejected: false,
         isMissed: false,
         startedAt: new Date(),
-        // clear connected/ended times if any
         connectedAt: null,
         endedAt: null,
       },
       { new: true }
     );
 
-    if (!convo) return res.status(404).json({ error: "Conversation not found" });
+    if (!convo) {
+      return res.status(404).json({ error: "Conversation not found" });
+    }
 
-    // Socket notify receiver if online
+    // 2️⃣ Socket / Push logic
     const io = req.app.get("io");
     const onlineUsers = req.app.get("onlineUsers");
 
     const socketId = onlineUsers.get(receiverId);
+
     if (socketId) {
       io.to(socketId).emit("incoming_call", {
         from: caller,
@@ -69,12 +73,68 @@ if (!caller || !receiverId) {
         startedAt: convo.startedAt,
       });
     } else {
-      // Receiver offline: mark missed (optional)
-      // You could also trigger push notification here (APNs/FCM)
-      await Conversation.findByIdAndUpdate(convo._id, { isMissed: true });
+      const receiverUser = await User.findOne({ email: receiverId });
+      const callerUser = await User.findOne({ email: caller });
+
+      if (receiverUser?.pushSubscription) {
+        const payload = JSON.stringify({
+          type: "incoming_call",
+          title: "Incoming Call",
+          body: `${callerUser?.name || "Someone"} is calling you`,
+          uniqueName: convo.uniqueName,
+          caller,
+          callerName: callerUser?.name,
+          receiverId,
+        });
+
+        await webpush.sendNotification(
+          receiverUser.pushSubscription,
+          payload
+        );
+
+        console.log("📲 Push notification sent to offline user");
+      }
     }
 
+    // ⏱️ Auto-miss call after 40 seconds
+    setTimeout(async () => {
+      try {
+        const latest = await Conversation.findOne({
+          uniqueName: convo.uniqueName,
+        });
+
+        if (
+          latest &&
+          latest.callStatus === "ringing" &&
+          !latest.connectedAt &&
+          !latest.endedAt
+        ) {
+          await Conversation.findOneAndUpdate(
+            { uniqueName: convo.uniqueName },
+            {
+              callStatus: "ended",
+              isMissed: true,
+              endedAt: new Date(),
+            }
+          );
+
+          console.log("⏱️ Call missed (no answer in 40s)");
+
+          const callerSocket = onlineUsers.get(caller);
+          if (callerSocket) {
+            io.to(callerSocket).emit("call_missed", {
+              uniqueName: convo.uniqueName,
+            });
+          }
+        }
+      } catch (timeoutErr) {
+        console.error("missed-call timeout error:", timeoutErr);
+      }
+    }, 40 * 1000);
+
+    // 3️⃣ Respond
     res.json(convo);
+
   } catch (err) {
     console.error("start-call error:", err);
     res.status(500).json({ message: err.message });
@@ -86,11 +146,11 @@ if (!caller || !receiverId) {
 router.put("/:uniqueName/answer-call", async (req, res) => {
   const { caller, receiverId } = req.body || {};
 
-if (!caller || !receiverId) {
-  return res.status(400).json({
-    error: "caller and receiverId are required",
-  });
-}
+  if (!caller || !receiverId) {
+    return res.status(400).json({
+      error: "caller and receiverId are required",
+    });
+  }
 
   try {
     const convo = await Conversation.findOneAndUpdate(
@@ -119,6 +179,19 @@ if (!caller || !receiverId) {
       });
     }
 
+    // 🔔 Close browser notification on receiver side
+    const receiverUser = await User.findOne({ email: receiverId });
+
+    if (receiverUser?.pushSubscription) {
+      await webpush.sendNotification(
+        receiverUser.pushSubscription,
+        JSON.stringify({
+          type: "call_answered",
+          uniqueName: convo.uniqueName,
+        })
+      );
+    }
+
     res.json(convo);
   } catch (err) {
     console.error("answer-call error:", err);
@@ -131,11 +204,11 @@ if (!caller || !receiverId) {
 router.put("/:uniqueName/end-call", async (req, res) => {
   const { caller, receiverId, reason } = req.body || {};
 
-if (!caller || !receiverId) {
-  return res.status(400).json({
-    error: "caller and receiverId are required",
-  });
-}
+  if (!caller || !receiverId) {
+    return res.status(400).json({
+      error: "caller and receiverId are required",
+    });
+  }
   try {
     const now = new Date();
 
@@ -170,6 +243,19 @@ if (!caller || !receiverId) {
     // Optionally reset to idle after some time or leave as ended for history
     // Example: set callStatus back to idle after 10s
     // setTimeout(() => Conversation.findByIdAndUpdate(convo._id, { callStatus: 'idle' }), 10000);
+
+    // 🔔 Close browser notification for receiver
+    const receiverUser = await User.findOne({ email: receiverId });
+
+    if (receiverUser?.pushSubscription) {
+      await webpush.sendNotification(
+        receiverUser.pushSubscription,
+        JSON.stringify({
+          type: "call_ended",
+          uniqueName: convo.uniqueName,
+        })
+      );
+    }
 
     res.json(convo);
   } catch (err) {

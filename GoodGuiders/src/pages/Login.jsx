@@ -849,7 +849,7 @@ import logo from "/src/assets/images/logo/icon-logo.png";
 // import facebook from "/src/assets/images/auth/1.png";
 // import google from "/src/assets/images/auth/2.png";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -871,72 +871,132 @@ export default function Login() {
     });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const { email, password } = formData;
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
 
-  try {
-    const res = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(`❌ ${data.msg}`);
-      return;
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
     }
+    return outputArray;
+  };
 
-    const user = data.user;
+  const registerPushNotifications = async (email) => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
-    // ✅ Check for disabled mentors
-    if (user.role === "mentor") {
-      if (user.isDisabled) {
-        alert("🚫 Your account has been disabled by admin. Contact support.");
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") return;
+
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(
+            import.meta.env.VITE_VAPID_PUBLIC_KEY,
+          ),
+        });
+      }
+
+      console.log("📨 Sending subscription to backend", subscription);
+
+      await fetch(`${API}/push/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          subscription,
+        }),
+      });
+
+      console.log("✅ Push notifications enabled");
+    } catch (err) {
+      console.error("❌ Push registration failed:", err);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const { email, password } = formData;
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(`❌ ${data.msg}`);
         return;
       }
 
-      switch (user.mentorStatus) {
-        case "approved":
-          localStorage.setItem("loggedInUser", JSON.stringify(user));
-          navigate("/doctor-dashboard");
-          break;
-        case "rejected":
-          alert("❌ Your mentor request has been rejected by admin. You cannot login.");
-          break;
-        case "verifyDocs":
-          alert("📧 Please check your email and upload latest documents for verification before you can login.");
-          break;
-        case "pending":
-        default:
-          alert("⏳ Your mentor application is still under review. Please wait for admin approval.");
-      }
-    } else {
-      // ✅ Non-mentor users (admin or student)
-      localStorage.setItem("loggedInUser", JSON.stringify(user));
+      const user = data.user;
 
-      if (user.role === "admin") {
-        navigate("/admin-dashboard");
-      } else if (user.role === "student") {
-        if (!user.profileCompleted) {
-          navigate("/edit-patient"); // 👈 your Edit_patient page
-        } else {
-          navigate("/patient-dashboard");
+      // ✅ Check for disabled mentors
+      if (user.role === "mentor") {
+        if (user.isDisabled) {
+          alert("🚫 Your account has been disabled by admin. Contact support.");
+          return;
+        }
+
+        switch (user.mentorStatus) {
+          case "approved":
+            localStorage.setItem("loggedInUser", JSON.stringify(user));
+            registerPushNotifications(user.email);
+            navigate("/doctor-dashboard");
+            break;
+          case "rejected":
+            alert(
+              "❌ Your mentor request has been rejected by admin. You cannot login.",
+            );
+            break;
+          case "verifyDocs":
+            alert(
+              "📧 Please check your email and upload latest documents for verification before you can login.",
+            );
+            break;
+          case "pending":
+          default:
+            alert(
+              "⏳ Your mentor application is still under review. Please wait for admin approval.",
+            );
         }
       } else {
-        navigate("/");
-      }
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Server error. Please try again.");
-  }
-};
+        // ✅ Non-mentor users (admin or student)
+        localStorage.setItem("loggedInUser", JSON.stringify(user));
+        registerPushNotifications(user.email);
 
+        if (user.role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (user.role === "student") {
+          if (!user.profileCompleted) {
+            navigate("/edit-patient"); // 👈 your Edit_patient page
+          } else {
+            navigate("/patient-dashboard");
+          }
+        } else {
+          navigate("/");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error. Please try again.");
+    }
+  };
 
   return (
     <div className="auth-main" style={{ padding: 30 }}>

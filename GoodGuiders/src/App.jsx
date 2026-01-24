@@ -7,6 +7,7 @@ import {
   Navigate,
   // useNavigate,
 } from "react-router-dom";
+import "./utils/pwaInstall"; // just load it once
 
 import Index from "./pages/Index";
 import Dashboard2 from "./pages/Dashboard2";
@@ -182,7 +183,7 @@ function AppContent() {
             />
           }
         /> */}
-<Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route exact path="/admin-dashboard" element={<Index />} />
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/chat/:mentorEmail" element={<ChatPage />} />
@@ -215,8 +216,8 @@ function AppContent() {
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
 
         <Route exact path="/all-doctors" element={<All_doctor />} />
-        <Route exact path="/doctor-info/:email" element={<MentorProfileInfo /> } />
-        <Route exact path="/patient-info/:email" element={<StudentProfileInfo /> } />
+        <Route exact path="/doctor-info/:email" element={<MentorProfileInfo />} />
+        <Route exact path="/patient-info/:email" element={<StudentProfileInfo />} />
         {/* <Route exact path="/add-doctor" element={<Add_doctor />} /> */}
         <Route exact path="/edit-doctor" element={<Edit_doctor />} />
 
@@ -256,7 +257,7 @@ function AppContent() {
         <Route exact path="/test-end" element={<TestEnd />} />
 
 
-        <Route path="/appointments" element={<Appointments />} /> 
+        <Route path="/appointments" element={<Appointments />} />
         <Route exact path="/doctor-schedule" element={<Doctor_schedule />} />
         <Route exact path="/add-appointment" element={<Add_appointment />} />
         <Route exact path="/edit-appointment" element={<Edit_appointment />} />
@@ -364,8 +365,8 @@ function AppContent() {
 
       {/* Customizer */}
       {!hideExtras && location.pathname !== "/error-page" && customizerEnabled && (
-  <Customizer />
-)}
+        <Customizer />
+      )}
     </>
   );
 }

@@ -7,6 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import http from "http";
 import { Server } from "socket.io";
+import webpush from "web-push";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -36,6 +37,7 @@ import materialsRoutes from "./routes/material.route.js";
 import pdfEvaluationRoutes from "./routes/pdfEvaluation.route.js";
 import { mentorExpiryCron } from "./cron/mentorExpiry.cron.js";
 import appointmentRoutes from "./routes/appointment.route.js";
+import pushRoutes from "./routes/push.route.js";
 
 
 
@@ -43,6 +45,13 @@ dotenv.config();
 
 const app = express();
 mentorExpiryCron();
+
+webpush.setVapidDetails(
+  "mailto:support@goodguiders.com",
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
+
 /* ----------------------- CORS ----------------------- */
 const corsOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
@@ -149,6 +158,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 // Mount with PATHS only (never full URLs)
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/classes", classesRouter);
+app.use("/api/push", pushRoutes);
 
 app.use("/api/stats", statsRoutes);
 app.use("/api/materials", materialsRoutes);

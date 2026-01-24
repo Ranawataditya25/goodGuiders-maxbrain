@@ -235,6 +235,7 @@
 
 import { useState, useEffect } from "react";
 import FeatherIcon from "feather-icons-react";
+import { installPWA, isPWAInstallable } from "../utils/pwaInstall";
 import SimpleBar from "simplebar-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Form } from "react-bootstrap";
@@ -250,11 +251,20 @@ export default function Header() {
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
   };
-  const user = JSON.parse(localStorage.getItem("loggedInUser"));
+  const user = JSON.parse(localStorage.getItem("loggedInUser") || "null");
   const [notifications, setNotifications] = useState([]);
+  const [showInstall, setShowInstall] = useState(false);
 
   useEffect(() => {
-    if (user.role === "admin") return;
+    const interval = setInterval(() => {
+      setShowInstall(isPWAInstallable());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!user || user.role === "admin") return;
 
     fetch(`${API}/appointments/notifications`, {
       headers: { "x-user-id": user._id },
@@ -322,7 +332,7 @@ export default function Header() {
                 </div>
               </li>
 
-              {user.role !== "admin" && (
+              {user && user.role !== "admin" && (
                 <li>
                   <div className="navicon-wrap">
                     <FeatherIcon icon="bell" />
@@ -437,6 +447,27 @@ export default function Header() {
                   </div>
                 </div>
               </li> */}
+
+              {showInstall && (
+                <li title="Install App">
+                  <div
+                    className="navicon-wrap"
+                    onClick={installPWA}
+                    style={{
+                      cursor: "pointer",
+                      background: "#2563eb",
+                      color: "#fff",
+                      borderRadius: "6px",
+                      padding: "6px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <FeatherIcon icon="download" size={16} />
+                  </div>
+                </li>
+              )}
 
               <li className="nav-profile">
                 <Link className="action-toggle" to="#">
