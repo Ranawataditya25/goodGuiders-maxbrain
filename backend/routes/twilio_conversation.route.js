@@ -282,4 +282,26 @@ router.get("/conversation/:uniqueName", async (req, res) => {
   }
 });
 
+// 🔹 FIND existing conversation by mentor + student
+router.post("/conversation/by-users", async (req, res) => {
+  const { mentorEmail, studentEmail } = req.body;
+
+  if (!mentorEmail || !studentEmail) {
+    return res.status(400).json({ error: "mentorEmail and studentEmail required" });
+  }
+
+  const uniqueName = [mentorEmail, studentEmail]
+    .map((e) => e.toLowerCase().replace(/[^a-z0-9]/g, "_"))
+    .sort()
+    .join("_");
+
+  const convo = await Conversation.findOne({ uniqueName });
+
+  if (!convo) {
+    return res.status(404).json({});
+  }
+
+  res.json({ uniqueName: convo.uniqueName });
+});
+
 export default router;

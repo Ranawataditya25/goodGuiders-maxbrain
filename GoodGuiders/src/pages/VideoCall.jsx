@@ -340,9 +340,10 @@ setCanJoin(false);
 });
 
     socketRef.current.on("connect", () => {
-      console.log("🆔 registering user on socket:", userName);
+      const normalized = String(userName || "").trim().toLowerCase();
+      console.log("🆔 registering user on socket:", normalized);
       console.log("✅ Socket connected:", socketRef.current.id);
-      socketRef.current.emit("register", userName);
+      socketRef.current.emit("register", normalized);
     });
 
     return () => {
@@ -461,6 +462,18 @@ setCanJoin(false);
         });
       } catch (err) {
         console.error("❌ JOIN FAILED:", err);
+        try {
+          // Notify server that the caller failed to join so the conversation doesn't stay in "ringing"
+          await axios.put(`${API}/video/${uniqueName}/end-call`, {
+            caller: userName,
+            receiverId,
+            reason: "failed",
+          });
+          console.log("🔔 Notified server of failed join (end-call)");
+        } catch (notifyErr) {
+          console.error("Failed to notify server about join failure:", notifyErr);
+        }
+
         cleanupAll("join-failed");
         onClose();
       }

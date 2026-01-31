@@ -63,36 +63,51 @@ router.put("/:uniqueName/start-call", async (req, res) => {
     const io = req.app.get("io");
     const onlineUsers = req.app.get("onlineUsers");
 
-    const socketId = onlineUsers.get(receiverId);
+    const receiverKey = String(receiverId || "").trim().toLowerCase();
+    const callerKey = String(caller || "").trim().toLowerCase();
+    const socketSet = onlineUsers.get(receiverKey);
 
-    if (socketId) {
-      io.to(socketId).emit("incoming_call", {
-        from: caller,
-        uniqueName: convo.uniqueName,
-        room: convo.uniqueName,
-        startedAt: convo.startedAt,
+    const receiverUser = await User.findOne({ email: receiverId });
+    const callerUser = await User.findOne({ email: caller });
+
+    if (socketSet && socketSet.size) {
+      console.log("📨 Emitting incoming_call to sockets:", Array.from(socketSet), "for:", receiverKey);
+      socketSet.forEach((sid) => {
+        io.to(sid).emit(
+          "incoming_call",
+          {
+            from: caller,
+            uniqueName: convo.uniqueName,
+            room: convo.uniqueName,
+            startedAt: convo.startedAt,
+          },
+          // acknowledgment from client (if client calls the ack callback)
+          (ack) => {
+            console.log("📨 incoming_call ACK from", sid, ack);
+          }
+        );
       });
     } else {
-      const receiverUser = await User.findOne({ email: receiverId });
-      const callerUser = await User.findOne({ email: caller });
+      console.log("📨 No socket for:", receiverKey, " — will send push if available");
+    }
 
-      if (receiverUser?.pushSubscription) {
-        const payload = JSON.stringify({
-          type: "incoming_call",
-          title: "Incoming Call",
-          body: `${callerUser?.name || "Someone"} is calling you`,
-          uniqueName: convo.uniqueName,
-          caller,
-          callerName: callerUser?.name,
-          receiverId,
-        });
+    // Always attempt web-push so background/unfocused clients also get notified
+    if (receiverUser?.pushSubscription) {
+      const payload = JSON.stringify({
+        type: "incoming_call",
+        title: "Incoming Call",
+        body: `${callerUser?.name || "Someone"} is calling you`,
+        uniqueName: convo.uniqueName,
+        caller,
+        callerName: callerUser?.name,
+        receiverId,
+      });
 
-        await webpush.sendNotification(
-          receiverUser.pushSubscription,
-          payload
-        );
-
-        console.log("📲 Push notification sent to offline user");
+      try {
+        await webpush.sendNotification(receiverUser.pushSubscription, payload);
+        console.log("📲 Push notification sent to user");
+      } catch (pushErr) {
+        console.error("📲 Push send error:", pushErr);
       }
     }
 
@@ -120,11 +135,34 @@ router.put("/:uniqueName/start-call", async (req, res) => {
 
           console.log("⏱️ Call missed (no answer in 40s)");
 
-          const callerSocket = onlineUsers.get(caller);
-          if (callerSocket) {
-            io.to(callerSocket).emit("call_missed", {
-              uniqueName: convo.uniqueName,
-            });
+          // 🔔 notify caller (socket)
+          const callerSocketSet = onlineUsers.get(String(caller || "").trim().toLowerCase());
+          if (callerSocketSet && callerSocketSet.size) {
+            callerSocketSet.forEach((sid) =>
+              io.to(sid).emit("call_missed", { uniqueName: convo.uniqueName }),
+            );
+          }
+
+          // 🔔 notify receiver (socket) if online so UI can stop ringing
+          const receiverSocketSet = onlineUsers.get(String(receiverId || "").trim().toLowerCase());
+          if (receiverSocketSet && receiverSocketSet.size) {
+            receiverSocketSet.forEach((sid) =>
+              io.to(sid).emit("call_missed", { uniqueName: convo.uniqueName }),
+            );
+          }
+
+          // 🔔 notify receiver (push) as well
+          const receiverUser = await User.findOne({ email: receiverId });
+          if (receiverUser?.pushSubscription) {
+            await webpush.sendNotification(
+              receiverUser.pushSubscription,
+              JSON.stringify({
+                type: "call_missed",
+                uniqueName: convo.uniqueName,
+                caller,
+                receiverId,
+              })
+            );
           }
         }
       } catch (timeoutErr) {
@@ -170,13 +208,16 @@ router.put("/:uniqueName/answer-call", async (req, res) => {
     const io = req.app.get("io");
     const onlineUsers = req.app.get("onlineUsers");
 
-    const callerSocket = onlineUsers.get(caller);
-    if (callerSocket) {
-      io.to(callerSocket).emit("call_accepted", {
-        uniqueName: convo.uniqueName,
-        room: convo.uniqueName,
-        connectedAt: convo.connectedAt,
-      });
+    const callerSocketSet = onlineUsers.get(String(caller || "").trim().toLowerCase());
+    if (callerSocketSet && callerSocketSet.size) {
+      console.log("📨 Emitting call_accepted to callerSocket(s) for:", caller, Array.from(callerSocketSet));
+      callerSocketSet.forEach((sid) =>
+        io.to(sid).emit("call_accepted", {
+          uniqueName: convo.uniqueName,
+          room: convo.uniqueName,
+          connectedAt: convo.connectedAt,
+        }),
+      );
     }
 
     // 🔔 Close browser notification on receiver side
@@ -212,6 +253,8 @@ router.put("/:uniqueName/end-call", async (req, res) => {
   try {
     const now = new Date();
 
+    console.log("🔔 end-call invoked", { uniqueName: req.params.uniqueName, caller, receiverId, reason });
+
     const convo = await Conversation.findOneAndUpdate(
       { uniqueName: req.params.uniqueName },
       {
@@ -230,14 +273,42 @@ router.put("/:uniqueName/end-call", async (req, res) => {
     const io = req.app.get("io");
     const onlineUsers = req.app.get("onlineUsers");
 
+    // Notify receiver socket about the end/rejection so their UI (if open) will stop ringing
     if (receiverId) {
-      const receiverSocket = onlineUsers.get(receiverId);
-      if (receiverSocket) io.to(receiverSocket).emit("call_ended", { uniqueName: convo.uniqueName });
+      const receiverSocketSet = onlineUsers.get(String(receiverId || "").trim().toLowerCase());
+      if (receiverSocketSet && receiverSocketSet.size) {
+        receiverSocketSet.forEach((sid) => {
+          if (reason === "rejected") {
+            io.to(sid).emit("call_rejected", { uniqueName: convo.uniqueName });
+          } else if (reason === "missed") {
+            io.to(sid).emit("call_missed", { uniqueName: convo.uniqueName });
+          } else {
+            io.to(sid).emit("call_ended", { uniqueName: convo.uniqueName });
+          }
+        });
+      }
     }
 
     if (caller) {
-      const callerSocket = onlineUsers.get(caller);
-      if (callerSocket) io.to(callerSocket).emit("call_ended", { uniqueName: convo.uniqueName });
+      const callerSocketSet = onlineUsers.get(String(caller || "").trim().toLowerCase());
+
+      if (callerSocketSet && callerSocketSet.size) {
+        callerSocketSet.forEach((sid) => {
+          if (reason === "rejected") {
+            io.to(sid).emit("call_rejected", {
+              uniqueName: convo.uniqueName,
+            });
+          } else if (reason === "missed") {
+            io.to(sid).emit("call_missed", {
+              uniqueName: convo.uniqueName,
+            });
+          } else {
+            io.to(sid).emit("call_ended", {
+              uniqueName: convo.uniqueName,
+            });
+          }
+        });
+      }
     }
 
     // Optionally reset to idle after some time or leave as ended for history
@@ -247,21 +318,30 @@ router.put("/:uniqueName/end-call", async (req, res) => {
     // 🔔 Close browser notification for receiver
     const receiverUser = await User.findOne({ email: receiverId });
 
+    const pushType =
+      reason === "rejected"
+        ? "call_rejected"
+        : reason === "missed"
+          ? "call_missed"
+          : "call_ended";
+
     if (receiverUser?.pushSubscription) {
       await webpush.sendNotification(
         receiverUser.pushSubscription,
         JSON.stringify({
-          type: "call_ended",
+          type: pushType,
           uniqueName: convo.uniqueName,
+          caller,
+          receiverId,
         })
       );
     }
 
-    res.json(convo);
+res.json(convo);
   } catch (err) {
-    console.error("end-call error:", err);
-    res.status(500).json({ message: err.message });
-  }
+  console.error("end-call error:", err);
+  res.status(500).json({ message: err.message });
+}
 });
 
 /* ---------------------  GET CALL STATUS  --------------------- */

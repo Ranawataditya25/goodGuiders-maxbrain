@@ -119,6 +119,10 @@ import StudentProfileInfo from "./pages/StudentProfileInfo.jsx";
 import StudentEvaluationResult from "./pages/StudentEvaluationResult.jsx";
 import StudentClasses from "./pages/Classes.jsx";
 import Appointments from "./pages/Appointments.jsx";
+import { CallProvider } from "./context/CallContext";
+import IncomingCallModal from "./componets/IncomingCallModal";
+import { socket } from "./socket";
+import { useEffect } from "react";
 
 const routesWithoutExtras = [
   "/",
@@ -134,8 +138,6 @@ const routesWithoutExtras = [
 
 function AppContent() {
   const location = useLocation();
-  // const navigate = useNavigate();
-  // const isSpecialRoute = hideExtras;
 
   // 👇 dynamic route check
   const isResetPasswordPage = location.pathname.startsWith("/reset-password");
@@ -144,6 +146,46 @@ function AppContent() {
     routesWithoutExtras.includes(location.pathname) || isResetPasswordPage;
 
   const customizerEnabled = true;
+
+    useEffect(() => {
+  if (hideExtras) return;
+
+  const user = JSON.parse(localStorage.getItem("loggedInUser"));
+  if (!user?.email) return;
+
+  const onConnect = () => {
+    console.log("🔌 Socket connected (client)", socket.id);
+    try {
+      const normalized = String(user.email || "").trim().toLowerCase();
+      socket.emit("register", normalized);
+      console.log("🔖 Registered (client):", normalized);
+    } catch (e) {
+      console.error("Register emit failed", e);
+    }
+  };
+
+  const onDisconnect = (reason) => {
+    console.log("❌ Socket disconnected (client)", reason);
+  };
+
+  const onConnectError = (err) => {
+    console.error("❌ Socket connect error:", err);
+  };
+
+  socket.on("connect", onConnect);
+  socket.on("disconnect", onDisconnect);
+  socket.on("connect_error", onConnectError);
+
+  socket.connect(); // will trigger 'connect' and register
+
+  return () => {
+    socket.off("connect", onConnect);
+    socket.off("disconnect", onDisconnect);
+    socket.off("connect_error", onConnectError);
+    socket.disconnect();
+  };
+}, [hideExtras]);
+
   // const headerEnabled = true;
   // const sidebarEnabled = true;
 
@@ -169,11 +211,20 @@ function AppContent() {
 
   return (
     <>
-      {/* ✅ HEADER & SIDEBAR CONDITION */}
-      {!hideExtras && <Header />}
-      {!hideExtras && <Sidebar />}
-      <Routes>
-        {/* <Route
+      {!hideExtras ? (
+        <CallProvider
+          userEmail={JSON.parse(localStorage.getItem("loggedInUser"))?.email}
+        >
+          {/* 🔔 Global incoming call popup */}
+          <IncomingCallModal />
+
+          {/* ✅ Header & Sidebar only after login */}
+          <Header />
+          <Sidebar />
+
+          {/* ✅ All authenticated routes */}
+          <Routes>
+            {/* <Route
           exact
           path="/"
           element={
@@ -183,189 +234,297 @@ function AppContent() {
             />
           }
         /> */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route exact path="/admin-dashboard" element={<Index />} />
-        <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
-        <Route exact path="/chat/:mentorEmail" element={<ChatPage />} />
-        <Route exact path="/all-chats" element={<AllChatsPage />} />
-        <Route exact path="/mentor/materials" element={<MentorMaterials />} />
-        <Route path="/mentor/:email/materials" element={<MentorMaterials />} />
-        <Route
-          exact
-          path="/admin-mentor-requests"
-          element={<AdminMentorRequests />}
-        />
-        <Route exact path="/purchase-temp" element={<PurchaseTemp />} />
-        <Route
-          exact
-          path="/mentor-submissions"
-          element={<MentorSubmissions />}
-        />
-        <Route
-          exact
-          path="/admin/pdf-submissions"
-          element={<AdminPdfSubmissions />}
-        />
-        <Route
-          exact
-          path="/mentor/pdf-evaluations"
-          element={<MentorEvaluations />}
-        />
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route exact path="/admin-dashboard" element={<Index />} />
+            <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
+            <Route exact path="/chat/:mentorEmail" element={<ChatPage />} />
+            <Route exact path="/all-chats" element={<AllChatsPage />} />
+            <Route
+              exact
+              path="/mentor/materials"
+              element={<MentorMaterials />}
+            />
+            <Route
+              path="/mentor/:email/materials"
+              element={<MentorMaterials />}
+            />
+            <Route
+              exact
+              path="/admin-mentor-requests"
+              element={<AdminMentorRequests />}
+            />
+            <Route exact path="/purchase-temp" element={<PurchaseTemp />} />
+            <Route
+              exact
+              path="/mentor-submissions"
+              element={<MentorSubmissions />}
+            />
+            <Route
+              exact
+              path="/admin/pdf-submissions"
+              element={<AdminPdfSubmissions />}
+            />
+            <Route
+              exact
+              path="/mentor/pdf-evaluations"
+              element={<MentorEvaluations />}
+            />
 
-        <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
-        <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
+            <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
+            <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
 
-        <Route exact path="/all-doctors" element={<All_doctor />} />
-        <Route exact path="/doctor-info/:email" element={<MentorProfileInfo />} />
-        <Route exact path="/patient-info/:email" element={<StudentProfileInfo />} />
-        {/* <Route exact path="/add-doctor" element={<Add_doctor />} /> */}
-        <Route exact path="/edit-doctor" element={<Edit_doctor />} />
+            <Route exact path="/all-doctors" element={<All_doctor />} />
+            <Route
+              exact
+              path="/doctor-info/:email"
+              element={<MentorProfileInfo />}
+            />
+            <Route
+              exact
+              path="/patient-info/:email"
+              element={<StudentProfileInfo />}
+            />
+            {/* <Route exact path="/add-doctor" element={<Add_doctor />} /> */}
+            <Route exact path="/edit-doctor" element={<Edit_doctor />} />
 
-        {/* Classes CRUD */}
-        <Route path="/classes" element={<ClassesList />} />
-        <Route path="/classes/new" element={<NewClass />} />
-        <Route path="/classes/:id/edit" element={<EditClass />} />
-        <Route path="/student/classes" element={<StudentClasses />} />
+            {/* Classes CRUD */}
+            <Route path="/classes" element={<ClassesList />} />
+            <Route path="/classes/new" element={<NewClass />} />
+            <Route path="/classes/:id/edit" element={<EditClass />} />
+            <Route path="/student/classes" element={<StudentClasses />} />
 
+            {/* Mentor assigning test */}
+            <Route exact path="/assign-test" element={<AssignTest />} />
+            <Route
+              exact
+              path="/assigned-tests"
+              element={<AssignedTestsPage />}
+            />
+            <Route
+              exact
+              path="/student/results"
+              element={<StudentEvaluationResult />}
+            />
 
-        {/* Mentor assigning test */}
-        <Route exact path="/assign-test" element={<AssignTest />} />
-        <Route exact path="/assigned-tests" element={<AssignedTestsPage />} />
-        <Route exact path="/student/results" element={<StudentEvaluationResult />} />
+            <Route
+              path="/test-instructions/:assignmentId"
+              element={<ExamInstructions />}
+            />
 
-        <Route
-          path="/test-instructions/:assignmentId"
-          element={<ExamInstructions />}
-        />
+            <Route
+              exact
+              path="/test-player/:assignmentId"
+              element={<TestPlayer />}
+            />
 
-        <Route
-          exact
-          path="/test-player/:assignmentId"
-          element={<TestPlayer />}
-        />
+            <Route
+              exact
+              path="/test-result/:attemptId"
+              element={<TestResult />}
+            />
 
-        <Route exact path="/test-result/:attemptId" element={<TestResult />} />
+            <Route exact path="/my-assignments" element={<MyAssignments />} />
 
-        <Route exact path="/my-assignments" element={<MyAssignments />} />
+            <Route exact path="/all-patients" element={<All_patient />} />
+            {/* <Route exact path="/add-patient" element={<Add_patient />} /> */}
+            <Route exact path="/edit-patient" element={<Edit_patient />} />
 
-        <Route exact path="/all-patients" element={<All_patient />} />
-        {/* <Route exact path="/add-patient" element={<Add_patient />} /> */}
-        <Route exact path="/edit-patient" element={<Edit_patient />} />
+            <Route exact path="/test-page" element={<TestPage />} />
+            <Route exact path="/test-start" element={<TestStart />} />
+            <Route exact path="/test-end" element={<TestEnd />} />
 
-        <Route exact path="/test-page" element={<TestPage />} />
-        <Route exact path="/test-start" element={<TestStart />} />
-        <Route exact path="/test-end" element={<TestEnd />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route
+              exact
+              path="/doctor-schedule"
+              element={<Doctor_schedule />}
+            />
+            <Route
+              exact
+              path="/add-appointment"
+              element={<Add_appointment />}
+            />
+            <Route
+              exact
+              path="/edit-appointment"
+              element={<Edit_appointment />}
+            />
+            <Route
+              exact
+              path="/appointment-list"
+              element={<Appointment_list />}
+            />
+            <Route exact path="/payment-list" element={<Payment_list />} />
+            <Route exact path="/add-payment" element={<Add_payment />} />
+            <Route exact path="/patient-invoice" element={<Invoice />} />
+            <Route
+              exact
+              path="/event-management"
+              element={<Event_management />}
+            />
 
+            <Route exact path="/login" element={<Login />} />
+            <Route exact path="/register" element={<Register />} />
+            <Route
+              exact
+              path="/mentor-registration"
+              element={<MentorRegistrationProfile />}
+            />
+            <Route exact path="/doctor-profile" element={<DoctorProfile />} />
+            <Route exact path="/status" element={<Status />} />
+            <Route
+              exact
+              path="/forgot-password"
+              element={<Forgot_password />}
+            />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route exact path="/verify-email" element={<Verify_email />} />
+            <Route exact path="/verify-pin" element={<Verify_pin />} />
 
-        <Route path="/appointments" element={<Appointments />} />
-        <Route exact path="/doctor-schedule" element={<Doctor_schedule />} />
-        <Route exact path="/add-appointment" element={<Add_appointment />} />
-        <Route exact path="/edit-appointment" element={<Edit_appointment />} />
-        <Route exact path="/appointment-list" element={<Appointment_list />} />
-        <Route exact path="/payment-list" element={<Payment_list />} />
-        <Route exact path="/add-payment" element={<Add_payment />} />
-        <Route exact path="/patient-invoice" element={<Invoice />} />
-        <Route exact path="/event-management" element={<Event_management />} />
+            <Route exact path="/faq" element={<Faq />} />
+            <Route exact path="/support" element={<Element_Support />} />
+            <Route exact path="/basic-table" element={<Table />} />
+            <Route exact path="/data-table" element={<Datatable />} />
 
-        <Route exact path="/login" element={<Login />} />
-        <Route exact path="/register" element={<Register />} />
-        <Route
-          exact
-          path="/mentor-registration"
-          element={<MentorRegistrationProfile />}
-        />
-        <Route exact path="/doctor-profile" element={<DoctorProfile />} />
-        <Route exact path="/status" element={<Status />} />
-        <Route exact path="/forgot-password" element={<Forgot_password />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-        <Route exact path="/verify-email" element={<Verify_email />} />
-        <Route exact path="/verify-pin" element={<Verify_pin />} />
+            <Route
+              exact
+              path="/element-input"
+              element={<Element_Basic_form />}
+            />
+            <Route
+              exact
+              path="/element-checkbox-radio"
+              element={<Element_Checkbox_radio />}
+            />
+            <Route
+              exact
+              path="/element-datepicker"
+              element={<Element_Datetimepicker />}
+            />
+            <Route exact path="/chart-apex" element={<ApexChart />} />
+            <Route exact path="/chart-echarts" element={<Echart />} />
+            <Route exact path="/chart-morris" element={<Morrishchart />} />
 
-        <Route exact path="/faq" element={<Faq />} />
-        <Route exact path="/support" element={<Element_Support />} />
-        <Route exact path="/basic-table" element={<Table />} />
-        <Route exact path="/data-table" element={<Datatable />} />
+            <Route exact path="/timeline-one" element={<Element_Timeline />} />
+            <Route
+              exact
+              path="/timeline-two"
+              element={<Element_Timeline_Two />}
+            />
+            <Route exact path="/pricing" element={<Element_pricing />} />
+            <Route
+              exact
+              path="/element-select2"
+              element={<Element_Select2 />}
+            />
+            <Route exact path="/element-switch" element={<Element_Switch />} />
+            <Route
+              exact
+              path="/element-dropzone"
+              element={<Element_Dropzone />}
+            />
+            <Route
+              exact
+              path="/element-sweetalert2"
+              element={<Element_Sweetalert />}
+            />
+            <Route
+              exact
+              path="/element-lightbox"
+              element={<Element_Lightbox />}
+            />
+            <Route
+              exact
+              path="/element-typography"
+              element={<Element_Typography />}
+            />
+            <Route exact path="/element-color" element={<Element_Colors />} />
+            <Route
+              exact
+              path="/element-themeclass"
+              element={<Element_HelperClass />}
+            />
+            <Route exact path="/element-alert" element={<Element_Alerts />} />
+            <Route exact path="/element-avtar" element={<Element_Avtar />} />
+            <Route exact path="/element-button" element={<Element_Buttons />} />
+            <Route exact path="/element-grid" element={<Element_Grids />} />
+            <Route
+              exact
+              path="/element-dropdown"
+              element={<Element_Dropdowns />}
+            />
+            <Route
+              exact
+              path="/element-breadcrumb"
+              element={<Element_breadcrumb />}
+            />
+            <Route
+              exact
+              path="/element-accordion"
+              element={<Element_Accordions />}
+            />
+            <Route exact path="/element-badge" element={<Element_Badges />} />
+            <Route exact path="/element-modal" element={<Element_Modals />} />
+            <Route
+              exact
+              path="/element-tab"
+              element={<Element_Tabs_content />}
+            />
+            <Route
+              exact
+              path="/element-tooltip"
+              element={<Element_Tooltips />}
+            />
+            <Route exact path="/element-card" element={<Element_Cards />} />
+            <Route
+              exact
+              path="/element-progressbar"
+              element={<Element_Progressbar />}
+            />
+            <Route
+              exact
+              path="/element-pagination"
+              element={<Element_Paginations />}
+            />
+            <Route exact path="/landing" element={<Landing />} />
 
-        <Route exact path="/element-input" element={<Element_Basic_form />} />
-        <Route
-          exact
-          path="/element-checkbox-radio"
-          element={<Element_Checkbox_radio />}
-        />
-        <Route
-          exact
-          path="/element-datepicker"
-          element={<Element_Datetimepicker />}
-        />
-        <Route exact path="/chart-apex" element={<ApexChart />} />
-        <Route exact path="/chart-echarts" element={<Echart />} />
-        <Route exact path="/chart-morris" element={<Morrishchart />} />
+            <Route path="*" element={<Navigate to="/error-page" replace />} />
+            <Route path="/error-page" element={<Errorpage />} />
+          </Routes>
 
-        <Route exact path="/timeline-one" element={<Element_Timeline />} />
-        <Route exact path="/timeline-two" element={<Element_Timeline_Two />} />
-        <Route exact path="/pricing" element={<Element_pricing />} />
-        <Route exact path="/element-select2" element={<Element_Select2 />} />
-        <Route exact path="/element-switch" element={<Element_Switch />} />
-        <Route exact path="/element-dropzone" element={<Element_Dropzone />} />
-        <Route
-          exact
-          path="/element-sweetalert2"
-          element={<Element_Sweetalert />}
-        />
-        <Route exact path="/element-lightbox" element={<Element_Lightbox />} />
-        <Route
-          exact
-          path="/element-typography"
-          element={<Element_Typography />}
-        />
-        <Route exact path="/element-color" element={<Element_Colors />} />
-        <Route
-          exact
-          path="/element-themeclass"
-          element={<Element_HelperClass />}
-        />
-        <Route exact path="/element-alert" element={<Element_Alerts />} />
-        <Route exact path="/element-avtar" element={<Element_Avtar />} />
-        <Route exact path="/element-button" element={<Element_Buttons />} />
-        <Route exact path="/element-grid" element={<Element_Grids />} />
-        <Route exact path="/element-dropdown" element={<Element_Dropdowns />} />
-        <Route
-          exact
-          path="/element-breadcrumb"
-          element={<Element_breadcrumb />}
-        />
-        <Route
-          exact
-          path="/element-accordion"
-          element={<Element_Accordions />}
-        />
-        <Route exact path="/element-badge" element={<Element_Badges />} />
-        <Route exact path="/element-modal" element={<Element_Modals />} />
-        <Route exact path="/element-tab" element={<Element_Tabs_content />} />
-        <Route exact path="/element-tooltip" element={<Element_Tooltips />} />
-        <Route exact path="/element-card" element={<Element_Cards />} />
-        <Route
-          exact
-          path="/element-progressbar"
-          element={<Element_Progressbar />}
-        />
-        <Route
-          exact
-          path="/element-pagination"
-          element={<Element_Paginations />}
-        />
-        <Route exact path="/landing" element={<Landing />} />
+          {/* Scroll To Top */}
+          <Taptotop />
 
-        <Route path="*" element={<Navigate to="/error-page" replace />} />
-        <Route path="/error-page" element={<Errorpage />} />
-      </Routes>
-
-      {/* Scroll To Top */}
-      <Taptotop />
-
-      {/* Customizer */}
-      {!hideExtras && location.pathname !== "/error-page" && customizerEnabled && (
-        <Customizer />
+          {/* Customizer */}
+          {!hideExtras &&
+            location.pathname !== "/error-page" &&
+            customizerEnabled && <Customizer />}
+        </CallProvider>
+      ) : (
+        <>
+          {/* ❌ PUBLIC PAGES (no calls, no sounds) */}
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route exact path="/login" element={<Login />} />
+            <Route exact path="/register" element={<Register />} />
+            <Route
+              exact
+              path="/forgot-password"
+              element={<Forgot_password />}
+            />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route exact path="/verify-email" element={<Verify_email />} />
+            <Route exact path="/verify-pin" element={<Verify_pin />} />
+            <Route
+              exact
+              path="/mentor-registration"
+              element={<MentorRegistrationProfile />}
+            />
+            <Route exact path="/landing" element={<Landing />} />
+            <Route path="*" element={<Navigate to="/error-page" replace />} />
+            <Route path="/error-page" element={<Errorpage />} />
+          </Routes>
+        </>
       )}
     </>
   );

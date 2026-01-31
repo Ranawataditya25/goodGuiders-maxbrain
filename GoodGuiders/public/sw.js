@@ -29,11 +29,16 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     (async () => {
       /* 🔴 CLOSE if call ended / answered */
-      if (data.type === "call_ended" || data.type === "call_answered") {
-        const existing = await self.registration.getNotifications({ tag });
-        existing.forEach((n) => n.close());
-        return;
-      }
+      if (
+  data.type === "call_ended" ||
+  data.type === "call_answered" ||
+  data.type === "call_rejected" ||
+  data.type === "call_missed"
+) {
+  const existing = await self.registration.getNotifications({ tag });
+  existing.forEach((n) => n.close());
+  return;
+}
 
       /* 🔁 Close any previous ringing notification */
       const existing = await self.registration.getNotifications({ tag });
@@ -80,11 +85,11 @@ self.addEventListener("notificationclick", (event) => {
       });
       active.forEach((n) => n.close());
 
-      /* ✅ ACCEPT → open chat with CALLER */
+      /* ✅ ACCEPT → open chat with CALLER (auto-join via query params) */
       if (event.action === "accept" || !event.action) {
         const chatUrl = `${FRONTEND_BASE_URL}/chat/${encodeURIComponent(
           caller,
-        )}`;
+        )}?autoJoinCall=1&uniqueName=${encodeURIComponent(uniqueName || "")}`;
         await clients.openWindow(chatUrl);
         return;
       }

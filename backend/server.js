@@ -43,6 +43,20 @@ import pushRoutes from "./routes/push.route.js";
 
 dotenv.config();
 
+const ALLOWED_ORIGINS = (
+  process.env.CORS_ORIGIN ||
+  [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:4173",
+    "https://landing-page-gg.onrender.com",
+    "https://goodguiders.onrender.com",
+  ].join(",")
+)
+  .split(",")
+  .map((o) => o.trim());
+
 const app = express();
 mentorExpiryCron();
 
@@ -53,34 +67,29 @@ webpush.setVapidDetails(
 );
 
 /* ----------------------- CORS ----------------------- */
-const corsOrigins = (process.env.CORS_ORIGIN || "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow Postman / server-to-server
+      if (!origin) return callback(null, true);
 
-const corsOptions = {
-  origin: corsOrigins.length
-    ? corsOrigins
-    : [
-        "http://127.0.0.1:5173",
-        "http://localhost:5173",
-        "http://localhost:5174", // Add this
-        "http://localhost:4173",
-        "https://landing-page-gg.onrender.com",
-        "https://goodguiders.onrender.com",
-      ],
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-  // ✅ Allow dev headers for header-based auth shimming
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "x-user-id",
-    "x-user-role",
-    "x-user-email",
-  ],
-  credentials: true,
-};
-app.use(cors(corsOptions));
+      if (ALLOWED_ORIGINS.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS not allowed"), false);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-user-id",
+      "x-user-role",
+      "x-user-email",
+    ],
+  })
+);
 // ⚠️ DO NOT add app.options("*") or app.options("(.*)") on Express 5.
 
 /* -------------------- Body Parsers ------------------- */
@@ -197,31 +206,40 @@ const server = http.createServer(app);
 // Create socket server
 const io = new Server(server, {
   cors: {
-    origin: corsOrigins,
-    credentials: true,  // allow all for now
+    origin: ALLOWED_ORIGINS,
+    credentials: true,
   },
+  transports: ["polling", "websocket"],
 });
 
 // Make socket instance available to all routes
 app.set("io", io);
 
-// Store online connected users
+// Store online connected users as Map<userKey, Set<socketId>>
 const onlineUsers = new Map();
 
 io.on("connection", (socket) => {
   console.log("🔌 Socket connected:", socket.id);
 
-  // User registers with userId
+  // User registers with userId (normalize to lowercase)
   socket.on("register", (userId) => {
-    console.log("Registered:", userId);
-    onlineUsers.set(userId, socket.id);
+    try {
+      const key = String(userId || "").trim().toLowerCase();
+      if (!key) return;
+      console.log("Registered:", key, " -> socketId:", socket.id);
+      if (!onlineUsers.has(key)) onlineUsers.set(key, new Set());
+      onlineUsers.get(key).add(socket.id);
+    } catch (e) {
+      console.error("register handler error:", e);
+    }
   });
 
   // Handle disconnects
   socket.on("disconnect", () => {
-    for (const [userId, socketId] of onlineUsers.entries()) {
-      if (socketId === socket.id) {
-        onlineUsers.delete(userId);
+    for (const [userId, socketSet] of onlineUsers.entries()) {
+      if (socketSet.has(socket.id)) {
+        socketSet.delete(socket.id);
+        if (socketSet.size === 0) onlineUsers.delete(userId);
         break;
       }
     }
@@ -231,6 +249,13 @@ io.on("connection", (socket) => {
 
 // Export user map for routes
 app.set("onlineUsers", onlineUsers);
+
+// DEV: debug endpoint to list sockets for a given email
+app.get('/api/debug/online/:email', (req, res) => {
+  const key = String(req.params.email || '').trim().toLowerCase();
+  const sockets = onlineUsers.get(key);
+  res.json({ email: key, sockets: sockets ? Array.from(sockets) : [], allUsers: Array.from(onlineUsers.keys()) });
+});
 
 const PORT = process.env.PORT || 5000;
 

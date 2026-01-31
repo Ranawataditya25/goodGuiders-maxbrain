@@ -891,7 +891,19 @@ export default function Login() {
 
     try {
       const permission = await Notification.requestPermission();
-      if (permission !== "granted") return;
+      console.log("🔔 Notification permission result:", permission);
+
+      if (permission === "denied") {
+        // user blocked notifications — inform them how to re-enable
+        alert("Notifications are blocked for this site. Please enable them in your browser/site settings to receive call alerts.");
+        return;
+      }
+
+      if (permission !== "granted") {
+        // user dismissed prompt — don't proceed with subscription
+        console.warn("Notification permission not granted (user dismissed or default). Will not subscribe.");
+        return;
+      }
 
       const registration = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
@@ -956,7 +968,12 @@ export default function Login() {
         switch (user.mentorStatus) {
           case "approved":
             localStorage.setItem("loggedInUser", JSON.stringify(user));
-            registerPushNotifications(user.email);
+            // ensure push permission is requested as part of the user gesture
+            try {
+              await registerPushNotifications(user.email);
+            } catch (e) {
+              console.warn("registerPushNotifications failed:", e);
+            }
             navigate("/doctor-dashboard");
             break;
           case "rejected":
@@ -978,7 +995,12 @@ export default function Login() {
       } else {
         // ✅ Non-mentor users (admin or student)
         localStorage.setItem("loggedInUser", JSON.stringify(user));
-        registerPushNotifications(user.email);
+        // ensure push permission is requested as part of the user gesture
+        try {
+          await registerPushNotifications(user.email);
+        } catch (e) {
+          console.warn("registerPushNotifications failed:", e);
+        }
 
         if (user.role === "admin") {
           navigate("/admin-dashboard");
