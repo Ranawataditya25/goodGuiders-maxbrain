@@ -10,13 +10,9 @@ import { useNavigate } from "react-router-dom";
 const SELECTABLE_CLASSES = ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
 
 // ✅ Default: only one row
-const DEFAULT_EDUCATION = [
-  { className: "", passout: "", board: "", subject: "", grade: "" },
-];
+const DEFAULT_EDUCATION = [{ className: "", board: "", subject: "" }];
 
-const RequiredStar = () => (
-  <span className="text-danger ms-1">*</span>
-);
+const RequiredStar = () => <span className="text-danger ms-1">*</span>;
 
 const REQUIRED_FIELDS = [
   "name",
@@ -44,18 +40,15 @@ function isProfileComplete(formData) {
   }
 
   const edu = formData.education[0];
-  if (
-    !edu.className ||
-    !edu.passout ||
-    !edu.board ||
-    !edu.subject ||
-    !edu.grade
-  ) {
+  if (!edu.className || !edu.board || !edu.subject) {
     return false;
   }
 
   return true;
 }
+
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
+const baseUrl = API.replace("/api", "");
 
 export default function Edit_patient() {
   const [formData, setFormData] = useState({
@@ -134,18 +127,17 @@ export default function Edit_patient() {
 
       data.append("email", savedUser.email);
 
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"}/profile`,
-        {
-          method: "PUT",
-          body: data,
-        }
-      );
+      const res = await fetch(`${API}/profile`, {
+        method: "PUT",
+        body: data,
+      });
 
       const result = await res.json();
       if (res.ok) {
         if (!isProfileComplete(formData)) {
-          alert("⚠️ Please fill all compulsory (*) fields before submitting your profile.");
+          alert(
+            "⚠️ Please fill all compulsory (*) fields before submitting your profile.",
+          );
           setIsSubmitting(false);
           return; // ⛔ STOP REDIRECT
         }
@@ -177,7 +169,7 @@ export default function Edit_patient() {
   const handleEducationChange = (index, field, value) => {
     setFormData((prev) => {
       const updated = prev.education.map((r, i) =>
-        i === index ? { ...r, [field]: value } : r
+        i === index ? { ...r, [field]: value } : r,
       );
       return { ...prev, education: updated };
     });
@@ -246,8 +238,8 @@ export default function Edit_patient() {
                 </Card.Header>
                 <Card.Body>
                   <p className="text-danger mb-3">
-  <strong>*</strong> Compulsory fields
-</p>
+                    <strong>*</strong> Compulsory fields
+                  </p>
                   <Form onSubmit={handleSubmit}>
                     <Row className="mb-24">
                       <Col md={12} className="text-center">
@@ -268,14 +260,14 @@ export default function Edit_patient() {
                               src={
                                 typeof formData.profileImage === "string" &&
                                 formData.profileImage.startsWith(
-                                  "/profilePhotoUploads"
+                                  "/profilePhotoUploads",
                                 )
-                                  ? `http://localhost:5000${formData.profileImage}`
+                                  ? `${baseUrl}${formData.profileImage}`
                                   : formData.profileImage instanceof File
-                                  ? URL.createObjectURL(formData.profileImage)
-                                  : `${
-                                      import.meta.env.BASE_URL
-                                    }default-avatar.png`
+                                    ? URL.createObjectURL(formData.profileImage)
+                                    : `${
+                                        import.meta.env.BASE_URL
+                                      }default-avatar.png`
                               }
                               alt="Profile"
                               className="profile-picedit"
@@ -287,7 +279,9 @@ export default function Edit_patient() {
                     <Row>
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Name <RequiredStar /></Form.Label>
+                          <Form.Label>
+                            Name <RequiredStar />
+                          </Form.Label>
                           <Form.Control
                             type="text"
                             name="name"
@@ -300,7 +294,9 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Date of Birth <RequiredStar /></Form.Label>
+                          <Form.Label>
+                            Date of Birth <RequiredStar />
+                          </Form.Label>
                           <input
                             className="datepicker-here form-control"
                             type="date"
@@ -313,7 +309,9 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mt-0 mb-3">
-                          <Form.Label>Gender <RequiredStar /></Form.Label>
+                          <Form.Label>
+                            Gender <RequiredStar />
+                          </Form.Label>
                           <Form.Control
                             as="select"
                             name="gender"
@@ -330,7 +328,9 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Phone <RequiredStar /></Form.Label>
+                          <Form.Label>
+                            Phone <RequiredStar />
+                          </Form.Label>
                           <Form.Control
                             type="text"
                             name="mobileNo"
@@ -343,7 +343,9 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>City <RequiredStar /></Form.Label>
+                          <Form.Label>
+                            City <RequiredStar />
+                          </Form.Label>
                           <Form.Control
                             type="text"
                             name="city"
@@ -356,7 +358,9 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>State <RequiredStar /></Form.Label>
+                          <Form.Label>
+                            State <RequiredStar />
+                          </Form.Label>
                           <Form.Control
                             type="text"
                             name="state"
@@ -369,7 +373,9 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Country <RequiredStar /></Form.Label>
+                          <Form.Label>
+                            Country <RequiredStar />
+                          </Form.Label>
                           <Form.Control
                             type="text"
                             name="country"
@@ -382,7 +388,9 @@ export default function Edit_patient() {
 
                       <Col md={4}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Postal/zip Code <RequiredStar /></Form.Label>
+                          <Form.Label>
+                            Postal/zip Code <RequiredStar />
+                          </Form.Label>
                           <Form.Control
                             type="text"
                             placeholder="Enter Postal/zip Code"
@@ -395,7 +403,9 @@ export default function Edit_patient() {
 
                       <Col md={6}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Address <RequiredStar /></Form.Label>
+                          <Form.Label>
+                            Address <RequiredStar />
+                          </Form.Label>
                           <Form.Control
                             as="textarea"
                             placeholder="Enter address"
@@ -415,11 +425,15 @@ export default function Edit_patient() {
                                   <table className="table table-bordered">
                                     <thead>
                                       <tr>
-                                        <th>Class <RequiredStar /></th>
-                                        <th>Passout <RequiredStar /></th>
-                                        <th>University/Board <RequiredStar /></th>
-                                        <th>Subject <RequiredStar /></th>
-                                        <th>Per/CGPA <RequiredStar /></th>
+                                        <th>
+                                          Class <RequiredStar />
+                                        </th>
+                                        <th>
+                                          University/Board <RequiredStar />
+                                        </th>
+                                        <th>
+                                          Subject <RequiredStar />
+                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody>
@@ -433,7 +447,7 @@ export default function Edit_patient() {
                                                 handleEducationChange(
                                                   index,
                                                   "className",
-                                                  e.target.value
+                                                  e.target.value,
                                                 )
                                               }
                                             >
@@ -450,25 +464,12 @@ export default function Edit_patient() {
                                           <td>
                                             <Form.Control
                                               type="text"
-                                              value={edu.passout}
-                                              onChange={(e) =>
-                                                handleEducationChange(
-                                                  index,
-                                                  "passout",
-                                                  e.target.value
-                                                )
-                                              }
-                                            />
-                                          </td>
-                                          <td>
-                                            <Form.Control
-                                              type="text"
                                               value={edu.board}
                                               onChange={(e) =>
                                                 handleEducationChange(
                                                   index,
                                                   "board",
-                                                  e.target.value
+                                                  e.target.value,
                                                 )
                                               }
                                             />
@@ -481,20 +482,7 @@ export default function Edit_patient() {
                                                 handleEducationChange(
                                                   index,
                                                   "subject",
-                                                  e.target.value
-                                                )
-                                              }
-                                            />
-                                          </td>
-                                          <td>
-                                            <Form.Control
-                                              type="text"
-                                              value={edu.grade}
-                                              onChange={(e) =>
-                                                handleEducationChange(
-                                                  index,
-                                                  "grade",
-                                                  e.target.value
+                                                  e.target.value,
                                                 )
                                               }
                                             />

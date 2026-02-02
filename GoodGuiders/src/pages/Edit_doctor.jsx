@@ -6,33 +6,30 @@ import "./css/ProfilePage.css";
 // import '../pages/css/ProfilePage.css';
 
 const DEFAULT_EDUCATION = [
-  { className: "10th", passout: "", board: "", subject: "", grade: "" },
-  { className: "12th", passout: "", board: "", subject: "", grade: "" },
+  { className: "10th", board: "", subject: "" },
+  { className: "12th", board: "", subject: "" },
   {
     className: "Graduation",
     degree: "",
-    passout: "",
     board: "",
     subject: "",
-    grade: "",
   },
   {
     className: "Post Graduation",
     degree: "",
-    passout: "",
     board: "",
     subject: "",
-    grade: "",
   },
   {
     className: "PhD",
     degree: "",
-    passout: "",
     board: "",
     subject: "",
-    grade: "",
   },
 ];
+
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000/api";
+const baseUrl = API.replace("/api", "");
 
 export default function Edit_doctor() {
   const [formData, setFormData] = useState({
@@ -51,31 +48,25 @@ export default function Edit_doctor() {
     specializedIn: "",
     profileImage: null,
     education: [
-      { className: "10th", passout: "", board: "", subject: "", grade: "" },
-      { className: "12th", passout: "", board: "", subject: "", grade: "" },
+      { className: "10th", board: "", subject: "" },
+      { className: "12th", board: "", subject: "" },
       {
         className: "Graduation",
         degree: "",
-        passout: "",
         board: "",
         subject: "",
-        grade: "",
       },
       {
         className: "Post Graduation",
         degree: "",
-        passout: "",
         board: "",
         subject: "",
-        grade: "",
       },
       {
         className: "PhD",
         degree: "",
-        passout: "",
         board: "",
         subject: "",
-        grade: "",
       },
     ],
   });
@@ -91,7 +82,7 @@ export default function Edit_doctor() {
       const education = DEFAULT_EDUCATION.map((edu) => {
         if (!Array.isArray(savedUser.education)) return edu;
         const savedEdu = savedUser.education.find(
-          (e) => e.className === edu.className
+          (e) => e.className === edu.className,
         );
         return savedEdu ? { ...edu, ...savedEdu } : edu;
       });
@@ -150,7 +141,7 @@ export default function Edit_doctor() {
       });
       data.append("email", savedUser.email);
 
-      const res = await fetch("http://127.0.0.1:5000/api/profile", {
+      const res = await fetch(`${API}/profile`, {
         method: "PUT",
         body: data,
       });
@@ -206,7 +197,7 @@ export default function Edit_doctor() {
       education: DEFAULT_EDUCATION.map((edu) => {
         if (!Array.isArray(savedUser.education)) return edu;
         const savedEdu = savedUser.education.find(
-          (e) => e.className === edu.className
+          (e) => e.className === edu.className,
         );
         return savedEdu ? { ...edu, ...savedEdu } : edu;
       }),
@@ -251,15 +242,19 @@ export default function Edit_doctor() {
                                 formData.profileImage
                                   ? typeof formData.profileImage === "string" &&
                                     formData.profileImage.startsWith(
-                                      "/profilePhotoUploads"
+                                      "/profilePhotoUploads",
                                     )
-                                    ? `http://localhost:5000${formData.profileImage}`
+                                    ? `${baseUrl}${formData.profileImage}`
                                     : formData.profileImage instanceof File
-                                      ? URL.createObjectURL(formData.profileImage)
-                                      : `${import.meta.env.BASE_URL
-                                      }default-avatar.png`
-                                  : `${import.meta.env.BASE_URL
-                                  }default-avatar.png`
+                                      ? URL.createObjectURL(
+                                          formData.profileImage,
+                                        )
+                                      : `${
+                                          import.meta.env.BASE_URL
+                                        }default-avatar.png`
+                                  : `${
+                                      import.meta.env.BASE_URL
+                                    }default-avatar.png`
                               }
                               alt="Profile"
                               className="profile-picedit"
@@ -453,12 +448,8 @@ export default function Edit_doctor() {
                                     <thead>
                                       <tr>
                                         <th>Class</th>
-
-                                        <th>Paasout</th>
                                         <th>University/Board </th>
                                         <th>Subject</th>
-
-                                        <th>Per/CGPA </th>
                                       </tr>
                                     </thead>
                                     <tbody>
@@ -466,7 +457,7 @@ export default function Edit_doctor() {
                                         <tr key={index}>
                                           <td>
                                             {["10th", "12th"].includes(
-                                              edu.className
+                                              edu.className,
                                             ) ? (
                                               edu.className
                                             ) : (
@@ -477,7 +468,7 @@ export default function Edit_doctor() {
                                                   handleEducationChange(
                                                     index,
                                                     "degree",
-                                                    e.target.value
+                                                    e.target.value,
                                                   )
                                                 }
                                               >
@@ -524,25 +515,12 @@ export default function Edit_doctor() {
                                           <td>
                                             <Form.Control
                                               type="text"
-                                              value={edu.passout || ""}
-                                              onChange={(e) =>
-                                                handleEducationChange(
-                                                  index,
-                                                  "passout",
-                                                  e.target.value
-                                                )
-                                              }
-                                            />
-                                          </td>
-                                          <td>
-                                            <Form.Control
-                                              type="text"
                                               value={edu.board || ""}
                                               onChange={(e) =>
                                                 handleEducationChange(
                                                   index,
                                                   "board",
-                                                  e.target.value
+                                                  e.target.value,
                                                 )
                                               }
                                             />
@@ -555,20 +533,7 @@ export default function Edit_doctor() {
                                                 handleEducationChange(
                                                   index,
                                                   "subject",
-                                                  e.target.value
-                                                )
-                                              }
-                                            />
-                                          </td>
-                                          <td>
-                                            <Form.Control
-                                              type="text"
-                                              value={edu.grade || ""}
-                                              onChange={(e) =>
-                                                handleEducationChange(
-                                                  index,
-                                                  "grade",
-                                                  e.target.value
+                                                  e.target.value,
                                                 )
                                               }
                                             />

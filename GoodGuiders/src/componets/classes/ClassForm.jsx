@@ -695,7 +695,7 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
                                     setShowQAModal(true);
                                   }}
                                 >
-                                  + Add Q&A
+                                  Sub-topic test
                                 </Button>
 
                                 <Button
@@ -750,7 +750,21 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
         </Card.Body>
         <Card.Footer className="d-flex justify-content-end gap-2">
           <Button onClick={submit} disabled={saving}>
-            {saving ? "Saving..." : "Save"}
+            {saving ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Saving…
+              </>
+            ) : (
+              "Save"
+            )}
           </Button>
         </Card.Footer>
       </Card>
@@ -831,7 +845,7 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
 
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowQAModal(false)}>
-            Close
+            Save
           </Button>
         </Modal.Footer>
       </Modal>

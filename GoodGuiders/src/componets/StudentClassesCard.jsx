@@ -21,6 +21,7 @@ export default function StudentClassesCard() {
   const [error, setError] = useState("");
   const [showQAModal, setShowQAModal] = useState(false);
   const [activeSubTopic, setActiveSubTopic] = useState(null);
+  const [openQuestionIndex, setOpenQuestionIndex] = useState(null);
 
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [activeSubject, setActiveSubject] = useState(null);
@@ -324,7 +325,7 @@ export default function StudentClassesCard() {
                                 size={14}
                                 className="me-1"
                               />
-                              View Q&A
+                              Sub-topic test
                             </Button>
                           </div>
                         </div>
@@ -356,25 +357,51 @@ export default function StudentClassesCard() {
 
           <Modal.Body className="px-4 py-4">
             {activeSubTopic?.questions?.length ? (
-              activeSubTopic.questions.map((q, i) => (
-                <div
-                  key={i}
-                  className="mb-4 p-4 border rounded bg-white shadow-sm"
-                >
-                  <div className="fw-bold fs-15 mb-3 ps-2">
-                    Q{i + 1}. {q.question}
-                  </div>
+              activeSubTopic.questions.map((q, i) => {
+                const isOpen = openQuestionIndex === i;
+
+                return (
                   <div
-                    className="mt-2 ps-2 text-dark"
-                    style={{ lineHeight: "1.6" }}
+                    key={i}
+                    className="mb-3 border rounded bg-white shadow-sm"
                   >
-                    <span className="fw-semibold text-secondary me-1">
-                      Answer:
-                    </span>
-                    {q.answer}
+                    {/* Question row */}
+                    <div
+                      className="d-flex justify-content-between align-items-center p-3"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setOpenQuestionIndex(isOpen ? null : i)}
+                    >
+                      <div className="fw-semibold px-3 py-3">
+                        Q{i + 1}. {q.question}
+                      </div>
+
+                      <Button
+                        size="sm"
+                        variant="outline-secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenQuestionIndex(isOpen ? null : i);
+                        }}
+                      >
+                        <FeatherIcon
+                          icon={isOpen ? "minus" : "plus"}
+                          size={14}
+                        />
+                      </Button>
+                    </div>
+
+                    {/* Answer dropdown */}
+                    {isOpen && (
+                      <div className="border-top px-3 py-3 text-dark">
+                        <span className="fw-semibold text-secondary me-1">
+                          Answer:
+                        </span>
+                        {q.answer}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-muted">
                 No questions available for this topic.
