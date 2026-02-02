@@ -19,6 +19,8 @@ export default function StudentClassesCard() {
   // const [expanded, setExpanded] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showQAModal, setShowQAModal] = useState(false);
+  const [activeSubTopic, setActiveSubTopic] = useState(null);
 
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [activeSubject, setActiveSubject] = useState(null);
@@ -34,8 +36,8 @@ export default function StudentClassesCard() {
 
         const res = await fetch(
           `${API}/classes/student?email=${encodeURIComponent(
-            loggedInUser.email
-          )}`
+            loggedInUser.email,
+          )}`,
         );
 
         const data = await res.json();
@@ -60,7 +62,7 @@ export default function StudentClassesCard() {
       rows.map((r) => ({
         subjects: r.subjects?.length || 0,
       })),
-    [rows]
+    [rows],
   );
 
   function handleOpenPdf(fileUrl) {
@@ -219,8 +221,9 @@ export default function StudentClassesCard() {
         <Modal
           show={showSubjectModal}
           onHide={() => setShowSubjectModal(false)}
-          size="lg"
+          size="xl"
           centered
+          dialogClassName="modal-90w"
         >
           <Modal.Header closeButton>
             <Modal.Title>
@@ -230,15 +233,20 @@ export default function StudentClassesCard() {
 
           <Modal.Body>
             {activeSubject?.chapters?.length ? (
-              activeSubject.chapters.map((c, i) => (
-                <div key={i} className="mb-3 p-13 border rounded">
-                  <strong>{c.name}</strong>
+              activeSubject.chapters.map((c, ci) => (
+                <div
+                  key={ci}
+                  className="mb-5 p-4 border rounded bg-white shadow-sm"
+                >
+                  {/* Chapter title */}
+                  <h5 className="fw-semibold mb-3">📘 {c.name}</h5>
 
-                  <div className="d-flex gap-2 mt-10 flex-wrap">
+                  {/* Chapter PDFs */}
+                  <div className="d-flex gap-3 mb-4 flex-wrap">
                     {c.onePagePdfUrl && (
                       <Button
                         size="sm"
-                        variant="outline-primary"
+                        variant="outline-dark"
                         onClick={() => handleOpenPdf(c.onePagePdfUrl)}
                       >
                         <FeatherIcon
@@ -253,7 +261,7 @@ export default function StudentClassesCard() {
                     {c.fullPdfUrl && (
                       <Button
                         size="sm"
-                        variant="outline-success"
+                        variant="outline-dark"
                         onClick={() => handleOpenPdf(c.fullPdfUrl)}
                       >
                         <FeatherIcon icon="file" size={14} className="me-1" />
@@ -261,12 +269,124 @@ export default function StudentClassesCard() {
                       </Button>
                     )}
                   </div>
+
+                  {/* Sub-topics */}
+                  {c.subTopics?.length ? (
+                    <div className="ps-3 mt-2">
+                      {c.subTopics.map((t, ti) => (
+                        <div
+                          key={ti}
+                          className="mb-3 p-3 border rounded bg-light"
+                        >
+                          <div className="fw-semibold mb-2">🔹 {t.name}</div>
+
+                          <div className="d-flex gap-3 mt-3 flex-wrap">
+                            {t.onePagePdfUrl && (
+                              <Button
+                                size="sm"
+                                variant="outline-dark"
+                                onClick={() => handleOpenPdf(t.onePagePdfUrl)}
+                              >
+                                <FeatherIcon
+                                  icon="file-text"
+                                  size={13}
+                                  className="me-1"
+                                />
+                                1-Page
+                              </Button>
+                            )}
+
+                            {t.fullPdfUrl && (
+                              <Button
+                                size="sm"
+                                variant="outline-dark"
+                                onClick={() => handleOpenPdf(t.fullPdfUrl)}
+                              >
+                                <FeatherIcon
+                                  icon="file"
+                                  size={13}
+                                  className="me-1"
+                                />
+                                Full PDF
+                              </Button>
+                            )}
+
+                            <Button
+                              size="sm"
+                              variant="outline-dark"
+                              onClick={() => {
+                                setActiveSubTopic(t);
+                                setShowQAModal(true);
+                              }}
+                            >
+                              <FeatherIcon
+                                icon="help-circle"
+                                size={14}
+                                className="me-1"
+                              />
+                              View Q&A
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-muted small">No sub-topics</div>
+                  )}
                 </div>
               ))
             ) : (
               <p className="text-muted">No chapters available</p>
             )}
           </Modal.Body>
+        </Modal>
+
+        <Modal
+          show={showQAModal}
+          onHide={() => setShowQAModal(false)}
+          size="xl"
+          centered
+          dialogClassName="modal-90w"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              📖 {activeSubTopic?.name} — Questions & Answers
+            </Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body className="px-4 py-4">
+            {activeSubTopic?.questions?.length ? (
+              activeSubTopic.questions.map((q, i) => (
+                <div
+                  key={i}
+                  className="mb-4 p-4 border rounded bg-white shadow-sm"
+                >
+                  <div className="fw-bold fs-15 mb-3 ps-2">
+                    Q{i + 1}. {q.question}
+                  </div>
+                  <div
+                    className="mt-2 ps-2 text-dark"
+                    style={{ lineHeight: "1.6" }}
+                  >
+                    <span className="fw-semibold text-secondary me-1">
+                      Answer:
+                    </span>
+                    {q.answer}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted">
+                No questions available for this topic.
+              </p>
+            )}
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowQAModal(false)}>
+              Close
+            </Button>
+          </Modal.Footer>
         </Modal>
       </Card.Body>
     </Card>

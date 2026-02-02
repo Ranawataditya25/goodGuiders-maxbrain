@@ -330,11 +330,16 @@
 //   );
 // }
 
-
-
 // src/pages/classes/List.jsx  (updated)
 import { useEffect, useMemo, useState } from "react";
-import { Container, Table, Button, Badge, Collapse } from "react-bootstrap";
+import {
+  Container,
+  Table,
+  Button,
+  Badge,
+  Collapse,
+  Modal,
+} from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import PropTypes from "prop-types";
@@ -348,6 +353,8 @@ export default function List() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [expanded, setExpanded] = useState({});
+  const [showQAModal, setShowQAModal] = useState(false);
+  const [activeSubTopic, setActiveSubTopic] = useState(null);
 
   // purchase modal
   const [modalShow, setModalShow] = useState(false);
@@ -361,7 +368,8 @@ export default function List() {
       setLoading(true);
       const res = await fetch(`${API}/classes`);
       const data = await res.json();
-      if (!res.ok || !data?.ok) throw new Error(data?.message || "Failed to load");
+      if (!res.ok || !data?.ok)
+        throw new Error(data?.message || "Failed to load");
       setRows(data.items || []);
     } catch (e) {
       setErr(e.message);
@@ -380,11 +388,11 @@ export default function List() {
         const subjects = r.subjects?.length || 0;
         const chapters = (r.subjects || []).reduce(
           (acc, s) => acc + (s.chapters?.length || 0),
-          0
+          0,
         );
         return { subjects, chapters };
       }),
-    [rows]
+    [rows],
   );
 
   // Open PDF placeholder
@@ -412,7 +420,8 @@ export default function List() {
     try {
       const res = await fetch(`${API}/classes/${id}`, { method: "DELETE" });
       const data = await res.json();
-      if (!res.ok || !data?.ok) throw new Error(data?.message || "Delete failed");
+      if (!res.ok || !data?.ok)
+        throw new Error(data?.message || "Delete failed");
       fetchAll();
     } catch (e) {
       alert(e.message);
@@ -429,13 +438,16 @@ export default function List() {
 
   const renderDetails = (item) => {
     const subjects = item.subjects || [];
-    if (!subjects.length) return <div className="text-muted">No subjects yet.</div>;
+    if (!subjects.length)
+      return <div className="text-muted">No subjects yet.</div>;
 
     return (
       <div className="p-3 bg-light rounded border">
         {item.educationBoard && (
           <div className="mb-2">
-            <Badge bg="info" className="me-2">Board</Badge>
+            <Badge bg="info" className="me-2">
+              Board
+            </Badge>
             <span>{item.educationBoard}</span>
           </div>
         )}
@@ -448,33 +460,53 @@ export default function List() {
             </div>
 
             {(s.chapters || []).length ? (
-              <ul className="mb-0" style={{ listStyle: "disc", paddingLeft: "1.2rem" }}>
+              <ul
+                className="mb-0"
+                style={{ listStyle: "disc", paddingLeft: "1.2rem" }}
+              >
                 {s.chapters.map((c, ci) => (
                   <li key={ci} className="mb-2">
                     <div className="d-flex align-items-center gap-2 flex-wrap">
-                      <span className="me-2">{c.name || `Chapter #${ci + 1}`}</span>
+                      <span className="me-2">
+                        {c.name || `Chapter #${ci + 1}`}
+                      </span>
 
                       {c.onePagePdfUrl && (
                         <button
                           className="btn btn-sm btn-outline-primary"
-                          onClick={() => handleOpenPdf(c.onePagePdfUrl, `${item.name} - ${s.name} - ${c.name} (1-page)`)}
+                          onClick={() =>
+                            handleOpenPdf(
+                              c.onePagePdfUrl,
+                              `${item.name} - ${s.name} - ${c.name} (1-page)`,
+                            )
+                          }
                         >
-                          <FeatherIcon icon="file-text" className="me-1" />1-page
+                          <FeatherIcon icon="file-text" className="me-1" />
+                          1-page
                         </button>
                       )}
 
                       {c.fullPdfUrl && (
                         <button
                           className="btn btn-sm btn-outline-success"
-                          onClick={() => handleOpenPdf(c.fullPdfUrl, `${item.name} - ${s.name} - ${c.name} (Full)`)}
+                          onClick={() =>
+                            handleOpenPdf(
+                              c.fullPdfUrl,
+                              `${item.name} - ${s.name} - ${c.name} (Full)`,
+                            )
+                          }
                         >
-                          <FeatherIcon icon="file" className="me-1" />full
+                          <FeatherIcon icon="file" className="me-1" />
+                          full
                         </button>
                       )}
                     </div>
 
                     {c.subTopics?.length && (
-                      <ul className="mb-0 mt-1" style={{ listStyle: "circle", paddingLeft: "1.2rem" }}>
+                      <ul
+                        className="mb-0 mt-1"
+                        style={{ listStyle: "circle", paddingLeft: "1.2rem" }}
+                      >
                         {c.subTopics.map((t, ti) => (
                           <li key={ti} className="mb-1">
                             <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -483,18 +515,47 @@ export default function List() {
                               {t.onePagePdfUrl && (
                                 <button
                                   className="btn btn-sm btn-outline-primary"
-                                  onClick={() => handleOpenPdf(t.onePagePdfUrl, `${item.name} - ${s.name} - ${c.name} - ${t.name} (1-page)`)}
+                                  onClick={() =>
+                                    handleOpenPdf(
+                                      t.onePagePdfUrl,
+                                      `${item.name} - ${s.name} - ${c.name} - ${t.name} (1-page)`,
+                                    )
+                                  }
                                 >
+                                  <FeatherIcon icon="file-text" className="me-1" />
                                   1-page
                                 </button>
                               )}
                               {t.fullPdfUrl && (
                                 <button
                                   className="btn btn-sm btn-outline-success"
-                                  onClick={() => handleOpenPdf(t.fullPdfUrl, `${item.name} - ${s.name} - ${c.name} - ${t.name} (Full)`)}
+                                  onClick={() =>
+                                    handleOpenPdf(
+                                      t.fullPdfUrl,
+                                      `${item.name} - ${s.name} - ${c.name} - ${t.name} (Full)`,
+                                    )
+                                  }
                                 >
+                                  <FeatherIcon icon="file" className="me-1" />
                                   full
                                 </button>
+                              )}
+                              {t.questions?.length > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="outline-dark"
+                                  onClick={() => {
+                                    setActiveSubTopic(t);
+                                    setShowQAModal(true);
+                                  }}
+                                >
+                                  <FeatherIcon
+                                    icon="help-circle"
+                                    size={13}
+                                    className="me-1"
+                                  />
+                                  View Q&A
+                                </Button>
                               )}
 
                               {/* Test links */}
@@ -546,7 +607,9 @@ export default function List() {
             <Button variant="outline-secondary" size="sm" onClick={collapseAll}>
               <FeatherIcon icon="chevrons-up" className="me-1" /> Collapse All
             </Button>
-            <Link to="/classes/new" className="btn btn-primary">+ Create Class</Link>
+            <Link to="/classes/new" className="btn btn-primary">
+              + Create Class
+            </Link>
           </div>
         </div>
 
@@ -567,9 +630,13 @@ export default function List() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8}>Loading…</td></tr>
+              <tr>
+                <td colSpan={8}>Loading…</td>
+              </tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={8}>No classes yet.</td></tr>
+              <tr>
+                <td colSpan={8}>No classes yet.</td>
+              </tr>
             ) : (
               rows.map((r, i) => (
                 <FragmentRow
@@ -589,6 +656,50 @@ export default function List() {
         </Table>
       </Container>
 
+      <Modal
+        show={showQAModal}
+        onHide={() => setShowQAModal(false)}
+        size="xl"
+        centered
+        dialogClassName="modal-90w"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            📖 {activeSubTopic?.name} — Questions & Answers
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body className="px-4 py-4">
+          {activeSubTopic?.questions?.length ? (
+            activeSubTopic.questions.map((q, i) => (
+              <div
+                key={i}
+                className="mb-4 p-4 border rounded bg-white shadow-sm"
+              >
+                <div className="fw-bold fs-15 mb-3 ps-2">
+                  Q{i + 1}. {q.question}
+                </div>
+
+                <div className="text-dark ps-2" style={{ lineHeight: "1.6" }}>
+                  <span className="fw-semibold text-secondary me-1">
+                    Answer:
+                  </span>
+                  {q.answer}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-muted">No questions available for this topic.</p>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowQAModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       {/* Purchase modal instance */}
       <PurchaseModal
         show={modalShow}
@@ -601,13 +712,30 @@ export default function List() {
 }
 
 // FragmentRow component
-function FragmentRow({ index, item, totals, isOpen, onToggle, onEdit, onDelete, renderDetails }) {
+function FragmentRow({
+  index,
+  item,
+  totals,
+  isOpen,
+  onToggle,
+  onEdit,
+  onDelete,
+  renderDetails,
+}) {
   return (
     <>
       <tr>
         <td className="text-center align-middle">
-          <Button variant="outline-secondary" size="sm" onClick={onToggle} aria-expanded={isOpen}>
-            <FeatherIcon icon={isOpen ? "chevron-up" : "chevron-down"} size={16} />
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            onClick={onToggle}
+            aria-expanded={isOpen}
+          >
+            <FeatherIcon
+              icon={isOpen ? "chevron-up" : "chevron-down"}
+              size={16}
+            />
           </Button>
         </td>
         <td className="align-middle">{index + 1}</td>
@@ -615,12 +743,20 @@ function FragmentRow({ index, item, totals, isOpen, onToggle, onEdit, onDelete, 
         <td className="align-middle">{item.educationBoard || "-"}</td>
         <td className="align-middle">{totals.subjects}</td>
         <td className="align-middle">{totals.chapters}</td>
-        <td className="align-middle">{item.createdAt ? new Date(item.createdAt).toLocaleString() : "-"}</td>
+        <td className="align-middle">
+          {item.createdAt ? new Date(item.createdAt).toLocaleString() : "-"}
+        </td>
         <td className="align-middle">
           <div className="d-flex gap-2">
-            <Button size="sm" variant="outline-primary" onClick={onEdit}>Edit</Button>
-            <Button size="sm" variant="outline-danger" onClick={onDelete}>Delete</Button>
-            <Button size="sm" variant="outline-secondary" onClick={onToggle}>{isOpen ? "Hide" : "Details"}</Button>
+            <Button size="sm" variant="outline-primary" onClick={onEdit}>
+              Edit
+            </Button>
+            <Button size="sm" variant="outline-danger" onClick={onDelete}>
+              Delete
+            </Button>
+            <Button size="sm" variant="outline-secondary" onClick={onToggle}>
+              {isOpen ? "Hide" : "Details"}
+            </Button>
           </div>
         </td>
       </tr>

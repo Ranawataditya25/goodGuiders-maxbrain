@@ -1,10 +1,19 @@
 import mongoose from "mongoose";
 
+const QuestionSchema = new mongoose.Schema(
+  {
+    question: { type: String, required: true, trim: true },
+    answer: { type: String, required: true, trim: true },
+  },
+  { _id: false }
+);
+
 const SubTopicSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     onePagePdfUrl: { type: String, default: "" },
     fullPdfUrl: { type: String, default: "" },
+    questions: { type: [QuestionSchema], default: [] }, // ✅ ADD THIS
   },
   { _id: false }
 );

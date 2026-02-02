@@ -7,6 +7,7 @@ import {
   Collapse,
   Spinner,
   Alert,
+  Modal,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
@@ -20,6 +21,8 @@ export default function StudentClasses() {
   const [expanded, setExpanded] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showQAModal, setShowQAModal] = useState(false);
+  const [activeSubTopic, setActiveSubTopic] = useState(null);
 
   // purchase modal
   // const [modalShow, setModalShow] = useState(false);
@@ -29,37 +32,37 @@ export default function StudentClasses() {
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
 
   /* ================= FETCH STUDENT CLASSES ================= */
-useEffect(() => {
-  async function loadClasses() {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    async function loadClasses() {
+      try {
+        setLoading(true);
 
-      if (!loggedInUser?.email) {
-        throw new Error("Student not logged in");
+        if (!loggedInUser?.email) {
+          throw new Error("Student not logged in");
+        }
+
+        const res = await fetch(
+          `${API}/classes/student?email=${encodeURIComponent(
+            loggedInUser.email,
+          )}`,
+        );
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          throw new Error(data.message || "Failed to load classes");
+        }
+
+        setRows(data.items || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-
-      const res = await fetch(
-        `${API}/classes/student?email=${encodeURIComponent(
-          loggedInUser.email
-        )}`
-      );
-
-      const data = await res.json();
-
-      if (!res.ok || !data.ok) {
-        throw new Error(data.message || "Failed to load classes");
-      }
-
-      setRows(data.items || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
-  }
 
-  loadClasses();
-}, []);
+    loadClasses();
+  }, []);
 
   /* ================= TOTAL COUNTS ================= */
   const totals = useMemo(
@@ -68,26 +71,26 @@ useEffect(() => {
         const subjects = r.subjects?.length || 0;
         const chapters = (r.subjects || []).reduce(
           (acc, s) => acc + (s.chapters?.length || 0),
-          0
+          0,
         );
         return { subjects, chapters };
       }),
-    [rows]
+    [rows],
   );
 
   /* ================= PDF CLICK (LOCKED) ================= */
-function handleOpenPdf(fileUrl) {
-  if (!fileUrl) return;
+  function handleOpenPdf(fileUrl) {
+    if (!fileUrl) return;
 
-  const user = localStorage.getItem("loggedInUser");
-  if (!user) {
-    navigate("/login");
-    return;
+    const user = localStorage.getItem("loggedInUser");
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    // Open PDF in new tab
+    window.open(fileUrl, "_blank", "noopener,noreferrer");
   }
-
-  // Open PDF in new tab
-  window.open(fileUrl, "_blank", "noopener,noreferrer");
-}
 
   const toggleRow = (id) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -100,7 +103,7 @@ function handleOpenPdf(fileUrl) {
     }
 
     return (
-      <div className="p-3 bg-light border rounded">
+      <div className="p-3 bg-light border rounded bg-white">
         {subjects.map((s, si) => (
           <div key={si} className="mb-3">
             <div className="d-flex align-items-center mb-2">
@@ -109,7 +112,7 @@ function handleOpenPdf(fileUrl) {
             </div>
 
             {(s.chapters || []).map((c, ci) => (
-              <div key={ci} className="mb-2 ps-3">
+              <div key={ci} className="mb-3 ps-3">
                 <div className="fw-semibold">{c.name}</div>
 
                 <div className="d-flex gap-2 flex-wrap mt-1">
@@ -119,7 +122,11 @@ function handleOpenPdf(fileUrl) {
                       variant="outline-primary"
                       onClick={() => handleOpenPdf(c.onePagePdfUrl)}
                     >
-                      <FeatherIcon icon="file-text" size={14} className="me-1" />
+                      <FeatherIcon
+                        icon="file-text"
+                        size={14}
+                        className="me-1"
+                      />
                       1-page
                     </Button>
                   )}
@@ -135,10 +142,127 @@ function handleOpenPdf(fileUrl) {
                     </Button>
                   )}
                 </div>
+
+                {/* ===== Sub-topics ===== */}
+                {c.subTopics?.length > 0 && (
+                  <div className="mt-3 ps-3">
+                    {c.subTopics.map((t, ti) => (
+                      <div
+                        key={ti}
+                        className="mb-3 p-3 border rounded bg-white"
+                      >
+                        {/* Sub-topic title */}
+                        <div className="fw-semibold mb-2 text-dark">
+                          🔹 {t.name}
+                        </div>
+
+                        {/* Sub-topic PDFs + Q&A */}
+                        <div className="d-flex gap-2 flex-wrap">
+                          {t.onePagePdfUrl && (
+                            <Button
+                              size="sm"
+                              variant="outline-secondary"
+                              onClick={() => handleOpenPdf(t.onePagePdfUrl)}
+                            >
+                              <FeatherIcon
+                                icon="file-text"
+                                size={13}
+                                className="me-1"
+                              />
+                              1-Page
+                            </Button>
+                          )}
+
+                          {t.fullPdfUrl && (
+                            <Button
+                              size="sm"
+                              variant="outline-secondary"
+                              onClick={() => handleOpenPdf(t.fullPdfUrl)}
+                            >
+                              <FeatherIcon
+                                icon="file"
+                                size={13}
+                                className="me-1"
+                              />
+                              Full PDF
+                            </Button>
+                          )}
+
+                          {t.questions?.length > 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline-dark"
+                              onClick={() => {
+                                setActiveSubTopic(t);
+                                setShowQAModal(true);
+                              }}
+                            >
+                              <FeatherIcon
+                                icon="help-circle"
+                                size={13}
+                                className="me-1"
+                              />
+                              View Q&A
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         ))}
+
+        <Modal
+          show={showQAModal}
+          onHide={() => setShowQAModal(false)}
+          size="xl"
+          centered
+          dialogClassName="modal-90w"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              📖 {activeSubTopic?.name} — Questions & Answers
+            </Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body className="px-4 py-4">
+            {activeSubTopic?.questions?.length ? (
+              activeSubTopic.questions.map((q, i) => (
+                <div
+                  key={i}
+                  className="mb-4 p-4 border rounded bg-white shadow-sm"
+                >
+                  <div className="fw-bold fs-15 mb-3 ps-2">
+                    Q{i + 1}. {q.question}
+                  </div>
+
+                  <div
+                    className="text-dark ps-2 mt-2"
+                    style={{ lineHeight: "1.6" }}
+                  >
+                    <span className="fw-semibold text-secondary me-1">
+                      Answer:
+                    </span>
+                    {q.answer}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted">
+                No questions available for this topic.
+              </p>
+            )}
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowQAModal(false)}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     );
   };

@@ -24,6 +24,18 @@ const validate = (body) => {
         if (!Array.isArray(c.subTopics)) return "subTopics must be an array.";
         for (const t of c.subTopics) {
           if (!t?.name?.trim()) return "Each sub-topic must have a name.";
+
+          if (t.questions) {
+            if (!Array.isArray(t.questions))
+              return "Questions must be an array.";
+
+            for (const q of t.questions) {
+              if (!q?.question?.trim())
+                return "Each question must have question text.";
+              if (!q?.answer?.trim())
+                return "Each question must have an answer.";
+            }
+          }
         }
       }
     }

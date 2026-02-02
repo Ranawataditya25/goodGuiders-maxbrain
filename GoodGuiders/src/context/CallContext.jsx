@@ -77,7 +77,8 @@ useEffect(() => {
       rejectElRef.current = new Audio("/sounds/rejected.mp3");
       rejectElRef.current.preload = "auto";
       rejectElRef.current.muted = false;
-      rejectElRef.current.volume = 1;
+      // 🔉 Set rejected sound quieter
+      rejectElRef.current.volume = 0.35;
       rejectElRef.current.style.display = "none";
       document.body.appendChild(rejectElRef.current);
 
@@ -189,10 +190,12 @@ const safePlayRing = async (opts) => {
 };
 
 // Helper to play short sounds (accept/reject/missed) with HTMLAudio fallback
-const safePlaySound = async (playFn, fallbackRef, fallbackSrc) => {
+const safePlaySound = async (playFn, fallbackRef, fallbackSrc, opts = {}) => {
+  const targetVolume = typeof opts.volume === 'number' ? opts.volume : 1;
+
   // First try the use-sound library (preferred)
   try {
-    const maybe = playFn && playFn();
+    const maybe = playFn && playFn(opts);
     if (maybe && typeof maybe.then === "function") await maybe;
     console.log("🔊 use-sound play succeeded (short sound)");
 
@@ -201,9 +204,9 @@ const safePlaySound = async (playFn, fallbackRef, fallbackSrc) => {
       const el = fallbackRef && fallbackRef.current;
       if (el && el.paused) {
         el.muted = false;
-        el.volume = 1;
+        el.volume = targetVolume;
         await el.play();
-        console.log("🔊 Forced HTMLAudio fallback short sound started after use-sound resolved", { src: el.src, paused: el.paused });
+        console.log("🔊 Forced HTMLAudio fallback short sound started after use-sound resolved", { src: el.src, paused: el.paused, volume: el.volume });
       }
     } catch (e) {
       console.warn("Forced fallback short sound after use-sound resolved failed:", e);
@@ -221,14 +224,15 @@ const safePlaySound = async (playFn, fallbackRef, fallbackSrc) => {
       el = new Audio(fallbackSrc);
       el.preload = "auto";
       el.muted = false;
-      el.volume = 1;
+      el.volume = targetVolume;
       el.style.display = "none";
       fallbackRef.current = el;
       try { document.body.appendChild(el); } catch (e) {}
     }
     if (el) {
+      el.volume = targetVolume;
       await el.play();
-      console.log("🔊 HTMLAudio fallback short sound played", { src: el.src });
+      console.log("🔊 HTMLAudio fallback short sound played", { src: el.src, volume: el.volume });
       return true;
     }
   } catch (e) {
@@ -361,7 +365,8 @@ useEffect(() => {
     const onRejected = () => {
       console.log("❌ Call rejected");
       safeStopRing();
-      safePlaySound(playReject, rejectElRef, "/sounds/rejected.mp3");
+      // play rejected sound at lower volume (30%-40%)
+      safePlaySound(playReject, rejectElRef, "/sounds/rejected.mp3", { volume: 0.35 });
       setIncomingCall(null);
     };
 

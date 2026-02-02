@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Button, Card, Col, Form, InputGroup, Row, Spinner } from "react-bootstrap";
+import {
+  Button,
+  Card,
+  Col,
+  Form,
+  InputGroup,
+  Row,
+  Spinner,
+  Modal,
+} from "react-bootstrap";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -8,6 +17,8 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  const [showQAModal, setShowQAModal] = useState(false);
+  const [activeIndexes, setActiveIndexes] = useState(null);
 
   const [klass, setKlass] = useState({
     educationBoard: "",
@@ -37,7 +48,8 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
       try {
         const res = await fetch(`${API}/classes/${classId}`);
         const data = await res.json();
-        if (!res.ok || !data?.ok) throw new Error(data?.message || "Failed to load class");
+        if (!res.ok || !data?.ok)
+          throw new Error(data?.message || "Failed to load class");
         const normalized = {
           educationBoard: data.item.educationBoard || "",
           name: data.item.name,
@@ -46,7 +58,9 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
             chapters: (s.chapters || []).map((c) => ({
               name: c.name,
               onePagePdfUrl: c.onePagePdfUrl || "",
-              onePagePdfName: c.onePagePdfUrl ? c.onePagePdfUrl.split("/").pop() : "",
+              onePagePdfName: c.onePagePdfUrl
+                ? c.onePagePdfUrl.split("/").pop()
+                : "",
               fullPdfUrl: c.fullPdfUrl || "",
               fullPdfName: c.fullPdfUrl ? c.fullPdfUrl.split("/").pop() : "",
               oneUploading: false,
@@ -57,6 +71,10 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
                 fullPdfUrl: t.fullPdfUrl || "",
                 oneUploading: false,
                 fullUploading: false,
+                questions: (t.questions || []).map((q) => ({
+                  question: q.question || "",
+                  answer: q.answer || "",
+                })),
               })),
             })),
           })),
@@ -89,8 +107,10 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
   }, [mode, classId]);
 
   // ----- top-level fields -----
-  const updateBoard = (e) => setKlass((k) => ({ ...k, educationBoard: e.target.value }));
-  const updateClassName = (e) => setKlass((k) => ({ ...k, name: e.target.value }));
+  const updateBoard = (e) =>
+    setKlass((k) => ({ ...k, educationBoard: e.target.value }));
+  const updateClassName = (e) =>
+    setKlass((k) => ({ ...k, name: e.target.value }));
 
   // ----- subjects -----
   const addSubject = () =>
@@ -115,7 +135,10 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
     }));
 
   const removeSubject = (si) =>
-    setKlass((k) => ({ ...k, subjects: k.subjects.filter((_, i) => i !== si) }));
+    setKlass((k) => ({
+      ...k,
+      subjects: k.subjects.filter((_, i) => i !== si),
+    }));
 
   const updateSubjectName = (si, value) =>
     setKlass((k) => {
@@ -178,6 +201,7 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
           fullPdfUrl: "",
           oneUploading: false,
           fullUploading: false,
+          questions: [],
         },
       ];
       chapters[ci] = ch;
@@ -215,7 +239,8 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
     fd.append("file", file);
     const res = await fetch(`${API}/uploads/pdf`, { method: "POST", body: fd });
     const data = await res.json();
-    if (!res.ok || !data?.ok) throw new Error(data?.message || "PDF upload failed");
+    if (!res.ok || !data?.ok)
+      throw new Error(data?.message || "PDF upload failed");
     return { url: data.url, name: data.name };
   };
 
@@ -269,7 +294,8 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
 
   // ----- validation + submit -----
   const validate = () => {
-    if (!klass.educationBoard.trim()) return "Please select or enter the Education Board.";
+    if (!klass.educationBoard.trim())
+      return "Please select or enter the Education Board.";
     if (!klass.name.trim()) return "Please enter a class name.";
     if (!klass.subjects.length) return "Add at least one subject.";
     for (const s of klass.subjects) {
@@ -286,6 +312,30 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
     }
     return "";
   };
+
+  const addQuestion = (si, ci, ti) =>
+    setKlass((k) => {
+      const subjects = structuredClone(k.subjects);
+      subjects[si].chapters[ci].subTopics[ti].questions.push({
+        question: "",
+        answer: "",
+      });
+      return { ...k, subjects };
+    });
+
+  const updateQuestion = (si, ci, ti, qi, field, value) =>
+    setKlass((k) => {
+      const subjects = structuredClone(k.subjects);
+      subjects[si].chapters[ci].subTopics[ti].questions[qi][field] = value;
+      return { ...k, subjects };
+    });
+
+  const removeQuestion = (si, ci, ti, qi) =>
+    setKlass((k) => {
+      const subjects = structuredClone(k.subjects);
+      subjects[si].chapters[ci].subTopics[ti].questions.splice(qi, 1);
+      return { ...k, subjects };
+    });
 
   const submit = async () => {
     const v = validate();
@@ -307,6 +357,10 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
             name: t.name,
             onePagePdfUrl: t.onePagePdfUrl || "",
             fullPdfUrl: t.fullPdfUrl || "",
+            questions: (t.questions || []).map((q) => ({
+              question: q.question,
+              answer: q.answer,
+            })),
           })),
         })),
       })),
@@ -316,7 +370,8 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
       setSaving(true);
       setError("");
       setMsg("");
-      const url = mode === "edit" ? `${API}/classes/${classId}` : `${API}/classes`;
+      const url =
+        mode === "edit" ? `${API}/classes/${classId}` : `${API}/classes`;
       const method = mode === "edit" ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
@@ -343,297 +398,443 @@ export default function ClassForm({ mode = "create", classId, onSuccess }) {
   }
 
   return (
-    <Card>
-      <Card.Body>
-        <Form>
-          {/* 1) Education Board */}
-          <Form.Group className="mb-3">
-            <Form.Label>Education Board</Form.Label>
-            <Form.Control
-              list="boardOptions"
-              placeholder="e.g., CBSE"
-              value={klass.educationBoard}
-              onChange={updateBoard}
-            />
-            <datalist id="boardOptions">
-              <option value="CBSE" />
-              <option value="ICSE" />
-              <option value="State Board" />
-              <option value="IB (International Baccalaureate)" />
-              <option value="Cambridge (IGCSE)" />
-              <option value="Other" />
-            </datalist>
-            <Form.Text className="text-muted">
-              Pick from suggestions or type your own board name.
-            </Form.Text>
-          </Form.Group>
+    <>
+      <Card>
+        <Card.Body>
+          <Form>
+            {/* 1) Education Board */}
+            <Form.Group className="mb-3">
+              <Form.Label>Education Board</Form.Label>
+              <Form.Control
+                list="boardOptions"
+                placeholder="e.g., CBSE"
+                value={klass.educationBoard}
+                onChange={updateBoard}
+              />
+              <datalist id="boardOptions">
+                <option value="CBSE" />
+                <option value="ICSE" />
+                <option value="State Board" />
+                <option value="IB (International Baccalaureate)" />
+                <option value="Cambridge (IGCSE)" />
+                <option value="Other" />
+              </datalist>
+              <Form.Text className="text-muted">
+                Pick from suggestions or type your own board name.
+              </Form.Text>
+            </Form.Group>
 
-          {/* 2) Class Name */}
-          <Form.Group className="mb-3">
-            <Form.Label>Class Name</Form.Label>
-            <Form.Control
-              placeholder="e.g., Class 10"
-              value={klass.name}
-              onChange={updateClassName}
-            />
-          </Form.Group>
+            {/* 2) Class Name */}
+            <Form.Group className="mb-3">
+              <Form.Label>Class Name</Form.Label>
+              <Form.Control
+                placeholder="e.g., Class 10"
+                value={klass.name}
+                onChange={updateClassName}
+              />
+            </Form.Group>
 
-          {/* 3) Subjects → Chapters → Sub-topics */}
-          {klass.subjects.map((s, si) => (
-            <div key={si} className="p-3 mb-3 border rounded">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <Form.Label className="mb-0 fw-semibold">Subject #{si + 1}</Form.Label>
-                <Button
-                  variant="outline-danger"
-                  size="sm"
-                  onClick={() => removeSubject(si)}
-                  disabled={klass.subjects.length === 1}
-                >
-                  Remove Subject
-                </Button>
-              </div>
+            {/* 3) Subjects → Chapters → Sub-topics */}
+            {klass.subjects.map((s, si) => (
+              <div key={si} className="p-3 mb-3 border rounded">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <Form.Label className="mb-0 fw-semibold">
+                    Subject #{si + 1}
+                  </Form.Label>
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => removeSubject(si)}
+                    disabled={klass.subjects.length === 1}
+                  >
+                    Remove Subject
+                  </Button>
+                </div>
 
-              <Form.Group className="mb-3">
-                <Form.Control
-                  placeholder="e.g., Physics, Maths, Hindi"
-                  value={s.name}
-                  onChange={(e) => updateSubjectName(si, e.target.value)}
-                />
-              </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Control
+                    placeholder="e.g., Physics, Maths, Hindi"
+                    value={s.name}
+                    onChange={(e) => updateSubjectName(si, e.target.value)}
+                  />
+                </Form.Group>
 
-              <Form.Label className="fw-semibold">Chapters</Form.Label>
+                <Form.Label className="fw-semibold">Chapters</Form.Label>
 
-              {s.chapters.map((c, ci) => (
-                <div key={ci} className="p-2 mb-2 border rounded">
-                  <Row className="g-2 align-items-start">
-                    <Col md={4}>
-                      <InputGroup>
-                        <InputGroup.Text>Chapter</InputGroup.Text>
-                        <Form.Control
-                          placeholder="e.g., Motion, Algebra"
-                          value={c.name}
-                          onChange={(e) => updateChapterField(si, ci, "name", e.target.value)}
-                        />
-                      </InputGroup>
-                    </Col>
+                {s.chapters.map((c, ci) => (
+                  <div key={ci} className="p-2 mb-2 border rounded">
+                    <Row className="g-2 align-items-start">
+                      <Col md={4}>
+                        <InputGroup>
+                          <InputGroup.Text>Chapter</InputGroup.Text>
+                          <Form.Control
+                            placeholder="e.g., Motion, Algebra"
+                            value={c.name}
+                            onChange={(e) =>
+                              updateChapterField(si, ci, "name", e.target.value)
+                            }
+                          />
+                        </InputGroup>
+                      </Col>
 
-                    <Col md={4}>
-                      <Form.Label className="small mb-1">1-Page Notes (PDF)</Form.Label>
-                      <div className="d-flex align-items-center gap-2">
-                        <Form.Control
-                          type="file"
-                          accept="application/pdf"
-                          onChange={(e) => onChapterPdfChange(si, ci, "one", e)}
-                        />
-                        {c.oneUploading && <Spinner size="sm" animation="border" />}
+                      <Col md={4}>
+                        <Form.Label className="small mb-1">
+                          1-Page Notes (PDF)
+                        </Form.Label>
+                        <div className="d-flex align-items-center gap-2">
+                          <Form.Control
+                            type="file"
+                            accept="application/pdf"
+                            onChange={(e) =>
+                              onChapterPdfChange(si, ci, "one", e)
+                            }
+                          />
+                          {c.oneUploading && (
+                            <Spinner size="sm" animation="border" />
+                          )}
+                        </div>
+                        {c.onePagePdfUrl && (
+                          <div className="mt-1">
+                            <a
+                              href={c.onePagePdfUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {c.onePagePdfName || "View 1-page PDF"}
+                            </a>
+                          </div>
+                        )}
+                      </Col>
+
+                      <Col md={4}>
+                        <Form.Label className="small mb-1">
+                          Full Notes (PDF)
+                        </Form.Label>
+                        <div className="d-flex align-items-center gap-2">
+                          <Form.Control
+                            type="file"
+                            accept="application/pdf"
+                            onChange={(e) =>
+                              onChapterPdfChange(si, ci, "full", e)
+                            }
+                          />
+                          {c.fullUploading && (
+                            <Spinner size="sm" animation="border" />
+                          )}
+                        </div>
+                        {c.fullPdfUrl && (
+                          <div className="mt-1">
+                            <a
+                              href={c.fullPdfUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {c.fullPdfName || "View Full PDF"}
+                            </a>
+                          </div>
+                        )}
+                      </Col>
+                    </Row>
+
+                    {/* Sub-topics */}
+                    <div className="mt-3">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <strong>Sub-topics</strong>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => addSubTopic(si, ci)}
+                        >
+                          + Add Sub-topic
+                        </Button>
                       </div>
-                      {c.onePagePdfUrl && (
-                        <div className="mt-1">
-                          <a href={c.onePagePdfUrl} target="_blank" rel="noreferrer">
-                            {c.onePagePdfName || "View 1-page PDF"}
-                          </a>
+
+                      {c.subTopics?.length ? (
+                        <div className="d-grid gap-3">
+                          {c.subTopics.map((t, ti) => (
+                            <div key={ti} className="p-2 border rounded">
+                              <Row className="g-2">
+                                <Col md={4}>
+                                  <Form.Control
+                                    placeholder={`Sub-topic #${ti + 1}`}
+                                    value={t.name}
+                                    onChange={(e) =>
+                                      updateSubTopicField(
+                                        si,
+                                        ci,
+                                        ti,
+                                        "name",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                </Col>
+                                <Col md={4}>
+                                  <Form.Label className="small mb-1">
+                                    1-Page Notes (PDF)
+                                  </Form.Label>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <Form.Control
+                                      type="file"
+                                      accept="application/pdf"
+                                      onChange={(e) =>
+                                        onSubTopicPdfChange(
+                                          si,
+                                          ci,
+                                          ti,
+                                          "one",
+                                          e,
+                                        )
+                                      }
+                                    />
+                                    {t.oneUploading && (
+                                      <Spinner size="sm" animation="border" />
+                                    )}
+                                  </div>
+                                  {t.onePagePdfUrl && (
+                                    <div className="mt-1">
+                                      <a
+                                        href={t.onePagePdfUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                      >
+                                        View 1-page PDF
+                                      </a>
+                                    </div>
+                                  )}
+                                </Col>
+                                <Col md={4}>
+                                  <Form.Label className="small mb-1">
+                                    Full Notes (PDF)
+                                  </Form.Label>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <Form.Control
+                                      type="file"
+                                      accept="application/pdf"
+                                      onChange={(e) =>
+                                        onSubTopicPdfChange(
+                                          si,
+                                          ci,
+                                          ti,
+                                          "full",
+                                          e,
+                                        )
+                                      }
+                                    />
+                                    {t.fullUploading && (
+                                      <Spinner size="sm" animation="border" />
+                                    )}
+                                  </div>
+                                  {t.fullPdfUrl && (
+                                    <div className="mt-1">
+                                      <a
+                                        href={t.fullPdfUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                      >
+                                        View Full PDF
+                                      </a>
+                                    </div>
+                                  )}
+                                </Col>
+                              </Row>
+
+                              {/* Test buttons */}
+                              <div className="mt-2 d-flex gap-2">
+                                <Button
+                                  variant="outline-success"
+                                  size="sm"
+                                  href={`/test-page?class=${encodeURIComponent(
+                                    klass.name,
+                                  )}&subject=${encodeURIComponent(
+                                    s.name,
+                                  )}&chapter=${encodeURIComponent(
+                                    c.name,
+                                  )}&topic=${encodeURIComponent(
+                                    t.name,
+                                  )}&difficulty=beginner`}
+                                >
+                                  Beginner Test
+                                </Button>
+                                <Button
+                                  variant="outline-warning"
+                                  size="sm"
+                                  href={`/test-page?class=${encodeURIComponent(
+                                    klass.name,
+                                  )}&subject=${encodeURIComponent(
+                                    s.name,
+                                  )}&chapter=${encodeURIComponent(
+                                    c.name,
+                                  )}&topic=${encodeURIComponent(
+                                    t.name,
+                                  )}&difficulty=intermediate`}
+                                >
+                                  Intermediate Test
+                                </Button>
+                                <Button
+                                  variant="outline-danger"
+                                  size="sm"
+                                  href={`/test-page?class=${encodeURIComponent(
+                                    klass.name,
+                                  )}&subject=${encodeURIComponent(
+                                    s.name,
+                                  )}&chapter=${encodeURIComponent(
+                                    c.name,
+                                  )}&topic=${encodeURIComponent(
+                                    t.name,
+                                  )}&difficulty=advanced`}
+                                >
+                                  Advanced Test
+                                </Button>
+
+                                <Button
+                                  variant="outline-info"
+                                  size="sm"
+                                  onClick={() => {
+                                    setActiveIndexes({ si, ci, ti });
+                                    setShowQAModal(true);
+                                  }}
+                                >
+                                  + Add Q&A
+                                </Button>
+
+                                <Button
+                                  className="ms-auto"
+                                  variant="outline-danger"
+                                  size="sm"
+                                  onClick={() => removeSubTopic(si, ci, ti)}
+                                >
+                                  Remove Sub-topic
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-muted small">
+                          No sub-topics yet.
                         </div>
                       )}
-                    </Col>
-
-                    <Col md={4}>
-                      <Form.Label className="small mb-1">Full Notes (PDF)</Form.Label>
-                      <div className="d-flex align-items-center gap-2">
-                        <Form.Control
-                          type="file"
-                          accept="application/pdf"
-                          onChange={(e) => onChapterPdfChange(si, ci, "full", e)}
-                        />
-                        {c.fullUploading && <Spinner size="sm" animation="border" />}
-                      </div>
-                      {c.fullPdfUrl && (
-                        <div className="mt-1">
-                          <a href={c.fullPdfUrl} target="_blank" rel="noreferrer">
-                            {c.fullPdfName || "View Full PDF"}
-                          </a>
-                        </div>
-                      )}
-                    </Col>
-                  </Row>
-
-                  {/* Sub-topics */}
-                  <div className="mt-3">
-                    <div className="d-flex justify-content-between align-items-center mb-2">
-                      <strong>Sub-topics</strong>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => addSubTopic(si, ci)}
-                      >
-                        + Add Sub-topic
-                      </Button>
                     </div>
 
-                    {c.subTopics?.length ? (
-                      <div className="d-grid gap-3">
-                        {c.subTopics.map((t, ti) => (
-                          <div key={ti} className="p-2 border rounded">
-                            <Row className="g-2">
-                              <Col md={4}>
-                                <Form.Control
-                                  placeholder={`Sub-topic #${ti + 1}`}
-                                  value={t.name}
-                                  onChange={(e) =>
-                                    updateSubTopicField(si, ci, ti, "name", e.target.value)
-                                  }
-                                />
-                              </Col>
-                              <Col md={4}>
-                                <Form.Label className="small mb-1">1-Page Notes (PDF)</Form.Label>
-                                <div className="d-flex align-items-center gap-2">
-                                  <Form.Control
-                                    type="file"
-                                    accept="application/pdf"
-                                    onChange={(e) =>
-                                      onSubTopicPdfChange(si, ci, ti, "one", e)
-                                    }
-                                  />
-                                  {t.oneUploading && (
-                                    <Spinner size="sm" animation="border" />
-                                  )}
-                                </div>
-                                {t.onePagePdfUrl && (
-                                  <div className="mt-1">
-                                    <a
-                                      href={t.onePagePdfUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                    >
-                                      View 1-page PDF
-                                    </a>
-                                  </div>
-                                )}
-                              </Col>
-                              <Col md={4}>
-                                <Form.Label className="small mb-1">Full Notes (PDF)</Form.Label>
-                                <div className="d-flex align-items-center gap-2">
-                                  <Form.Control
-                                    type="file"
-                                    accept="application/pdf"
-                                    onChange={(e) =>
-                                      onSubTopicPdfChange(si, ci, ti, "full", e)
-                                    }
-                                  />
-                                  {t.fullUploading && (
-                                    <Spinner size="sm" animation="border" />
-                                  )}
-                                </div>
-                                {t.fullPdfUrl && (
-                                  <div className="mt-1">
-                                    <a
-                                      href={t.fullPdfUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                    >
-                                      View Full PDF
-                                    </a>
-                                  </div>
-                                )}
-                              </Col>
-                            </Row>
-
-                            {/* Test buttons */}
-                            <div className="mt-2 d-flex gap-2">
-                              <Button
-                                variant="outline-success"
-                                size="sm"
-                                href={`/test-page?class=${encodeURIComponent(
-                                  klass.name
-                                )}&subject=${encodeURIComponent(
-                                  s.name
-                                )}&chapter=${encodeURIComponent(
-                                  c.name
-                                )}&topic=${encodeURIComponent(
-                                  t.name
-                                )}&difficulty=beginner`}
-                              >
-                                Beginner Test
-                              </Button>
-                              <Button
-                                variant="outline-warning"
-                                size="sm"
-                                href={`/test-page?class=${encodeURIComponent(
-                                  klass.name
-                                )}&subject=${encodeURIComponent(
-                                  s.name
-                                )}&chapter=${encodeURIComponent(
-                                  c.name
-                                )}&topic=${encodeURIComponent(
-                                  t.name
-                                )}&difficulty=intermediate`}
-                              >
-                                Intermediate Test
-                              </Button>
-                              <Button
-                                variant="outline-danger"
-                                size="sm"
-                                href={`/test-page?class=${encodeURIComponent(
-                                  klass.name
-                                )}&subject=${encodeURIComponent(
-                                  s.name
-                                )}&chapter=${encodeURIComponent(
-                                  c.name
-                                )}&topic=${encodeURIComponent(
-                                  t.name
-                                )}&difficulty=advanced`}
-                              >
-                                Advanced Test
-                              </Button>
-
-                              <Button
-                                className="ms-auto"
-                                variant="outline-danger"
-                                size="sm"
-                                onClick={() => removeSubTopic(si, ci, ti)}
-                              >
-                                Remove Sub-topic
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-muted small">No sub-topics yet.</div>
-                    )}
+                    <div className="mt-2">
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => removeChapter(si, ci)}
+                        disabled={s.chapters.length === 1}
+                      >
+                        Remove Chapter
+                      </Button>
+                    </div>
                   </div>
+                ))}
 
-                  <div className="mt-2">
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={() => removeChapter(si, ci)}
-                      disabled={s.chapters.length === 1}
-                    >
-                      Remove Chapter
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => addChapter(si)}
+                >
+                  + Add Chapter
+                </Button>
+              </div>
+            ))}
 
-              <Button variant="outline-secondary" size="sm" onClick={() => addChapter(si)}>
-                + Add Chapter
-              </Button>
-            </div>
-          ))}
+            <Button variant="outline-primary" onClick={addSubject}>
+              + Add Subject
+            </Button>
 
-          <Button variant="outline-primary" onClick={addSubject}>
-            + Add Subject
+            {error && <div className="mt-3 text-danger small">{error}</div>}
+            {msg && <div className="mt-3 text-success small">{msg}</div>}
+          </Form>
+        </Card.Body>
+        <Card.Footer className="d-flex justify-content-end gap-2">
+          <Button onClick={submit} disabled={saving}>
+            {saving ? "Saving..." : "Save"}
           </Button>
+        </Card.Footer>
+      </Card>
+      <Modal show={showQAModal} onHide={() => setShowQAModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Questions & Answers</Modal.Title>
+        </Modal.Header>
 
-          {error && <div className="mt-3 text-danger small">{error}</div>}
-          {msg && <div className="mt-3 text-success small">{msg}</div>}
-        </Form>
-      </Card.Body>
-      <Card.Footer className="d-flex justify-content-end gap-2">
-        <Button onClick={submit} disabled={saving}>
-          {saving ? "Saving..." : "Save"}
-        </Button>
-      </Card.Footer>
-    </Card>
+        <Modal.Body>
+          {activeIndexes &&
+            (() => {
+              const { si, ci, ti } = activeIndexes;
+              const questions =
+                klass.subjects[si].chapters[ci].subTopics[ti].questions || [];
+
+              return (
+                <>
+                  {questions.map((q, qi) => (
+                    <div key={qi} className="mb-3 border rounded p-2">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <strong>Question {qi + 1}</strong>
+
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => removeQuestion(si, ci, ti, qi)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+
+                      <Form.Control
+                        className="mb-2"
+                        placeholder="Question"
+                        value={q.question}
+                        onChange={(e) =>
+                          updateQuestion(
+                            si,
+                            ci,
+                            ti,
+                            qi,
+                            "question",
+                            e.target.value,
+                          )
+                        }
+                      />
+
+                      <Form.Control
+                        as="textarea"
+                        rows={2}
+                        placeholder="Answer"
+                        value={q.answer}
+                        onChange={(e) =>
+                          updateQuestion(
+                            si,
+                            ci,
+                            ti,
+                            qi,
+                            "answer",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => addQuestion(si, ci, ti)}
+                  >
+                    + Add Question
+                  </Button>
+                </>
+              );
+            })()}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowQAModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 }
